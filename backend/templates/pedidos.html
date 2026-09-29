@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Pedidos - Cook Degustto{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles_pedidos.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="page-header page-header-glow">
+        <div>
+            <h1 class="page-title-glow">📦 Gerenciar Pedidos</h1>
+            <div class="page-subtitle">Acompanhe e atualize o status dos pedidos</div>
+        </div>
+        
+        <div class="header-controls">
+            <input type="text" id="searchPedidos" class="input-std search-box" placeholder="🔍 Buscar cliente, ID ou telefone...">
+            <button onclick="abrirModalManual()" class="btn-neon-outline btn-neon-outline-success">➕ Novo Pedido</button>
+            
+            <div class="d-flex align-center gap-5 ml-5 mr-5">
+                <span class="text-muted text-sm">Filtrar Data:</span>
+                <input type="date" id="filtroData" class="input-std cursor-pointer w-auto" value="{{ data_filtro if data_filtro else '' }}" onchange="aplicarFiltrosUrl()">
+            </div>
+
+            <div class="header-divider"></div>
+            
+            <a href="/pedidos?filtro=hoje&tipo={{ tipo_atual }}&status={{ status_atual }}" class="btn-neon-outline btn-neon-outline-primary {{ 'active' if filtro_atual == 'hoje' and not data_filtro else '' }}">📅 Hoje</a>
+            <a href="/pedidos?filtro=todos&tipo={{ tipo_atual }}&status={{ status_atual }}" class="btn-neon-outline btn-neon-outline-info {{ 'active' if filtro_atual == 'todos' or data_filtro else '' }}">📂 Histórico</a>
+            <a href="/pedidos?filtro=cancelados&tipo={{ tipo_atual }}&status={{ status_atual }}" class="btn-neon-outline btn-neon-outline-danger {{ 'active' if filtro_atual == 'cancelados' else '' }}">🗑️ Cancelados</a>
+            
+            <div class="header-divider"></div>
+            
+            <select class="input-std font-bold cursor-pointer" id="filtroTipo" onchange="aplicarFiltrosUrl()">
+                <option value="todos" {{ 'selected' if tipo_atual == 'todos' }}>👀 Todos os Tipos</option>
+                <option value="entrega" {{ 'selected' if tipo_atual == 'entrega' }}>🛵 Entrega / Retirada</option>
+                <option value="mesa" {{ 'selected' if tipo_atual == 'mesa' }}>🪑 Mesas / Salão</option>
+            </select>
+
+            <select class="input-std font-bold cursor-pointer" id="filtroStatus" onchange="aplicarFiltrosUrl()">
+                <option value="todos" {{ 'selected' if status_atual == 'todos' }}>⚪ Todos os Status</option>
+                <option value="ABERTO" {{ 'selected' if status_atual == 'ABERTO' }}>📝 Rascunho / Aberto</option>
+                <option value="EM_PREPARO" {{ 'selected' if status_atual == 'EM_PREPARO' }}>🔥 Em Preparo</option>
+                <option value="SAIU_PARA_ENTREGA" {{ 'selected' if status_atual == 'SAIU_PARA_ENTREGA' }}>🛵 Saiu P/ Entrega</option>
+                <option value="CONCLUIDO" {{ 'selected' if status_atual == 'CONCLUIDO' }}>✅ Concluído</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="totals-bar">
+        <div class="total-card"><h4>💵 Dinheiro</h4><p class="value text-success">R$ {{ "%.2f"|format(totais['Dinheiro'])|replace('.', ',') }}</p></div>
+        <div class="total-card"><h4>💠 Pix</h4><p class="value" style="color:#00e5ff;">R$ {{ "%.2f"|format(totais['Pix'])|replace('.', ',') }}</p></div>
+        <div class="total-card"><h4>💳 Crédito</h4><p class="value text-warning">R$ {{ "%.2f"|format(totais['Crédito'])|replace('.', ',') }}</p></div>
+        <div class="total-card"><h4>💳 Débito</h4><p class="value" style="color:#d500f9;">R$ {{ "%.2f"|format(totais['Débito'])|replace('.', ',') }}</p></div>
+        <div class="total-card"><h4>💰 Total Geral</h4><p class="value" style="color:#2979ff;">R$ {{ "%.2f"|format(totais['Total'])|replace('.', ',') }}</p></div>
+    </div>
+
+    <div id="bulk-actions-bar" class="bulk-bar" style="display: none;">
+        <span id="bulk-count" class="bulk-count-text">0 selecionados</span>
+        <div class="bulk-controls">
+            <select id="bulk_motoboy" class="input-std p-10 text-sm" style="border-color: var(--warning);">
+                <option value="">🛵 Atribuir Motoboy...</option>
+                {% for m in entregadores %}<option value="{{ m.id }}">{{ m.nome }}</option>{% endfor %}
+            </select>
+            <button class="btn-neon-outline btn-neon-outline-warning" onclick="vincularMotoboyEmMassa()">Atribuir Selecionados</button>
+            <div class="bulk-divider"></div>
+            <button class="btn-neon-outline btn-neon-outline-info" onclick="toggleSelecionarTodos()">✅ Selecionar Todos</button>
+            <button class="btn-neon-outline btn-neon-outline-danger" onclick="excluirSelecionados()">🗑️ Excluir Selecionados</button>
+            <button class="btn-neon-outline btn-neon-outline-gray" onclick="limparTudo('{{ filtro_atual }}')">⚠️ Limpar Tela</button>
+        </div>
+    </div>
+
+    <div class="grid-pedidos" id="pedidos-grid">
+        {% if not pedidos %}<div class="empty-table-msg"><div class="text-xl mb-15">📭</div><h2>Nenhum pedido encontrado.</h2></div>{% endif %}
+        {% for p in pedidos %}
+        <div class="pedido-card status-{{ p.status }}" data-id="{{ p.id }}">
+            <div class="card-top">
+                <div class="d-flex align-center gap-10">
+                    <input type="checkbox" class="card-select-box" value="{{ p.id }}" onchange="updateBulkBar()" style="width: 18px; height: 18px; accent-color: var(--danger); cursor: pointer;">
+                    <span class="badge-id">#{{ p.id }}</span>
+                </div>
+                <div class="badge-time">{% if filtro_atual != 'hoje' or data_filtro %}{{ p.dia }} - {% endif %}🕒 {{ p.hora }}</div>
+            </div>
+
+            <div class="card-body">
+                <div class="client-info">
+                    <div class="client-name">{{ p.cliente_nome }}</div>
+                    {% if p.telefone and p.telefone != 'MESA' and p.telefone != '00000000000' %}<a href="https://wa.me/{{ p.telefone }}" target="_blank" class="client-phone">📱 {{ p.telefone }}</a>{% endif %}
+                    
+                    {% for extra in colunas_extras %}
+                        {% if p[extra.coluna] %}
+                            <div class="text-sm mt-5" style="color: var(--info);"><strong>{{ extra.label }}:</strong> {{ p[extra.coluna] }}</div>
+                        {% endif %}
+                    {% endfor %}
+                    <button class="btn-del-client" onclick="excluirTodosCliente('{{ p.telefone }}')">Excluir histórico deste cliente</button>
+                </div>
+                
+                <div class="delivery-box">
+                    <span class="delivery-icon">{% if p.tipo_entrega == 'Entrega' %}🛵{% elif p.tipo_entrega == 'Retirada' %}👜{% else %}🪑{% endif %}</span>
+                    <div>
+                        <div class="font-bold mb-4" style="color: var(--primary);">{{ p.tipo_entrega or 'A definir' }}</div>
+                        {% if p.endereco_resumo %}<div class="line-height-base">{{ p.endereco_resumo }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="items-list">
+                    {% for pizza in p.itens_pizzas %}
+                        <div class="item-line"><strong>{{ pizza.quantidade }}x {{ pizza.tamanho }} - {{ pizza.sabores }}</strong>{% if pizza.borda %}<span class="item-addons">➕ {{ pizza.borda }}</span>{% endif %}{% if pizza.observacao %}<span class="item-obs">⚠️ {{ pizza.observacao }}</span>{% endif %}</div>
+                    {% endfor %}
+                    {% for item in p.itens_extras %}
+                        <div class="item-line"><strong>{{ item.quantidade }}x {{ item.nome_item }}</strong>{% if item.opcoes %}<span class="item-addons">⚙️ {{ item.opcoes }}</span>{% endif %}{% if item.adicionais %}<span class="item-addons">➕ {{ item.adicionais }}</span>{% endif %}{% if item.observacao %}<span class="item-obs">⚠️ {{ item.observacao }}</span>{% endif %}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="total-row">
+                    <span class="total-value">R$ {{ "%.2f"|format(p.valor_total)|replace('.', ',') if p.valor_total else '0,00' }}</span>
+                    <div class="text-right"><span class="pay-method">{{ p.forma_pagamento or 'PGT' }}</span>{% if p.detalhe_pagamento %}<span class="pay-detail">{{ p.detalhe_pagamento }}</span>{% endif %}</div>
+                </div>
+                {% if p.tipo_entrega == 'Entrega' %}
+                <div class="mb-10">
+                    <select class="input-std w-100 p-10 text-sm" onchange="vincularMotoboyIndividual('{{ p.id }}', this.value)">
+                        <option value="">🛵 Nenhum motoboy vinculado</option>
+                        {% for m in entregadores %}<option value="{{ m.id }}" {{ 'selected' if p.entregador_id == m.id else '' }}>🛵 {{ m.nome }}</option>{% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="actions-row">
+                    <select class="status-select" data-id="{{ p.id }}" data-phone="{{ p.telefone }}">
+                        <option value="ABERTO" {{ 'selected' if p.status == 'ABERTO' }}>Rascunho</option>
+                        <option value="EM_PREPARO" {{ 'selected' if p.status == 'EM_PREPARO' or p.status == 'CONFIRMADO' }}>Em Preparo 🔥</option>
+                        <option value="SAIU_PARA_ENTREGA" {{ 'selected' if p.status == 'SAIU_PARA_ENTREGA' }}>Saiu para Entrega 🛵</option>
+                        <option value="CONCLUIDO" {{ 'selected' if p.status == 'CONCLUIDO' }}>Concluído ✅</option>
+                        <option value="CANCELADO" {{ 'selected' if p.status == 'CANCELADO' or p.status == 'ABANDONADO' }}>Cancelado ❌</option>
+                    </select>
+                    <a href="/pedidos/editar/{{ p.id }}" class="btn-icon" style="color: var(--primary); border-color: var(--primary);">✏️</a>
+                    <button type="button" class="btn-icon" onclick="imprimirCupomPopup('{{ p.id }}')" style="color: var(--info); border-color: var(--info);">🖨️</button>
+                    <button class="btn-icon btn-del" data-del="{{ p.id }}" style="color: var(--danger); border-color: var(--danger);">🗑️</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="modalManual" class="modal-overlay">
+        <div class="modal" style="background: #1e1e1e; border: 1px solid #00e676; box-shadow: 0 0 40px rgba(0,230,118,0.2); width: 95%; max-width: 650px; max-height: 90vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
+            <div class="d-flex justify-between align-center mb-15 pb-15" style="border-bottom: 1px solid #333; padding: 5px;">
+                <h2 id="titulo_modal_manual" class="m-0 text-success" style="text-shadow: 0 0 10px rgba(0,230,118,0.4);">📝 Novo Pedido Manual</h2>
+                <button onclick="document.getElementById('modalManual').style.display='none'" class="btn-del bg-transparent text-xl m-0 p-0">&times;</button>
+            </div>
+            
+            <div class="d-flex justify-end mb-15">
+                <button type="button" id="btn_modo_caixa" class="btn-neon-outline btn-neon-outline-warning" onclick="toggleModoCaixa()">⚡ Ativar Caixa Rápido</button>
+            </div>
+
+            <form id="formManual" onsubmit="salvarPedidoManual(event)">
+                
+                <div class="mb-15 p-15" style="background: rgba(255,255,255,0.02); border-radius:8px; border: 1px solid #333;">
+                    <h4 class="m-0 mb-15 text-info">1. Dados do Cliente</h4>
+                    
+                    <div id="box_cliente_normal">
+                        <div class="d-flex gap-10 align-center mb-10 w-100">
+                            <div class="flex-1">
+                                <input type="text" id="man_telefone" class="input-std w-100" style="border-color: var(--info);" placeholder="📱 Telefone (Obrigatório)*" onkeyup="buscarClienteDelay(this.value)">
+                                <small id="status_busca" class="text-muted d-block mt-5 font-bold" style="height:15px;"></small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-10 mb-10 w-100">
+                            <input type="text" id="man_nome" class="input-std flex-2" placeholder="Nome do Cliente" readonly>
+                            <input type="text" id="man_cpf" class="input-std flex-1" placeholder="CPF" readonly>
+                        </div>
+                    </div>
+
+                    <div id="box_origem" style="display:none; margin-bottom:10px;">
+                        <label class="text-sm text-muted">Origem / Plataforma:</label>
+                        <select id="man_origem" class="input-std" style="border-color: var(--info);">
+                            <option value="BalcaoWpp">Balcão / Telefone / Wpp</option>
+                            {% for p in plataformas %}<option value="{{ p.nome }}">App: {{ p.nome }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-10">
+                        <label class="text-sm text-muted">Tipo de Envio:</label>
+                        <select id="man_entrega" class="input-std w-100" onchange="toggleEndereco()">
+                            <option value="Entrega">🛵 Entrega</option>
+                            <option value="Retirada">👜 Balcão / Retirada</option>
+                        </select>
+                    </div>
+
+                    <div id="box_endereco" class="mt-15 pt-15" style="display:block; border-top:1px solid #444;">
+                        <select id="man_bairro" class="input-std w-100 mb-10" onchange="autoCalcularEntrega()">
+                            <option value="">Selecione o Bairro...</option>
+                        </select>
+                        <div id="box_endereco_rua">
+                            <div class="d-flex gap-10 mb-10 mt-10">
+                                <input type="text" id="man_rua" class="input-std flex-2" placeholder="Rua">
+                                <input type="text" id="man_numero" class="input-std flex-1" placeholder="Nº">
+                            </div>
+                            <input type="text" id="man_ref" class="input-std w-100" placeholder="Ponto de Referência">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-15 p-15" style="background: rgba(255,255,255,0.02); border-radius:8px; border: 1px solid #333;">
+                    <h4 class="m-0 mb-15 text-warning">2. Itens do Pedido</h4>
+                    
+                    <div class="mb-15 position-relative">
+                        <input type="text" id="busca_global" class="input-std w-100" style="border-color: var(--warning);" placeholder="🔍 Buscar produto (ex: 1.5l, pizza...)" onkeyup="buscarProdutoGlobal()" autocomplete="off">
+                        <div id="resultado_busca" class="search-result-box" style="display:none;"></div>
+                    </div>
+                    
+                    <div class="text-center text-muted text-sm mb-15">-- OU SELECIONE MANUALMENTE --</div>
+
+                    <div class="d-flex gap-10 mb-10 w-100">
+                        <select id="sel_categoria" class="input-std flex-1" onchange="carregarProdutosDaCategoria()">
+                            <option value="">📂 Categoria...</option>
+                            {% for cat in categorias %}<option value="{{ cat.id }}">{{ cat.emoji }} {{ cat.nome }}</option>{% endfor %}
+                        </select>
+                        <select id="sel_produto" class="input-std flex-2" onchange="carregarDetalhesProduto()">
+                            <option value="">Selecione a Categoria ⬆️</option>
+                        </select>
+                    </div>
+                    
+                    <div id="box_detalhes_dinamicos" class="mb-15 p-15" style="background:rgba(0,0,0,0.3); border-radius:6px; display:none; border:1px dashed #555;"></div>
+
+                    <div class="d-flex gap-10 mb-20"> 
+                        <div style="width: 80px;">
+                            <label class="text-muted text-sm d-block mb-5">Qtd</label>
+                            <input type="number" id="manual_qtd_item" class="input-std m-0 w-100 text-center" style="height: 42px; padding: 0;" value="1" min="1">
+                        </div>
+                        <div class="flex-1">
+                            <label class="d-block mb-5">&nbsp;</label>
+                            <button type="button" class="btn-neon-outline btn-neon-outline-primary w-100 m-0" style="height: 42px; display: flex; align-items: center; justify-content: center;" onclick="adicionarItemLista()">
+                                ➕ Adicionar Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="cart-table">
+                        <thead><tr><th>Qtd</th><th>Item</th><th>Valor</th><th></th></tr></thead>
+                        <tbody id="tabela_itens_manual"></tbody>
+                    </table>
+                    
+                    <div class="mt-15">
+                        <div class="manual-calc-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal_manual" class="calc-value">R$ 0.00</span>
+                        </div>
+                        <div class="manual-calc-row" id="row_taxa_entrega" style="display: flex;">
+                            <span>Taxa Entrega:</span>
+                            <span id="display_entrega" class="calc-value font-bold">R$ 1.00</span>
+                            <input type="hidden" id="val_entrega" value="1.00">
+                        </div>
+                        <div class="manual-calc-row">
+                            <span>Adicional:</span>
+                            <input type="number" id="val_extra" class="manual-calc-input" value="0.00" step="0.50" onchange="calcularTotalManual()">
+                        </div>
+                        <div class="manual-calc-row">
+                            <span>Desconto (-):</span>
+                            <input type="number" id="val_desconto" class="manual-calc-input" value="0.00" step="0.50" onchange="calcularTotalManual()">
+                        </div>
+                        <div class="text-right text-lg font-bold mt-15 text-success">
+                            Total Final: R$ <span id="total_manual_display">1.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-25 p-15" style="background: rgba(255,255,255,0.02); border-radius:8px; border: 1px solid #333;">
+                    <h4 class="m-0 mb-15" style="color:var(--info);">3. Pagamento</h4>
+                    <div class="pb-15 mb-15">
+                        <div class="d-flex gap-10 mb-10">
+                            <select id="sel_pgt_metodo" class="input-std flex-1" onchange="atualizarInterfacePagamento()">
+                                <option value="">Método...</option>
+                                {% for fp in formas_pagamento %}<option value="{{ fp.nome }}" data-pede="{{ fp.pede_detalhe }}" data-pergunta="{{ fp.pergunta_detalhe }}">{{ fp.nome }}</option>{% endfor %}
+                            </select>
+                            <input type="number" id="input_pgt_valor" class="input-std flex-1" placeholder="Valor R$" step="0.01">
+                        </div>
+                        <div id="div_pgt_detalhes" class="mb-10">
+                            <input type="text" id="input_pgt_detalhe" class="input-std w-100" placeholder="Detalhes (Troco para, etc)..." style="display:none;">
+                        </div>
+                        <button type="button" class="btn-neon-outline btn-neon-outline-primary p-10 w-100" onclick="adicionarPagamento()">➕ Adicionar Pagamento</button>
+                    </div>
+                    
+                    <div  style="background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #444;">
+                        <table class="cart-table m-0">
+                            <thead><tr><th>Método</th><th>Detalhe</th><th>Valor</th><th></th></tr></thead>
+                            <tbody id="lista_pagamentos_tabela"></tbody>
+                        </table>
+                    </div>
+                    <div class="text-right font-bold text-lg mt-15">
+                        <div class="text-success">Pago: R$ <span id="span_total_pago">0.00</span></div>
+                        <div class="text-danger mt-5">Restante: R$ <span id="span_total_restante">0.00</span></div>
+                    </div>
+                    <input type="hidden" id="man_valor_final" value="0">
+                </div>
+
+                <div class="modal-footer pt-20" style="border-top: 1px solid #444;">
+                    <button type="button" class="btn-neon-outline btn-neon-outline-danger" onclick="document.getElementById('modalManual').style.display='none'">Cancelar</button>
+                    <button type="submit" id="btn_salvar_pedido" class="btn-neon-outline btn-neon-outline-success" disabled>💾 Salvar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/pedidos.js') }}"></script>
+{% endblock %}

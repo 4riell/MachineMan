@@ -1,0 +1,360 @@
+/* =========================================================
+   ESTILOS ESPECÍFICOS - CARDÁPIO
+   ========================================================= */
+
+/* Filtros em Pílulas Específicos do Cardápio */
+#tab-produtos .cat-chip.active, 
+#tab-config .cat-chip.active { 
+    background: rgba(41, 121, 255, 0.15); 
+    color: #2979ff; 
+    border-color: #2979ff; 
+    box-shadow: 0 0 10px rgba(41, 121, 255, 0.4); 
+    font-weight: bold; 
+}
+
+.filter-highlight-blue { background: rgba(41, 121, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(41, 121, 255, 0.3); display: flex; align-items: center; gap: 10px; }
+.filter-highlight-cyan { background: rgba(0, 229, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(0, 229, 255, 0.3); display: flex; align-items: center; gap: 10px; }
+.filter-title-blue { color: #2979ff; font-weight: bold; font-size: 0.9rem; }
+.filter-title-cyan { color: #00e5ff; font-weight: bold; font-size: 0.9rem; }
+
+/* =========================================================
+   BASE DOS CARDS DE SESSÃO (BORDAS ARREDONDADAS GLOBAIS)
+   ========================================================= */
+.card-section-wrapper { 
+    background: var(--bg-card, #1e1e1e);
+    border: 1px solid var(--border, #333);
+    border-radius: 12px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    height: auto; 
+    margin-bottom: 20px; 
+    padding: 0; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+}
+
+.card-section-header { 
+    position: relative; /* Ancoragem da seta de minimizar */
+    padding: 15px 45px 15px 20px !important; /* Espaço direito para a seta não esmagar botões */
+    background: rgba(0,0,0,0.2); 
+    border-bottom: 1px solid #333; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    cursor: pointer; 
+    user-select: none;
+    gap: 15px;
+}
+
+.card-section-title { 
+    margin: 0; 
+    border: none; 
+    padding: 0; 
+    flex: 1; /* Permite que ocupe o espaço livre */
+}
+
+.title-glow-blue { color: #2979ff; text-shadow: 0 0 10px rgba(41, 121, 255, 0.4); }
+.title-glow-teal { color: #1de9b6; text-shadow: 0 0 10px rgba(29, 233, 182, 0.4); }
+.title-glow-orange { color: #ff9100; text-shadow: 0 0 10px rgba(255, 145, 0, 0.4); }
+
+.table-reset { border: none; border-radius: 0; box-shadow: none; }
+
+/* =========================================================
+   SISTEMA ACORDEÃO GLOBAL (RETRAIR CATEGORIAS E CARDS)
+   ========================================================= */
+.card-section-header::after { 
+    content: "▼"; 
+    position: absolute; 
+    right: 20px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    font-size: 0.9rem; 
+    transition: transform 0.3s ease; 
+    opacity: 0.7; 
+    color: #fff;
+}
+
+.card-section-wrapper:not(.collapsed) .card-section-header::after { 
+    transform: translateY(-50%) rotate(180deg); 
+}
+
+.card-section-wrapper.collapsed > *:not(.card-section-header) { 
+    display: none !important; 
+}
+
+.card-section-wrapper.collapsed .card-section-header {
+    border-bottom: none !important;
+}
+
+/* Efeito Neon ao passar o mouse (Tabelas do Cardápio - Desktop) */
+@media (min-width: 769px) {
+
+    #tbody-grupos tr.config-row td:first-child {
+        width: 40px;
+        text-align: center;
+    }
+}
+
+/* =========================================================
+   DRAG AND DROP (ARRASTAR) & MODAL DE OPÇÕES
+   ========================================================= */
+tr.draggable-row { transition: background 0.2s; }
+tr.draggable-row.dragging { opacity: 0.5; background: #333; border: 2px dashed #555; }
+
+.drag-handle, .drag-handle-modal { 
+    cursor: grab; 
+    color: #888; 
+    font-size: 1.5rem; 
+    user-select: none; 
+    touch-action: none !important; /* BLOQUEIA ROLAGEM NO CELULAR E PERMITE ARRASTAR */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.drag-handle:active, .drag-handle-modal:active { color: #fff; cursor: grabbing; }
+
+/* Estrutura visual da linha de opções dentro do modal (BLINDAGEM DE LARGURA) */
+.draggable-item {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important; /* Centraliza tudo verticalmente */
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    background: rgba(0,0,0,0.3) !important;
+    padding: 10px 12px !important; /* Preenchimento padronizado */
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+    border: 1px solid #444 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+.draggable-item.dragging { opacity: 0.5; border: 1px dashed #ff9100 !important; }
+
+/* Trava de altura dos inputs no modal */
+.draggable-item .op-nome, 
+.draggable-item .op-preco {
+    height: 40px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.draggable-item .op-nome {
+    flex: 1 1 0% !important; /* Absorve o espaço, mas permite encolher */
+    width: 100% !important;
+    min-width: 0 !important; /* ESSENCIAL para não esmagar o botão X no celular */
+    padding: 0 10px !important;
+}
+
+.draggable-item .op-preco {
+    flex: 0 0 85px !important;
+    width: 85px !important;
+    min-width: 85px !important; /* Preço fixo */
+    padding: 0 10px !important;
+    text-align: center !important;
+}
+
+.draggable-item .drag-handle-modal {
+    flex: 0 0 30px !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.draggable-item .btn-remove-opcao {
+    flex: 0 0 36px !important; 
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: rgba(239, 68, 68, 0.1); 
+    border: 1px solid var(--danger); 
+    color: var(--danger); 
+    font-size: 1.2rem; 
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.draggable-item .btn-remove-opcao:hover {
+    background: var(--danger); 
+    color: #fff;
+}
+
+/* Modais do Cardápio */
+.modal-border-blue { background: #1e1e1e; border: 1px solid #2979ff; box-shadow: 0 0 40px rgba(41,121,255,0.2); }
+.modal-border-teal { background: #1e1e1e; border: 1px solid #1de9b6; box-shadow: 0 0 40px rgba(29,233,182,0.2); }
+.modal-border-orange { background: #1e1e1e; border: 1px solid #ff9100; box-shadow: 0 0 40px rgba(255,145,0,0.2); width: 700px; }
+.modal-h3-blue { color: #2979ff; border-color: #333; }
+.modal-h3-teal { color: #1de9b6; border-color: #333; }
+.modal-h3-orange { color: #ff9100; border-color: #333; }
+
+.pizza-config-box { display: none; background: rgba(255, 145, 0, 0.1); padding: 15px; border: 1px solid #ff9100; border-radius: 6px; margin-bottom: 15px; }
+.pizza-config-title { color: #ff9100; font-weight: bold; margin-bottom: 10px; display: block; }
+.escopo-valor-box { display: none; margin-bottom: 15px; background: rgba(0, 229, 255, 0.1); padding: 10px; border-radius: 6px; border: 1px solid #00e5ff; }
+.escopo-valor-label { color: #00e5ff; font-weight: bold; }
+.opcoes-list-wrapper { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; }
+.opcoes-list-title { margin-bottom: 10px; display: block; border-bottom: 1px dashed #444; padding-bottom: 5px; color: #fff; }
+.opcoes-list-container { max-height: 200px; overflow-y: auto; padding-right: 5px; overflow-x: hidden; }
+
+/* =========================================================
+   MOBILE - CARDÁPIO (ATÉ 768PX)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* Esconder elementos forçados no Cardápio */
+    #tbody-variacoes tr.config-row.force-hide, 
+    #tbody-grupos tr.config-row.force-hide,
+    #lista-produtos .category-section.force-hide { 
+        display: none !important; 
+    }
+
+    .category-section table, 
+    .category-section tbody, 
+    #tab-config table, 
+    #tab-config tbody { 
+        display: block !important; 
+        width: 100% !important; 
+        max-width: 100% !important; 
+    }
+
+    /* Transformar linhas em Cards Empilhados */
+    tr.prod-row, tr.config-row {
+        display: flex !important;
+        flex-direction: column !important;
+        background: #252525 !important;
+        border: 1px solid #333 !important;
+        border-radius: 12px !important;
+        margin-bottom: 15px !important;
+        margin-top: 15px !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    tr.prod-row td, tr.config-row td { 
+        display: block !important; 
+        border: none !important; 
+        width: 100% !important; 
+        white-space: normal !important; 
+        word-wrap: break-word !important; 
+        text-align: left !important; 
+    }
+    
+    /* ESTRUTURA: CARD DE PRODUTOS */
+    tr.prod-row td:nth-child(1) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        border-bottom: 1px dashed #444 !important;
+    }
+
+    tr.prod-row td:nth-child(1) .prod-nome {
+        padding: 15px !important;
+        margin: 0 !important;
+        border-bottom: 1px dashed #444 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: block !important;
+    }
+
+    tr.prod-row td:nth-child(1) > div:last-child {
+        padding: 15px !important;
+        margin: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: block !important;
+    }
+
+    tr.prod-row td:nth-child(2) {
+        padding: 15px !important;
+        margin: 0 !important;
+        border-bottom: 1px dashed #444 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    tr.prod-row td:nth-child(2)::before {
+        content: "Preço: " !important;
+        color: #888 !important;
+        font-weight: normal !important;
+        margin-right: 8px !important;
+    }
+
+    tr.prod-row td:nth-child(3) {
+        padding: 15px !important;
+        margin: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+    }
+
+    /* ESTRUTURA: CARD DE VARIAÇÕES E GRUPOS */
+    
+    /* Garante que os cards de Adicionais e Tamanhos tenham preenchimento nas laterais */
+    #tbody-variacoes tr.config-row td,
+    #tbody-grupos tr.config-row td { 
+        padding: 15px !important; 
+        box-sizing: border-box !important; 
+    }
+
+    #tbody-variacoes tr.config-row td:nth-child(1) { padding-bottom: 5px !important; }
+    #tbody-variacoes tr.config-row td:nth-child(2) { padding-top: 0 !important; border-bottom: 1px dashed #444 !important; }
+    #tbody-variacoes tr.config-row td:nth-child(3) { border-bottom: 1px dashed #444 !important; display: flex !important; align-items: center !important; }
+    #tbody-variacoes tr.config-row td:nth-child(3)::before { content: "Preço: " !important; color: #888 !important; font-weight: normal !important; margin-right: 8px !important; }
+    #tbody-variacoes tr.config-row td:nth-child(4) { margin: 0 !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; gap: 10px !important; }
+
+    /* Alinha o ícone de arrastar no celular com a Badge da Categoria */
+    #tbody-grupos tr.config-row td:nth-child(1) { 
+        display: flex !important; 
+        flex-direction: row !important; 
+        align-items: center !important; 
+        gap: 10px !important;
+        border-bottom: 1px solid #333 !important; 
+        padding-bottom: 15px !important; 
+        margin-bottom: 0 !important; 
+    }
+    
+    #tbody-grupos tr.config-row td:nth-child(4) { background: rgba(0, 0, 0, 0.2) !important; padding: 10px !important; border-radius: 8px !important; margin-top: 5px !important; }
+    #tbody-grupos tr.config-row td:nth-child(5) { background: rgba(255, 255, 255, 0.03) !important; padding: 10px !important; border-radius: 8px !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; }
+    #tbody-grupos tr.config-row td:nth-child(6) { display: flex !important; flex-direction: row !important; justify-content: space-between !important; gap: 10px !important; border-top: 1px dashed #444 !important; margin-top: 10px !important; padding-top: 15px !important; }
+
+    .drag-handle { width: auto !important; flex: none !important; padding: 10px !important; }
+
+    /* BOTÕES E INTERAÇÕES (CARDÁPIO) */
+    tr.prod-row td:nth-child(3) button,
+    #tbody-variacoes tr.config-row td:nth-child(4) button,
+    #tbody-grupos tr.config-row td:nth-child(6) button {
+        flex: 1 !important;
+        width: 100% !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 6px !important;
+        font-size: 0.9rem !important;
+        margin: 0 !important;
+    }
+
+    tr.prod-row td:nth-child(3) button.btn-neon-info,
+    #tbody-variacoes tr.config-row td:nth-child(4) button.btn-neon-info,
+    #tbody-grupos tr.config-row td:nth-child(6) button.btn-neon-info { background: rgba(0, 229, 255, 0.1) !important; border: 1px solid #00e5ff !important; }
+
+    tr.prod-row td:nth-child(3) button.btn-neon-danger,
+    #tbody-variacoes tr.config-row td:nth-child(4) button.btn-neon-danger,
+    #tbody-grupos tr.config-row td:nth-child(6) button.btn-neon-danger { background: rgba(255, 23, 68, 0.1) !important; border: 1px solid #ff1744 !important; }
+}

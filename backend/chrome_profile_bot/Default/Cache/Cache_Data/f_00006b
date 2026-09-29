@@ -1,0 +1,1103 @@
+
+
+
+
+<div id="saboresPizzas">
+    
+
+<div class="div-ingrediente-detalhes" id="stickyDiv">
+    <div>
+        <span class="titulo-ingrediente-detalhes title-medium-medium desativar-text-transform">Escolha o sabor</span>
+        <div>
+                            <small class="subtitulo-ingrediente-detalhes body-small-regular">Escolha até 2 sabores</small>
+
+        </div>
+    </div>
+    <div class="flex-column-center">
+        <span class="badge-opcional label-large-medium">
+            Opcional
+        </span>
+    </div>
+</div>
+
+        <div class="ingrediente-detalhes panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+            <!--1º sabor-->
+            <div class="card-pizza-ingrediente panel" data-idProduto="244753">
+                <div class="div-descricao-check-detalhes" role="tab" id="head-244615">
+                    <div class="div-pizza-detalhes">
+                        <div class="flex-column-center">
+                                <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                        </div>
+                        <div class="div-descricao-pizza-detalhe">
+                            <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza &#224; moda da casa</p>
+                            <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, SALAMINHO, LOMBINHO, BACON, TOMATE SECO, PIMENT&#195;O, PALMITO, CEBOLA, MILHO, ERVILHA E OR&#201;GANO.</small>
+
+                            <div class="d-flex">
+                                <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-column-center flex-check-pizza">
+                        <div class="d-flex justify-content-end">
+                            <input type="checkbox" checked="checked" class="checkbox-detalhes" disabled />
+                        </div>
+                    </div>
+                </div>
+
+                <div id="collapse-244615" class="CollapseGrade ingrediente-pizza-detalhes collapse" role="tabpanel">
+                    
+
+
+
+
+                </div>
+            </div>
+
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244685">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244632">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza vegetariana</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, TOMATE, PALMITO, CEBOLA, PIMENT&#195;O, MILHO, ERVILHA E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244685', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244685" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244685">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244689">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244631">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza toscana</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CALABRESA RALADA, MANJERIC&#195;O, OVO, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244689', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244689" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244689">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244693">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244630">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza siciliana</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CHAMPIGNON, BACON, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244693', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244693" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244693">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244697">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244629">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza salaminho</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, SALAMINHO, TOMATE, PIMENT&#195;O, CEBOLA &#201; OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244697', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244697" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244697">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244701">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244628">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza portuguesa</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CALABRESA, OVO, PIMENT&#195;O, PALMITO, MILHO, ERVILHA, CEBOLA, TOMATE, AZEITONA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244701', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244701" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244701">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244705">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244627">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza napolitana</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, RODELAS DE TOMATE, ALHO DOURADO NA MANTEIGA, PARMES&#195;O E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244705', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244705" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244705">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244709">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244626">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza mussarela</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, TOMATE, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244709', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244709" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244709">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244713">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244625">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza milho verde com catupiry</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes"></small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244713', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244713" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244713">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244717">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244624">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza marguerita</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, FOLHAS DE MANJERIC&#195;O, TOMATE, PARMES&#195;O, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244717', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244717" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244717">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244721">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244623">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza lombinho</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, LOMBO DEFUMADO, CEBOLA, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244721', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244721" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244721">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244725">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244622">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza frango com catupiry</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, FRANGO, CATUPIRY, MILHO, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244725', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244725" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244725">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244729">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244621">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza frango com bacon</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, FRANGO, CUBINHOS DE BACON, PALMITO, TOMATE E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244729', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244729" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244729">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244733">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244620">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza cinco queijos</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CATUPIRY, PARMES&#195;O, QUEIJO PRATO E QUEIJO CHEDDAR.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244733', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244733" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244733">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244737">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244619">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza calabresa com cheddar</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CALABRESA, CHEDDAR, CEBOLA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244737', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244737" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244737">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244741">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244618">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza calabresa</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CALABRESA, CEBOLA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244741', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244741" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244741">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244745">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244617">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza bauru</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, PRESUNTO, TOMATE, OR&#201;GANO E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244745', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244745" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244745">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244749">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244616">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza atum</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, ATUM, TOMATE, CEBOLA E AZEITONA.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244749', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244749" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244749">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244753">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244615">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza &#224; moda da casa</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, SALAMINHO, LOMBINHO, BACON, TOMATE SECO, PIMENT&#195;O, PALMITO, CEBOLA, MILHO, ERVILHA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244753', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244753" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244753">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244769">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244611">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza pepperoni</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, PEPPERONI, CEBOLA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244769', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244769" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244769">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244773">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244610">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza g&#234;nova</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, TOMATE SECO, ALHO TORRADO, MAJERIC&#195;O E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244773', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244773" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244773">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244777">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244609">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza carbonara</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, FRANGO, CATUPIRY, OVO, MILHO, BACON, AZEITONA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244777', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244777" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244777">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244781">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244608">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza capezi</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, PRESUNTO, CATUPIRY, CALABRESA, PALMITO, BACON, MILHO, AZEITONA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244781', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244781" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244781">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244785">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244607">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza calabresa com bacon</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CALABRESA, BACON E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244785', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244785" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244785">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="277473">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-277470">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza frango</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, FRANGO, MILHO, AZEITONA E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '277473', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-277473" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-277473">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="277477">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-277469">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza veggie</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, PALMITO, ALHO GRANULADO, CEBOLA,AZEITONA E OR&#201;GANO</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '277477', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-277477" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-277477">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244681">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244633">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza abacaxi com bacon</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, CUBINHOS DE BACON, ABACAXI E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244681', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244681" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244681">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244757">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244614">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza brescia</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, TOMATE SECO, ALHO GRANULADO, GEL&#201;IA DE PIMENTA E MANJERIC&#195;O</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244757', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244757" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244757">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244761">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244613">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza specialle</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, LOMBINHO, QUEIJO CHEDDAR, UVA PASSAS, TOMATE E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244761', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244761" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244761">
+                            
+                        </div>
+
+                    </div>
+                    <!--o resto dos sabores-->
+                    <div class="card-pizza-ingrediente panel" data-idProduto="244765">
+                        <div class="div-descricao-check-detalhes" role="tab" id="head-244612">
+                            <div class="div-pizza-detalhes">
+                                <div class="flex-column-center">
+                                        <img src="/Content/img/no-photo.png" class="img-pizza-detalhes" />
+                                </div>
+                                <div class="div-descricao-pizza-detalhe">
+                                    <p class="label-large-medium descricao-ingrediente-detalhes mb-0">pizza royale</p>
+                                    <small class="body-small-regular subtitulo-ingrediente-detalhes">MOLHO, MUSSARELA, PEITO DE PERU, CREAM CHEESE, BACON, GELEIA DE AMORA, MAJERIC&#195;O E OR&#201;GANO.</small>
+                                    <div class="d-flex">
+                                        <p class="label-large-medium valor-produto-detalhes mb-0">R$ 84,00</p>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-column-center flex-check-pizza divCheckPizza">
+                                <div class="d-flex justify-content-end">
+                                    <input type="checkbox" class="checkbox-detalhes checkbox-segundo-sabor" onchange="SelecionarSegundoSaborPizza('2', '244765', this.checked)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="collapse-244765" class="CollapseGrade ingrediente-pizza-detalhes panelCollapsePersonalizar panel-collapse collapseIngrediente collapse" role="tabpanel" aria-labelledby="head-244765">
+                            
+                        </div>
+
+                    </div>
+
+        </div>
+
+
+<script>
+    $(document).ready(function () {
+        $('.divCheckPizza').click(function (event) {
+            //tratamento para clicar 2x
+            if ($(event.target).is('input[type="checkbox"]')) {
+                return;
+            }
+
+            var $checkbox = $(this).find('input[type="checkbox"]');
+            $checkbox.prop('checked', !$checkbox.prop('checked')).change();
+        });
+    });
+
+</script>
+</div>
+
+<div id="bordaRecheada">
+    
+            <div class="ListaItensIngredienteUnico ingrediente-detalhes" data-filtro="175626" data-qtde-min="0" data-qtde-max="1">
+
+                <div class="div-ingrediente-detalhes" id="stickyDiv">
+
+                    <div>
+                        <input type="hidden" data-qtde="1" />
+
+                        <span class="titulo-ingrediente-detalhes title-medium-medium">
+                            deseja borda recheada?
+                        </span>
+                        <div class="subtitulo-ingrediente-detalhes body-small-regular">
+                        </div>
+                    </div>
+
+                        <div class="flex-column-center">
+                            <span class="badge-opcional label-large-medium badgeIngrediente">
+                                Opcional
+                            </span>
+                        </div>
+                </div>
+
+                    <div class="card-produto-ingrediente inputRadio" onclick="SelecionarGradeUnica(72662, this)" data-gradeProduto="175626" for="72662">
+                        <div class="flex-column-center">
+
+                            <p class="label-large-medium descricao-ingrediente-detalhes mb-0 text-label">
+                                borda de catupiry
+                            </p>
+
+
+                                <p class="label-large-medium descricao-ingrediente-detalhes mb-0">+ R$ 18,00</p>
+
+                        </div>
+                        <div class="flex-column-center">
+                            <input data-filtro="175626" id="72662" data-visible-carrinho="True" data-ingre-grade="True" data-valor="18,00" data-id-ingre="72662" data-ingre-grad-item-val="210495"
+                                   class="rblIngredUnico radio-ingrediente-detalhes radio-input inputRadio" type="radio"  name="IngredienteUnico-175626" value="72662">
+                        </div>
+                    </div>
+                    <div class="card-produto-ingrediente inputRadio" onclick="SelecionarGradeUnica(72663, this)" data-gradeProduto="175626" for="72663">
+                        <div class="flex-column-center">
+
+                            <p class="label-large-medium descricao-ingrediente-detalhes mb-0 text-label">
+                                borda de cheddar
+                            </p>
+
+
+                                <p class="label-large-medium descricao-ingrediente-detalhes mb-0">+ R$ 18,00</p>
+
+                        </div>
+                        <div class="flex-column-center">
+                            <input data-filtro="175626" id="72663" data-visible-carrinho="True" data-ingre-grade="True" data-valor="18,00" data-id-ingre="72663" data-ingre-grad-item-val="210496"
+                                   class="rblIngredUnico radio-ingrediente-detalhes radio-input inputRadio" type="radio"  name="IngredienteUnico-175626" value="72663">
+                        </div>
+                    </div>
+                    <div class="card-produto-ingrediente inputRadio" onclick="SelecionarGradeUnica(72665, this)" data-gradeProduto="175626" for="72665">
+                        <div class="flex-column-center">
+
+                            <p class="label-large-medium descricao-ingrediente-detalhes mb-0 text-label">
+                                borda de creme de chocolate
+                            </p>
+
+
+                                <p class="label-large-medium descricao-ingrediente-detalhes mb-0">+ R$ 18,00</p>
+
+                        </div>
+                        <div class="flex-column-center">
+                            <input data-filtro="175626" id="72665" data-visible-carrinho="True" data-ingre-grade="True" data-valor="18,00" data-id-ingre="72665" data-ingre-grad-item-val="375445"
+                                   class="rblIngredUnico radio-ingrediente-detalhes radio-input inputRadio" type="radio"  name="IngredienteUnico-175626" value="72665">
+                        </div>
+                    </div>
+                    <div class="card-produto-ingrediente inputRadio" onclick="SelecionarGradeUnica(131562, this)" data-gradeProduto="175626" for="131562">
+                        <div class="flex-column-center">
+
+                            <p class="label-large-medium descricao-ingrediente-detalhes mb-0 text-label">
+                                borda de mussarela
+                            </p>
+
+
+                                <p class="label-large-medium descricao-ingrediente-detalhes mb-0">+ R$ 18,00</p>
+
+                        </div>
+                        <div class="flex-column-center">
+                            <input data-filtro="175626" id="131562" data-visible-carrinho="True" data-ingre-grade="True" data-valor="18,00" data-id-ingre="131562" data-ingre-grad-item-val="375444"
+                                   class="rblIngredUnico radio-ingrediente-detalhes radio-input inputRadio" type="radio"  name="IngredienteUnico-175626" value="131562">
+                        </div>
+                    </div>
+                    <div class="card-produto-ingrediente inputRadio" onclick="SelecionarGradeUnica(72667, this)" data-gradeProduto="175626" for="72667">
+                        <div class="flex-column-center">
+
+                            <p class="label-large-medium descricao-ingrediente-detalhes mb-0 text-label">
+                                sem borda recheada
+                            </p>
+
+
+
+                        </div>
+                        <div class="flex-column-center">
+                            <input data-filtro="175626" id="72667" data-visible-carrinho="True" data-ingre-grade="True" data-valor="0,00" data-id-ingre="72667" data-ingre-grad-item-val="210494"
+                                   class="rblIngredUnico radio-ingrediente-detalhes radio-input inputRadio" type="radio"  name="IngredienteUnico-175626" value="72667">
+                        </div>
+                    </div>
+            </div>
+
+<script>
+    $(document).ready(function () {
+        var vInUn = 0;
+        $('.inputRadio:checked').each(function () {
+            if ($(this).length) {
+                var idGrade = $(this).attr("data-filtro");
+
+                vInUn += parseFloat($(this).attr('data-valor').replace(',', '.'));
+                $("#card-obrigatorio-" + idGrade).removeClass("badge-obrigatorio");
+                $("#card-obrigatorio-" + idGrade).addClass("badge-opcional");
+            }
+        });
+    });
+
+</script>
+</div>
+
+<div class="blocosAddPizza div-observacao-detalhes">
+    <p class="title-medium-medium txt-observacao-detalhes">Observação</p>
+<textarea class="campoObs campo-observacao-detalhes" maxlength="250" placeholder="Ex: sem salada" id="txtObs"></textarea>
+</div>
+
+
+<div id="btnModalOrigem">
+            <nav id="add-produto" class="div-addPedido-detalhes">
+
+                <div class="divAdicionar div-adicionar">
+    <a id="btnQtdeMenos" class="btnQuant a-addProduto-detalhes">
+        <i class="fas fa-trash-alt iconAddDetalhes"></i>
+    </a>
+    <input class="form-control input-addProduto" id="selectQtde" value="1" />
+    <a id="btnQtdeMais" data-controla-estoque="" data-qtde-estoque="" class="btnQuant a-addProduto-detalhes">
+        <i class="fas fa-plus"></i>
+    </a>
+</div>
+
+
+                <a id="addPizzaCarrinho" class="btn btn-success btn-adicionar-detalhe label-large-medium btnAdicionar">
+                    <span>
+                        Adicionar •
+                    </span>
+                    <span data-valor-ref="84,00"
+                          data-valor="84,00"
+                          data-tipo-calculo="0" id="spanTotalItem"> R$ 84,00</span>
+                    </a>
+
+                </nav>
+</div>
+
+<script>
+    //necessário para que funcione corretamente
+    jQuery(document).ready(function ($) {
+
+        //coloca o botão no local correto
+        if ($("#btnModalOrigem").length && $("#btnModalDestino").length) {
+            var origem = document.getElementById('btnModalOrigem').innerHTML;
+            var destino = document.getElementById('btnModalDestino');
+            destino.innerHTML = origem;
+            document.getElementById('btnModalOrigem').remove();
+        }
+
+        //liga os eventos que são carregados após ajax
+        $("#saboresPizzas").on("click", ".menos", btnMenosClickPizza);
+        $("#saboresPizzas").on("click", ".mais", btnMaisClickPizza);
+
+        $("#saboresPizzas").on("click", ".menos", GRAQTDEbtnMenosClickProdutoPizza);
+        $("#saboresPizzas").on("click", ".mais", GRAQTDEbtnMaisClickProdutoPizza);
+
+        //$("#saboresPizzas").on("change", ".selectSabor", changeSaborPizza);
+        $("#bordaRecheada").on("change", ".rblIngredUnico", calcularTotalItemPizza);
+
+        $(".divAdicionar").on("click", "#btnQtdeMenos", MENOSQtdeAdicionarCarrinhoPiza);
+        $(".divAdicionar").on("click", "#btnQtdeMais", MAISQtdeAdicionarCarrinhoPizza);
+
+        //se existe o botão na página
+        if ($("#addPizzaCarrinho").length) {
+            $("#addPizzaCarrinho").on('click', addPizzaCarrinhoPizza);
+        }
+
+    });
+</script>

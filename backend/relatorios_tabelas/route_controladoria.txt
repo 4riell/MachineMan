@@ -1,0 +1,119 @@
+=== ANÁLISE DO MÓDULO: route_controladoria.py ===
+
+>>> TABELAS CRIADAS NESTE ARQUIVO (7) <<<
+Estas tabelas possuem sua estrutura (schema) definida aqui.
+
+[+] Tabela: erp_contadores
+    Colunas (15):
+      - id (INTEGER)
+      - nome (TEXT)
+      - crc (TEXT)
+      - telefone (TEXT)
+      - inativo (TEXT)
+      - email (VARCHAR(100))
+      - cep (VARCHAR(10))
+      - numero (VARCHAR(20))
+      - status (VARCHAR(20))
+      - cpf_cnpj (VARCHAR(20))
+      - celular (VARCHAR(20))
+      - logradouro (VARCHAR(150))
+      - bairro (VARCHAR(100))
+      - cpf_resp_contabil (VARCHAR(20))
+      - complemento (VARCHAR(100))
+----------------------------------------
+
+[+] Tabela: erp_emitentes
+    Colunas (37):
+      - id (INTEGER)
+      - cnpj (TEXT)
+      - razao_social (TEXT)
+      - municipio (TEXT)
+      - uf (TEXT)
+      - fantasia (VARCHAR(150))
+      - atividade (VARCHAR(100))
+      - crt (VARCHAR(50))
+      - ie (VARCHAR(20))
+      - im (VARCHAR(20))
+      - telefone (VARCHAR(20))
+      - email (VARCHAR(100))
+      - logradouro (VARCHAR(150))
+      - numero (VARCHAR(20))
+      - bairro (VARCHAR(100))
+      - cep (VARCHAR(10))
+      - status (VARCHAR(20))
+      - multi_estoque (VARCHAR(1))
+      - cnae (VARCHAR(50))
+      - complemento (VARCHAR(100))
+      - contabilidade (VARCHAR(150))
+      - aliq_cred_simpl (REAL)
+      - base_iss (REAL)
+      - perc_iss (REAL)
+      - base_inss (REAL)
+      - perc_inss (REAL)
+      - base_ir (REAL)
+      - perc_ir (REAL)
+      - base_csll (REAL)
+      - perc_csll (REAL)
+      - base_pis (REAL)
+      - perc_pis (REAL)
+      - base_cofins (REAL)
+      - perc_cofins (REAL)
+      - inativo (VARCHAR(1))
+      - servicos (VARCHAR(1))
+      - impostos_retidos (VARCHAR(1))
+----------------------------------------
+
+[+] Tabela: erp_operacoes
+    Colunas (8):
+      - id (INTEGER)
+      - codigo_cfop (VARCHAR(20))
+      - descricao (VARCHAR(150))
+      - tipo (VARCHAR(20))
+      - nome (VARCHAR(150))
+      - nat_credito (VARCHAR(100))
+      - plano_conta (VARCHAR(100))
+      - movimenta_estoque (VARCHAR(1))
+----------------------------------------
+
+[+] Tabela: erp_portarias
+    Colunas (6):
+      - id (INTEGER)
+      - status (VARCHAR(20))
+      - nome (VARCHAR(150))
+      - tipo (VARCHAR(50))
+      - mensagem (TEXT)
+      - inativo (VARCHAR(1))
+----------------------------------------
+
+[+] Tabela: erp_tabelas_preco
+    Colunas (3):
+      - id (INTEGER)
+      - nome (VARCHAR(100))
+      - status (VARCHAR(20))
+----------------------------------------
+
+[+] Tabela: erp_tributacoes
+    Colunas (9):
+      - id (INTEGER)
+      - finalidade (VARCHAR(100))
+      - tipo_pessoa (VARCHAR(50))
+      - consumidor_final (VARCHAR(1))
+      - integracao_fiscal (VARCHAR(150))
+      - tipo_tributacao (VARCHAR(100))
+      - uf (VARCHAR(2))
+      - inativo (VARCHAR(1))
+      - data_registro (VARCHAR(20))
+----------------------------------------
+
+[+] Tabela: erp_usuarios
+    Colunas (8):
+      - id (INTEGER)
+      - nome (VARCHAR(150))
+      - senha (VARCHAR(100))
+      - email (VARCHAR(100))
+      - telefone (VARCHAR(20))
+      - status (VARCHAR(20))
+      - usuario (VARCHAR(50))
+      - inativo (VARCHAR(1))
+----------------------------------------
+

@@ -1,0 +1,1376 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão Financeira Completa{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .badge-fin { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .bg-pago { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .bg-pendente { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+        .bg-atrasado { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        
+        /* Estilos do Sistema de Modais */
+        .erp-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .erp-modal.active { display: flex; }
+        .erp-modal-content {
+            background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #444;
+            max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); scrollbar-width: thin; scrollbar-color: #00ffcc #222;
+        }
+        .erp-modal-close {
+            position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold;
+        }
+        .erp-modal-close:hover { color: #ff4757; }
+        .modal-title { margin-top: 0; margin-bottom: 20px; color: #4cd137; border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        .inner-grid-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .inner-grid-table th, .inner-grid-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: left; font-size: 0.85rem; }
+        .inner-grid-table th { background: rgba(0,255,255,0.1); color: #0ff; font-weight: bold; }
+        
+        /* Barra de Ações (Filtro e Exportações) */
+        .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
+        .action-bar input[type="text"] { background: #000; color: #fff; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem; flex: 1; min-width: 250px; }
+        .action-bar .btn-action { background: #222; color: #fff; border: 1px solid #444; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; display:flex; align-items:center; gap:5px; transition: all 0.3s ease; }
+        .action-bar .btn-action:hover { background: #333; border-color: #00ffcc; color: #00ffcc; }
+
+        /* Estilo para Filtros com Títulos (Labels) */
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); align-items: flex-end; }
+        .filter-item { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+        .filter-item label { font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-item input, .filter-item select { background: #000; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
+        input[readonly] { background-color: rgba(255,255,255,0.05) !important; color: #aaa !important; cursor: not-allowed; }
+
+        .check-container { display: flex; gap: 12px; margin-top: 15px; color: #ccc; flex-wrap: wrap; }
+        .check-container label { display: flex; gap: 6px; cursor: pointer; margin: 0; }
+        .check-container input[type="checkbox"] { width: 18px; height: 18px; accent-color: #00ffcc; cursor: pointer; margin: 0; padding: 0; }
+
+        /* Checkbox na tabela */
+        .erp-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: #00ffcc; cursor: pointer; }
+
+        /* Abas / Tabs */
+        .tabs-header { display: flex; gap: 5px; border-bottom: 1px solid #444; margin-bottom: 15px; }
+        .tab-btn { background: #222; color: #888; border: 1px solid #444; border-bottom: none; padding: 8px 15px; cursor: pointer; border-radius: 6px 6px 0 0; }
+        .tab-btn.active { background: #1e1e1e; color: #00ffcc; border-top: 2px solid #00ffcc; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        select[multiple] { height: auto; min-height: 80px; padding: 5px; }
+        select[multiple] option { padding: 4px; }
+        
+        .flex-1 { min-width: 0 !important; max-width: 100%; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .erp-workspace, .erp-workspace * { visibility: visible; }
+            .erp-sidebar, .filter-row, .action-bar, .page-header, .btn-neon, button, .erp-modal { display: none !important; }
+            .erp-workspace { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0; }
+            .erp-table { border-collapse: collapse; width: 100%; border: 1px solid #000; }
+            .erp-table th, .erp-table td { border: 1px solid #aaa; color: #000; padding: 5px; font-size: 12px; }
+            .text-success, .text-danger, .text-warning, .text-info, .text-primary { color: #000 !important; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">💰 Gestão Financeira Completa</h1>
+        <div class="page-subtitle">Recebimentos, Pagamentos, Caixa, Conciliação e Cadastros Fiscais/Bancários.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Movimentações</div>
+            <button class="menu-item active" onclick="switchFinView('view_recebimentos', this)">💵 Recebimentos</button>
+            <button class="menu-item" onclick="switchFinView('view_pagamentos', this)">💸 Pagamentos</button>
+            <button class="menu-item" onclick="switchFinView('view_boletos', this)">📄 Boletos</button>
+            <button class="menu-item" onclick="switchFinView('view_cheques', this)">📝 Cheques</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Controle de Caixa e Bancos</div>
+            <button class="menu-item" onclick="switchFinView('view_fluxo', this)">📈 Fluxo Financeiro</button>
+            <button class="menu-item" onclick="switchFinView('view_fechamento_pdv', this)">🛒 Fechamento PDV</button>
+            <button class="menu-item" onclick="switchFinView('view_conciliacoes', this)">🏦 Conciliações</button>
+            <button class="menu-item" onclick="switchFinView('view_renegociacoes', this)">🤝 Renegociações</button>
+            <button class="menu-item" onclick="switchFinView('view_comissoes', this)">🏅 Comissões</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Cadastros Base</div>
+            <button class="menu-item" onclick="switchFinView('view_plano_contas', this)">📑 Plano de Contas</button>
+            <button class="menu-item" onclick="switchFinView('view_natureza', this)">🌱 Natureza Financeira</button>
+            <button class="menu-item" onclick="switchFinView('view_condicoes', this)">📆 Condições Pgto</button>
+            <button class="menu-item" onclick="switchFinView('view_formas', this)">💳 Formas Pgto</button>
+            <button class="menu-item" onclick="switchFinView('view_bandeiras', this)">🚩 Bandeiras Cartão</button>
+            <button class="menu-item" onclick="switchFinView('view_contas_banc', this)">🏛️ Contas Bancárias</button>
+            <button class="menu-item" onclick="switchFinView('view_bancos', this)">🏦 Bancos</button>
+            <button class="menu-item" onclick="switchFinView('view_centro_custo', this)">🎯 Centro de Custo</button>
+            <button class="menu-item" onclick="switchFinView('view_status', this)">🚦 Status Financeiro</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- ======================= RECEBIMENTOS ======================= -->
+        <div id="view_recebimentos" class="erp-view active">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">💵 Lista de Recebimentos</h3>
+                <button class="btn-neon btn-neon-success" onclick="novoCadastroFinanceiro('form_recebimentos')">➕ Novo</button>
+            </div>
+
+            <!-- Pesquisa e Exportação -->
+            <div class="action-bar">
+                <input type="text" id="search_recebimentos" placeholder="🔍 Pesquisar em recebimentos..." onkeyup="filterTable('search_recebimentos', 'tb_recebimentos')">
+                <button class="btn-action text-success" onclick="alert('Funcionalidade de Baixa Coletiva em desenvolvimento')">💰 Baixa Coletiva</button>
+                <button class="btn-action text-primary" onclick="alert('Funcionalidade de Inclusão Coletiva em desenvolvimento')">➕ Inclusão Coletiva</button>
+                <button class="btn-action text-info" onclick="alert('Gerar Relatórios')">📈 Relatórios</button>
+                <button class="btn-action" onclick="exportToCSV('tb_recebimentos', 'Recebimentos')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF</button>
+            </div>
+
+            <!-- Filtros Avançados -->
+            <div class="filter-row">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="filtro_rec_data" onchange="loadRecebimentos()"></div>
+                <div class="filter-item"><label>Tipo de Data</label>
+                    <select id="filtro_rec_tipo_data" onchange="loadRecebimentos()">
+                        <option value="vencimento">Vencimento</option>
+                        <option value="pagamento">Pagamento</option>
+                        <option value="emissao">Emissão</option>
+                    </select>
+                </div>
+                <div class="filter-item"><label>Cliente</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="filtro_rec_cliente_filtro" class="erp-input flex-1" placeholder="Pesquisar..." onchange="loadRecebimentos()">
+                        <button type="button" class="btn-neon btn-neon-primary" style="padding:4px;" onclick="abrirPesquisa('clientes', '', 'filtro_rec_cliente_filtro')">🔍</button>
+                    </div>
+                </div>
+                <div class="filter-item"><label>Situação</label><select id="filtro_rec_situacao" onchange="loadRecebimentos()"><option value="">-- Todas --</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="filtro_rec_status" class="ddl-status" onchange="loadRecebimentos()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Conta Bancária</label><select id="filtro_rec_conta" class="ddl-contas" onchange="loadRecebimentos()"><option value="">-- Todas --</option></select></div>
+                <div class="filter-item"><label>Forma de Pgto.</label><select id="filtro_rec_forma" class="ddl-formas" onchange="loadRecebimentos()"><option value="">-- Todas --</option></select></div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr>
+                        <th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th>
+                        <th>Emissão</th><th>Vencto</th><th>Contato</th><th>Rcto</th><th>Valor</th><th>Recebido</th><th>Saldo</th><th class="text-center">Ações</th>
+                    </tr></thead>
+                    <tbody id="tb_recebimentos"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL RECEBIMENTOS -->
+            <div id="form_recebimentos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 1000px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_recebimentos')">&times;</span>
+                    <h3 class="modal-title text-success">Novo Recebimento</h3>
+                    
+                    <div class="tabs-header mb-15">
+                        <button type="button" class="tab-btn active" onclick="switchFinTab(this, 'tab_rec_geral')">Geral</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_rec_baixas')">Lista Baixas</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_rec_cheques')">Lista Cheques</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_rec_planos')">Plano de Contas</button>
+                    </div>
+
+                    <form id="form_recebimentos" onsubmit="salvarFinanceiro(event, 'recebimentos')">
+                        <input type="hidden" id="rec_id">
+                        
+                        <div id="tab_rec_geral" class="tab-content active">
+                            <div class="form-grid">
+                                <div class="col-span-2">
+                                    <label>Cliente (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="rec_cliente_id">
+                                        <input type="text" id="rec_cliente" class="erp-input flex-1" readonly placeholder="Pesquisar cliente..." required>
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('clientes', 'rec_cliente_id', 'rec_cliente')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Emissão (Auto):</label><input type="date" id="rec_data_emissao" class="erp-input" readonly></div>
+                                <div><label>Vencimento:</label><input type="date" id="rec_vencimento" class="erp-input" required></div>
+                                <div><label>Num. Documento:</label><input type="text" id="rec_num_documento" class="erp-input"></div>
+                                
+                                <div><label>Conta Banco:</label><select id="rec_conta_banco" class="erp-select ddl-contas"></select></div>
+                                <div><label>Centro de Custo:</label><select id="rec_centro_custo" class="erp-select ddl-centros"></select></div>
+                                <div><label>Forma de Pgto:</label><select id="rec_forma_pagamento" class="erp-select ddl-formas"></select></div>
+                                <div><label>Status:</label><select id="rec_status" class="erp-select ddl-status"></select></div>
+                                
+                                <div><label>Pagamento (Automático):</label><input type="date" id="rec_pagamento" class="erp-input" readonly></div>
+                                <div><label>Valor Original:</label><input type="number" step="0.01" id="rec_valor" class="erp-input" required></div>
+                                
+                                <div><label>Tarifa (Automático):</label><input type="number" step="0.01" id="rec_tarifa" class="erp-input text-danger" readonly></div>
+                                <div><label>Desconto (Automático):</label><input type="number" step="0.01" id="rec_desconto" class="erp-input text-danger" readonly></div>
+                                <div><label>Juros (Automático):</label><input type="number" step="0.01" id="rec_juros" class="erp-input text-warning" readonly></div>
+                                <div><label>Encargos (Automático):</label><input type="number" step="0.01" id="rec_encargos" class="erp-input text-warning" readonly></div>
+                                <div><label>Amortizado (Automático):</label><input type="number" step="0.01" id="rec_amortizado" class="erp-input" readonly></div>
+                                
+                                <div><label>Saldo (Automático):</label><input type="number" step="0.01" id="rec_saldo_aberto" class="erp-input font-bold" readonly></div>
+                                <div><label>Valor Recebido (Automático):</label><input type="number" step="0.01" id="rec_valor_recebido" class="erp-input font-bold text-success" readonly></div>
+                                
+                                <div class="col-span-full"><label>Notas:</label><textarea id="rec_notas" class="erp-input" rows="2"></textarea></div>
+                                <div class="col-span-full"><label>📎 Anexos:</label><input type="file" id="rec_anexos" class="erp-input" multiple></div>
+                            </div>
+                        </div>
+
+                        <!-- LISTA BAIXAS -->
+                        <div id="tab_rec_baixas" class="tab-content">
+                            <h4 class="text-success mt-0 mb-10">Lista de Baixas</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div><label>Data:</label><input type="date" id="tmp_rec_baixa_data" class="erp-input"></div>
+                                <div><label>Conta Banco:</label><select id="tmp_rec_baixa_conta" class="erp-select ddl-contas"></select></div>
+                                <div><label>Forma Pgto:</label><select id="tmp_rec_baixa_forma" class="erp-select ddl-formas"></select></div>
+                                <div><label>Amortizado (R$):</label><input type="number" step="0.01" id="tmp_rec_baixa_amortizado" class="erp-input"></div>
+                                <div><label>Pago (R$):</label><input type="number" step="0.01" id="tmp_rec_baixa_pago" class="erp-input"></div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-success w-100" onclick="addRecBaixa()">➕ Adicionar</button></div>
+                            </div>
+                            <input type="hidden" id="rec_itens_baixas_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_rec_baixas">
+                                    <thead><tr><th>Data</th><th>Conta Banco</th><th>Forma Pgto</th><th>Amortizado</th><th>Pago</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- CHEQUES GRID -->
+                        <div id="tab_rec_cheques" class="tab-content">
+                            <h4 class="text-info mt-0 mb-10">Lista Cheques</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div><label>Número:</label><input type="text" id="tmp_rec_cheque_numero" class="erp-input"></div>
+                                <div><label>Emissão:</label><input type="date" id="tmp_rec_cheque_emissao" class="erp-input"></div>
+                                <div><label>Vencimento:</label><input type="date" id="tmp_rec_cheque_venc" class="erp-input"></div>
+                                <div><label>Status:</label><select id="tmp_rec_cheque_status" class="erp-select ddl-status"></select></div>
+                                <div><label>Data:</label><input type="date" id="tmp_rec_cheque_data" class="erp-input"></div>
+                                <div><label>Valor (R$):</label><input type="number" step="0.01" id="tmp_rec_cheque_valor" class="erp-input"></div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-info w-100" onclick="addRecCheque()">➕ Adicionar</button></div>
+                            </div>
+                            <input type="hidden" id="rec_cheques_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_rec_cheques">
+                                    <thead><tr><th>Número</th><th>Emissão</th><th>Vencimento</th><th>Status</th><th>Data</th><th>Valor (R$)</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- PLANO DE CONTAS GRID -->
+                        <div id="tab_rec_planos" class="tab-content">
+                            <h4 class="text-success mt-0 mb-10">Planos de Contas e Valores</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div class="col-span-2"><label>Plano de Conta:</label><select id="tmp_rec_plano" class="erp-select ddl-planos"></select></div>
+                                <div><label>Valor (R$):</label><input type="number" step="0.01" id="tmp_rec_plano_valor" class="erp-input"></div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-success w-100" onclick="addRecPlano()">➕ Adicionar</button></div>
+                            </div>
+                            <input type="hidden" id="rec_planos_contas_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_rec_planos">
+                                    <thead><tr><th>Plano de Conta</th><th>Valor (R$)</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= PAGAMENTOS ======================= -->
+        <div id="view_pagamentos" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-danger">💸 Lista de Pagamentos</h3>
+                <button class="btn-neon btn-neon-danger" onclick="novoCadastroFinanceiro('form_pagamentos')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_pagamentos" placeholder="🔍 Pesquisar em pagamentos..." onkeyup="filterTable('search_pagamentos', 'tb_pagamentos')">
+                <button class="btn-action text-danger" onclick="alert('Funcionalidade de Baixa Coletiva em desenvolvimento')">💰 Baixa Coletiva</button>
+                <button class="btn-action text-primary" onclick="alert('Funcionalidade de Inclusão Coletiva em desenvolvimento')">➕ Inclusão Coletiva</button>
+                <button class="btn-action text-info" onclick="alert('Gerar Relatórios')">📈 Relatórios</button>
+                <button class="btn-action" onclick="exportToCSV('tb_pagamentos', 'Pagamentos')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF</button>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="filtro_pag_data" onchange="loadPagamentos()"></div>
+                <div class="filter-item"><label>Tipo de Data</label>
+                    <select id="filtro_pag_tipo_data" onchange="loadPagamentos()">
+                        <option value="vencimento">Vencimento</option>
+                        <option value="pagamento">Pagamento</option>
+                        <option value="emissao">Emissão</option>
+                    </select>
+                </div>
+                <div class="filter-item"><label>Fornecedor</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="filtro_pag_fornecedor_filtro" class="erp-input flex-1" placeholder="Pesquisar..." onchange="loadPagamentos()">
+                        <button type="button" class="btn-neon btn-neon-warning" style="padding:4px;" onclick="abrirPesquisa('fornecedores', '', 'filtro_pag_fornecedor_filtro')">🔍</button>
+                    </div>
+                </div>
+                <div class="filter-item"><label>Situação</label><select id="filtro_pag_situacao" onchange="loadPagamentos()"><option value="">-- Todas --</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="filtro_pag_status" class="ddl-status" onchange="loadPagamentos()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Conta Bancária</label><select id="filtro_pag_conta" class="ddl-contas" onchange="loadPagamentos()"><option value="">-- Todas --</option></select></div>
+                <div class="filter-item"><label>Forma de Pgto.</label><select id="filtro_pag_forma" class="ddl-formas" onchange="loadPagamentos()"><option value="">-- Todas --</option></select></div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr>
+                        <th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th>
+                        <th>Vencto</th><th>Fornecedor</th><th>Pagto</th><th>Valor</th><th>Pago</th><th>Saldo</th><th class="text-center">Ações</th>
+                    </tr></thead>
+                    <tbody id="tb_pagamentos"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL PAGAMENTOS -->
+            <div id="form_pagamentos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 1000px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_pagamentos')">&times;</span>
+                    <h3 class="modal-title text-danger">Novo Pagamento</h3>
+
+                    <div class="tabs-header mb-15">
+                        <button type="button" class="tab-btn active" onclick="switchFinTab(this, 'tab_pag_geral')">Geral</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_pag_baixas')">Lista Baixas</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_pag_planos')">Plano de Contas</button>
+                    </div>
+
+                    <form id="form_pagamentos" onsubmit="salvarFinanceiro(event, 'pagamentos')">
+                        <input type="hidden" id="pag_id">
+                        
+                        <div id="tab_pag_geral" class="tab-content active">
+                            <div class="form-grid">
+                                <div class="col-span-2">
+                                    <label>Fornecedor (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="pag_fornecedor_id">
+                                        <input type="text" id="pag_fornecedor" class="erp-input flex-1" readonly placeholder="Pesquisar fornecedor..." required>
+                                        <button type="button" class="btn-neon btn-neon-warning" onclick="abrirPesquisa('fornecedores', 'pag_fornecedor_id', 'pag_fornecedor')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Emissão (Auto):</label><input type="date" id="pag_data_emissao" class="erp-input" readonly></div>
+                                <div><label>Vencimento:</label><input type="date" id="pag_vencimento" class="erp-input" required></div>
+                                <div><label>Num. Documento:</label><input type="text" id="pag_num_documento" class="erp-input"></div>
+                                
+                                <div><label>Conta Banco:</label><select id="pag_conta_banco" class="erp-select ddl-contas"></select></div>
+                                <div><label>Centro Custo:</label><select id="pag_centro_custo" class="erp-select ddl-centros"></select></div>
+                                <div><label>Forma de Pagamento:</label><select id="pag_forma_pagamento" class="erp-select ddl-formas"></select></div>
+                                <div><label>Status:</label><select id="pag_status" class="erp-select ddl-status"></select></div>
+                                
+                                <div><label>Pagamento (Automático):</label><input type="date" id="pag_pagamento" class="erp-input" readonly></div>
+                                <div><label>Valor:</label><input type="number" step="0.01" id="pag_valor" class="erp-input" required></div>
+                                
+                                <div><label>Desconto (Automático):</label><input type="number" step="0.01" id="pag_desconto" class="erp-input text-success" readonly></div>
+                                <div><label>Juros (Automático):</label><input type="number" step="0.01" id="pag_juros" class="erp-input text-danger" readonly></div>
+                                <div><label>Encargos (Automático):</label><input type="number" step="0.01" id="pag_encargos" class="erp-input text-danger" readonly></div>
+                                <div><label>Amortizado (Automático):</label><input type="number" step="0.01" id="pag_amortizado" class="erp-input" readonly></div>
+                                
+                                <div><label>Saldo (Automático):</label><input type="number" step="0.01" id="pag_saldo_aberto" class="erp-input font-bold text-warning" readonly></div>
+                                <div><label>Valor Pago (Automático):</label><input type="number" step="0.01" id="pag_valor_pago" class="erp-input font-bold text-danger" readonly></div>
+                                
+                                <div class="col-span-full"><label>Notas:</label><textarea id="pag_notas" class="erp-input" rows="2"></textarea></div>
+                                <div class="col-span-full"><label>📎 Anexos:</label><input type="file" id="pag_anexos" class="erp-input" multiple></div>
+                            </div>
+                        </div>
+
+                        <!-- LISTA BAIXAS -->
+                        <div id="tab_pag_baixas" class="tab-content">
+                            <h4 class="text-danger mt-0 mb-10">Lista de Baixas</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div><label>Data:</label><input type="date" id="tmp_pag_baixa_data" class="erp-input"></div>
+                                <div><label>Conta Banco:</label><select id="tmp_pag_baixa_conta" class="erp-select ddl-contas"></select></div>
+                                <div><label>Forma Pgto:</label><select id="tmp_pag_baixa_forma" class="erp-select ddl-formas"></select></div>
+                                <div><label>Amortizado (R$):</label><input type="number" step="0.01" id="tmp_pag_baixa_amortizado" class="erp-input"></div>
+                                <div><label>Pago (R$):</label><input type="number" step="0.01" id="tmp_pag_baixa_pago" class="erp-input"></div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-danger w-100" onclick="addPagBaixa()">➕ Adicionar</button></div>
+                            </div>
+                            <input type="hidden" id="pag_itens_baixas_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_pag_baixas">
+                                    <thead><tr><th>Data</th><th>Conta Banco</th><th>Forma Pgto</th><th>Amortizado</th><th>Pago</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- PLANO DE CONTAS GRID -->
+                        <div id="tab_pag_planos" class="tab-content">
+                            <h4 class="text-danger mt-0 mb-10">Planos de Contas e Valores</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div class="col-span-2"><label>Plano de Conta:</label><select id="tmp_pag_plano" class="erp-select ddl-planos"></select></div>
+                                <div><label>Valor (R$):</label><input type="number" step="0.01" id="tmp_pag_plano_valor" class="erp-input"></div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-danger w-100" onclick="addPagPlano()">➕ Adicionar</button></div>
+                            </div>
+                            <input type="hidden" id="pag_planos_contas_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_pag_planos">
+                                    <thead><tr><th>Plano de Conta</th><th>Valor (R$)</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="submit" class="btn-neon btn-neon-danger">💾 Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= BOLETOS ======================= -->
+        <div id="view_boletos" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">📄 Lista de Relação de Boletos</h3>
+                <div class="d-flex gap-10">
+                    <button class="btn-neon btn-neon-warning" onclick="openModal('form_importar_retorno')">📥 Importar Retorno</button>
+                    <button class="btn-neon btn-neon-success" onclick="openModal('form_gerar_remessa')">📦 Gerar Remessa Bancaria</button>
+                    <button class="btn-neon btn-neon-primary" onclick="novoCadastroFinanceiro('form_boletos')">➕ Novo Boleto (Avulso)</button>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_boletos" placeholder="🔍 Pesquisar em boletos..." onkeyup="filterTable('search_boletos', 'tb_boletos')">
+                <button class="btn-action" onclick="exportToCSV('tb_boletos', 'Boletos')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF</button>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="filtro_bol_data" onchange="loadBoletos()"></div>
+                <div class="filter-item"><label>Tipo Data</label><select id="filtro_bol_tipo_data" onchange="loadBoletos()"><option value="vencimento">Vencimento</option><option value="emissao">Emissão</option></select></div>
+                <div class="filter-item"><label>Conta Cobrança</label><select id="filtro_bol_conta_cobranca" class="ddl-contas" onchange="loadBoletos()"><option value="">-- Todas --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="filtro_bol_status" class="ddl-status" onchange="loadBoletos()"><option value="">-- Todos --</option></select></div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr>
+                        <th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th>
+                        <th>Vencimento</th><th>Conta</th><th>Nosso Numero</th><th>Documento</th><th>Cliente</th><th>Remessa</th><th>Valor</th><th>Status</th><th class="text-center">Ações</th>
+                    </tr></thead>
+                    <tbody id="tb_boletos"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL NOVO BOLETO -->
+            <div id="form_boletos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 600px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_boletos')">&times;</span>
+                    <h3 class="modal-title">Novo Boleto</h3>
+                    <form id="form_boletos" onsubmit="salvarFinanceiro(event, 'boletos')">
+                        <input type="hidden" id="bol_id">
+                        <div class="form-grid">
+                            <div class="col-span-2">
+                                <label>Cliente (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="bol_cliente_id">
+                                    <input type="text" id="bol_cliente" class="erp-input flex-1" readonly placeholder="Pesquisar cliente..." required>
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('clientes', 'bol_cliente_id', 'bol_cliente')">🔍</button>
+                                </div>
+                            </div>
+                            <div><label>Vencimento:</label><input type="date" id="bol_vencimento" class="erp-input" required></div>
+                            <div><label>Documento:</label><input type="text" id="bol_documento" class="erp-input"></div>
+                            <div class="col-span-2"><label>Conta Cobrança:</label><select id="bol_conta_cobranca" class="erp-select ddl-contas" required></select></div>
+                            <div><label>Nosso Número:</label><input type="text" id="bol_nosso_numero" class="erp-input"></div>
+                            <div><label>Valor:</label><input type="number" id="bol_valor" class="erp-input" step="0.01" required></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-primary">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL GERAR REMESSA BANCARIA -->
+            <div id="form_gerar_remessa_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_gerar_remessa')">&times;</span>
+                    <h3 class="modal-title text-success">Gerar Remessa Bancária</h3>
+                    <div class="form-grid mb-15">
+                        <div class="col-span-2"><label>Banco:</label><select class="erp-select ddl-bancos"><option value="">-- Selecione o Banco --</option></select></div>
+                    </div>
+                    <div class="table-responsive-wrapper mb-15">
+                        <table class="inner-grid-table">
+                            <thead><tr><th style="width:30px;"><input type="checkbox"></th><th>Emissão</th><th>Vencimento</th><th>N.Número</th><th>Cliente</th><th>Documento</th><th>Valor</th></tr></thead>
+                            <tbody><tr><td colspan="7" class="text-center text-muted">Utilize os filtros para localizar boletos pendentes de remessa.</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="form-actions justify-end"><button type="button" class="btn-neon btn-neon-success" onclick="alert('Arquivo de Remessa .REM gerado com sucesso!'); closeModal('form_gerar_remessa');">⚙️ Gerar Remessa Botão</button></div>
+                </div>
+            </div>
+
+            <!-- MODAL IMPORTAR RETORNO -->
+            <div id="form_importar_retorno_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_importar_retorno')">&times;</span>
+                    <h3 class="modal-title text-warning">Importar Retorno (.RET)</h3>
+                    <div class="form-grid mb-15">
+                        <div class="col-span-full"><label>Arquivo de Retorno:</label><input type="file" class="erp-input" accept=".ret,.txt"></div>
+                    </div>
+                    <div class="form-actions justify-end"><button type="button" class="btn-neon btn-neon-warning" onclick="alert('Retorno processado. Boletos baixados automaticamente.'); closeModal('form_importar_retorno');">📥 Processar</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= CHEQUES ======================= -->
+        <div id="view_cheques" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">📝 Lista de Cheques</h3>
+                <button class="btn-neon btn-neon-info" onclick="novoCadastroFinanceiro('form_cheques')">➕ Novo Cheque</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_cheques" placeholder="🔍 Pesquisar cheques..." onkeyup="filterTable('search_cheques', 'tb_cheques')">
+                <button class="btn-action" onclick="exportToCSV('tb_cheques', 'Cheques')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF</button>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="filtro_cheq_data" onchange="loadCheques()"></div>
+                <div class="filter-item"><label>Tipo Data</label><select id="filtro_cheq_tipo_data" onchange="loadCheques()"><option value="vencimento">Vencimento</option><option value="emissao">Emissão</option><option value="status">Data Status</option></select></div>
+                <div class="filter-item"><label>Portador</label><select id="filtro_cheq_portador" class="ddl-clientes" onchange="loadCheques()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="filtro_cheq_status" class="ddl-status" onchange="loadCheques()"><option value="">-- Todos --</option></select></div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr>
+                        <th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th>
+                        <th>Numero</th><th>Portador</th><th>Vencto</th><th>Valor</th><th>Data Status</th><th>Status</th><th class="text-center">Ações</th>
+                    </tr></thead>
+                    <tbody id="tb_cheques"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL NOVO CHEQUE -->
+            <div id="form_cheques_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 900px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_cheques')">&times;</span>
+                    <h3 class="modal-title text-info">Gestão de Cheque</h3>
+                    
+                    <div class="tabs-header mb-15">
+                        <button type="button" class="tab-btn active" onclick="switchFinTab(this, 'tab_cheq_cad')">Cadastro</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_cheq_ref')">Lista Referências</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_cheq_hist')">Lista Histórico</button>
+                    </div>
+
+                    <form id="form_cheques" onsubmit="salvarFinanceiro(event, 'cheques')">
+                        <input type="hidden" id="cheq_id">
+                        
+                        <div id="tab_cheq_cad" class="tab-content active">
+                            <div class="form-grid">
+                                <div class="col-span-full"><label>CMC7:</label><input type="text" id="cheq_cmc7" class="erp-input"></div>
+                                <div><label>Número do Cheque:</label><input type="text" id="cheq_numero" class="erp-input" required></div>
+                                <div><label>Vencimento:</label><input type="date" id="cheq_vencimento" class="erp-input" required></div>
+                                <div><label>Valor (R$):</label><input type="number" step="0.01" id="cheq_valor" class="erp-input" required></div>
+                                
+                                <div><label>Banco:</label><select id="cheq_banco" class="erp-select ddl-bancos"></select></div>
+                                <div><label>Agência:</label><input type="text" id="cheq_agencia" class="erp-input"></div>
+                                <div><label>Conta Corrente:</label><input type="text" id="cheq_conta" class="erp-input"></div>
+                                
+                                <div><label>Portador (Opcional):</label><select id="cheq_portador" class="erp-select ddl-clientes"></select></div>
+                                <div><label>Emissor Nominal:</label><input type="text" id="cheq_emissor" class="erp-input"></div>
+                                <div><label>CNPJ/CPF:</label><input type="text" id="cheq_cnpj_cpf" class="erp-input"></div>
+                                <div><label>Telefone Contato:</label><input type="text" id="cheq_telefone" class="erp-input"></div>
+                                
+                                <div><label>Status Atual:</label><select id="cheq_status" class="erp-select ddl-status"></select></div>
+                                <div><label>Data Status:</label><input type="date" id="cheq_data_status" class="erp-input"></div>
+                                
+                                <div class="col-span-full"><label>Notas e Observações:</label><textarea id="cheq_notas" class="erp-input" rows="2"></textarea></div>
+                            </div>
+                        </div>
+                        
+                        <div id="tab_cheq_ref" class="tab-content">
+                            <div class="col-span-full mt-10">
+                                <h4 class="text-info mt-0 mb-10">Vínculos de Referências</h4>
+                                <div class="form-grid align-end mb-10">
+                                    <div><label>Num. Doc:</label><input type="text" id="tmp_cheq_ref_doc" class="erp-input"></div>
+                                    <div><label>Emissão:</label><input type="date" id="tmp_cheq_ref_emi" class="erp-input"></div>
+                                    <div><label>Vencimento:</label><input type="date" id="tmp_cheq_ref_ven" class="erp-input"></div>
+                                    <div><label>Contato:</label><input type="text" id="tmp_cheq_ref_contato" class="erp-input"></div>
+                                    <div><label>Valor:</label><input type="number" step="0.01" id="tmp_cheq_ref_valor" class="erp-input"></div>
+                                    <div><label>Situação:</label><select id="tmp_cheq_ref_sit" class="erp-select ddl-status"></select></div>
+                                    <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-warning w-100" onclick="addCheqRef()">➕ Add</button></div>
+                                </div>
+                                <input type="hidden" id="cheq_referencias_json">
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table" id="tb_cheq_referencias">
+                                        <thead><tr><th>Num. Doc</th><th>Emissão</th><th>Vencimento</th><th>Contato</th><th>Valor (R$)</th><th>Situação</th><th class="text-center">Ação</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tab_cheq_hist" class="tab-content">
+                            <div class="col-span-full mt-10">
+                                <h4 class="text-warning mt-0 mb-10">Histórico de Movimentações</h4>
+                                <div class="form-grid align-end mb-10">
+                                    <div><label>Data Registro:</label><input type="date" id="tmp_cheq_hist_data_reg" class="erp-input"></div>
+                                    <div><label>Data Status:</label><input type="date" id="tmp_cheq_hist_data_stat" class="erp-input"></div>
+                                    <div><label>Status:</label><select id="tmp_cheq_hist_status" class="erp-select ddl-status"></select></div>
+                                    <div><label>Usuário:</label><input type="text" id="tmp_cheq_hist_usuario" class="erp-input"></div>
+                                    <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-danger w-100" onclick="addCheqHist()">➕ Add</button></div>
+                                </div>
+                                <input type="hidden" id="cheq_historico_json">
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table" id="tb_cheq_historico">
+                                        <thead><tr><th>Data Registro</th><th>Data Status</th><th>Status</th><th>Usuário</th><th class="text-center">Ação</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="submit" class="btn-neon btn-neon-info">💾 Salvar Cheque</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= FLUXO FINANCEIRO E TRANSFERÊNCIAS ======================= -->
+        <div id="view_fluxo" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">📈 Movimento Caixas & Bancos</h3>
+                <div class="d-flex gap-10">
+                    <button class="btn-neon btn-neon-info" onclick="novoCadastroFinanceiro('form_transferencias')">🔄 Transferências Bancarias</button>
+                    <button class="btn-neon btn-neon-warning" onclick="novoCadastroFinanceiro('form_fechamento_pdv')">🔐 Fechamento Caixa</button>
+                </div>
+            </div>
+            
+            <div class="action-bar">
+                <input type="text" id="search_fluxo" placeholder="🔍 Pesquisar movimentos..." onkeyup="filterTable('search_fluxo', 'tb_fluxo_caixa')">
+                <button class="btn-action" onclick="exportToCSV('tb_fluxo_caixa', 'Fluxo_Caixa')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF</button>
+            </div>
+
+            <div class="tabs-header mb-15">
+                <button type="button" class="tab-btn active" onclick="switchFinTab(this, 'tab_flu_movimentos')">Movimentações</button>
+                <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_flu_transferencias')">Transferências</button>
+            </div>
+
+            <div id="tab_flu_movimentos" class="tab-content active">
+                <div class="filter-row">
+                    <div class="filter-item"><label>Data</label><input type="date" id="filtro_flu_data" onchange="loadFluxo()"></div>
+                    <div class="filter-item"><label>Tipo de Operação</label><select id="filtro_flu_tipo" onchange="loadFluxo()"><option value="">-- Todos --</option><option value="Entrada">Entrada</option><option value="Saída">Saída</option></select></div>
+                    <div class="filter-item"><label>Conta Banco</label><select id="filtro_flu_conta" class="ddl-contas" onchange="loadFluxo()"><option value="">-- Todas --</option></select></div>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <table class="erp-table">
+                        <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Data</th><th>Tipo</th><th>Forma Pgto</th><th>Valor</th><th>Histórico</th></tr></thead>
+                        <tbody id="tb_fluxo_caixa"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab_flu_transferencias" class="tab-content">
+                <div class="table-responsive-wrapper">
+                    <table class="erp-table">
+                        <thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Valor</th><th class="text-center">Ações</th></tr></thead>
+                        <tbody id="tb_transferencias"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MODAL TRANSFERÊNCIAS -->
+            <div id="form_transferencias_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_transferencias')">&times;</span>
+                    <h3 class="modal-title text-info">Nova Transferência</h3>
+                    <form id="form_transferencias" onsubmit="salvarFinanceiro(event, 'transferencias')">
+                        <input type="hidden" id="transf_id">
+                        <div class="form-grid">
+                            <div><label>Data:</label><input type="date" id="transf_data" class="erp-input" required></div>
+                            <div><label>Valor:</label><input type="number" id="transf_valor" step="0.01" class="erp-input" required></div>
+                            <div class="col-span-full"><label>Origem:</label><select id="transf_origem" class="erp-select ddl-contas" required></select></div>
+                            <div class="col-span-full"><label>Destino:</label><select id="transf_destino" class="erp-select ddl-contas" required></select></div>
+                            <div class="col-span-full"><label>Notas:</label><textarea id="transf_notas" class="erp-input" rows="2"></textarea></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-info">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL FECHAMENTO CAIXA SIMPLES -->
+            <div id="form_fechamento_pdv_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_fechamento_pdv')">&times;</span>
+                    <h3 class="modal-title text-warning">Fechamento Caixa</h3>
+                    <form id="form_fechamento_pdv" onsubmit="salvarFinanceiro(event, 'fechamento_pdv')">
+                        <input type="hidden" id="fech_id">
+                        <div class="form-grid">
+                            <div><label>Data Fechamento:</label><input type="date" id="fech_data_fechamento" class="erp-input" required></div>
+                            <div><label>Conta Banco / Caixa:</label><select id="fech_caixa" class="erp-select ddl-contas" required></select></div>
+                            <div class="col-span-full"><label>Operador:</label><select id="fech_operador" class="erp-select ddl-funcionarios" required></select></div>
+                            <div><label>Saldo Final Informado:</label><input type="number" id="fech_final" step="0.01" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-warning">💾 Fechar Caixa</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= FECHAMENTO CAIXA PDV (Lista) ======================= -->
+        <div id="view_fechamento_pdv" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🛒 Lista de Fechamento de Caixa</h3>
+            </div>
+            
+            <div class="action-bar">
+                <input type="text" id="search_fechamento" placeholder="🔍 Pesquisar fechamentos..." onkeyup="filterTable('search_fechamento', 'tb_fechamento_pdv')">
+                <button class="btn-action" onclick="exportToCSV('tb_fechamento_pdv', 'Fechamento_Caixa')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF</button>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item"><label>Data de Fech.</label><input type="date" id="filtro_fech_data" onchange="loadFechamentoPdv()"></div>
+                <div class="filter-item"><label>Caixa / Banco</label><select id="filtro_fech_caixa" class="ddl-contas" onchange="loadFechamentoPdv()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Operador(a)</label><select id="filtro_fech_operador" class="ddl-funcionarios" onchange="loadFechamentoPdv()"><option value="">-- Todos --</option></select></div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Conta/Caixa</th><th>Operador</th><th>Abertura</th><th>Fechamento</th><th>Conciliado</th><th>Inicial</th><th>Final</th></tr></thead>
+                    <tbody id="tb_fechamento_pdv"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= CONCILIAÇÕES ======================= -->
+        <div id="view_conciliacoes" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🏦 Lista de Conciliações</h3>
+                <button class="btn-neon btn-neon-primary" onclick="novoCadastroFinanceiro('form_conciliacoes')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_conciliacoes" placeholder="🔍 Pesquisar conciliações..." onkeyup="filterTable('search_conciliacoes', 'tb_conciliacoes')">
+                <button class="btn-action" onclick="exportToCSV('tb_conciliacoes', 'Conciliacoes')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Data</th><th>Banco</th><th>Agência</th><th>Conta</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_conciliacoes"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL CONCILIAÇÕES -->
+            <div id="form_conciliacoes_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_conciliacoes')">&times;</span>
+                    <h3 class="modal-title">Nova Conciliação</h3>
+                    <form id="form_conciliacoes" onsubmit="salvarFinanceiro(event, 'conciliacoes')">
+                        <input type="hidden" id="conc_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label>Arquivo (Anexar Extrato):</label><input type="file" id="conc_anexos" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="submit" class="btn-neon btn-neon-primary">💾 Iniciar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= RENEGOCIAÇÕES ======================= -->
+        <div id="view_renegociacoes" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🤝 Renegociações de Dívidas</h3>
+                <button class="btn-neon btn-neon-warning" onclick="novoCadastroFinanceiro('form_renegociacoes')">➕ Nova Renegociação</button>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Tipo</th><th>Pra Quem</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_renegociacoes"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL RENEGOCIACOES -->
+            <div id="form_renegociacoes_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 600px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_renegociacoes')">&times;</span>
+                    <h3 class="modal-title text-warning">Assistente de Renegociação</h3>
+                    
+                    <div class="tabs-header mb-15">
+                        <button type="button" class="tab-btn active" onclick="switchFinTab(this, 'tab_ren_1')">1. Que tipo?</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_ren_2')">2. Pra quem?</button>
+                        <button type="button" class="tab-btn" onclick="switchFinTab(this, 'tab_ren_5')">Confirmação</button>
+                    </div>
+
+                    <form id="form_renegociacoes" onsubmit="salvarFinanceiro(event, 'renegociacoes')">
+                        <input type="hidden" id="ren_id">
+                        
+                        <div id="tab_ren_1" class="tab-content active">
+                            <div class="form-grid">
+                                <div class="col-span-full"><label>Tipo de Operação:</label>
+                                    <select id="ren_tipo" class="erp-select">
+                                        <option value="Recebimento">Recebimento (A Receber)</option>
+                                        <option value="Pagamento">Pagamento (A Pagar)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tab_ren_2" class="tab-content">
+                            <div class="form-grid">
+                                <div class="col-span-full"><label>Cliente / Fornecedor:</label><select id="ren_para_quem" class="erp-select ddl-clientes"></select></div>
+                            </div>
+                        </div>
+
+                        <div id="tab_ren_5" class="tab-content">
+                            <div class="form-grid">
+                                <div class="col-span-full"><label>Status de Conferência Final:</label>
+                                    <select id="ren_status" class="erp-select">
+                                        <option value="Pendente">Pendente de Aprovação</option>
+                                        <option value="Aprovado">Aprovado e Gerado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions mt-15 justify-end">
+                                <button type="submit" class="btn-neon btn-neon-warning">🚀 Concluir e Salvar Acordo</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= COMISSÕES ======================= -->
+        <div id="view_comissoes" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🏅 Lista de Comissões</h3>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_comissoes" placeholder="🔍 Pesquisar comissões..." onkeyup="filterTable('search_comissoes', 'tb_comissoes')">
+                <button class="btn-action" onclick="exportToCSV('tb_comissoes', 'Comissoes')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item"><label>Data</label><input type="date" id="filtro_com_data" onchange="loadComissoes()"></div>
+                <div class="filter-item"><label>Funcionário</label><select id="filtro_com_funcionario" class="ddl-funcionarios" onchange="loadComissoes()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="filtro_com_status" class="ddl-status" onchange="loadComissoes()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Tipo</label><select id="filtro_com_tipo" onchange="loadComissoes()"><option value="">-- Todos --</option><option value="Venda">Venda</option><option value="Servico">Serviço</option></select></div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>#</th><th>Data</th><th>Funcionário</th><th>Documento</th><th>Valor</th><th>Status</th></tr></thead>
+                    <tbody id="tb_comissoes"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= PLANO DE CONTAS ======================= -->
+        <div id="view_plano_contas" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">📑 Lista de Plano de Contas</h3>
+                <div class="d-flex gap-10">
+                    <button class="btn-neon btn-neon-success" onclick="novoCadastroFinanceiro('form_plano_contas')">➕ Novo</button>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_plano_contas" placeholder="🔍 Pesquisar plano de contas..." onkeyup="filterTable('search_plano_contas', 'tb_plano_contas')">
+                <button class="btn-action" onclick="exportToCSV('tb_plano_contas', 'Plano_Contas')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Plano de Contas</th><th>Tipo</th><th>Classificação</th><th>Ocorrência</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_plano_contas"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL PLANO CONTAS -->
+            <div id="form_plano_contas_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_plano_contas')">&times;</span>
+                    <h3 class="modal-title">Novo Plano de Contas</h3>
+                    <form id="form_plano_contas" onsubmit="salvarFinanceiro(event, 'plano_contas')">
+                        <input type="hidden" id="plan_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="plan_nome" class="erp-input" required></div>
+                            <div class="col-span-2"><label>Plano de Conta Pai:</label><select id="plan_plano_conta_pai" class="erp-select ddl-planos"></select></div>
+                            
+                            <div><label>Código CTA:</label><input type="text" id="plan_codigo_cta" class="erp-input"></div>
+                            
+                            <!-- Ajustado: Campo de nível agora é livre para o usuário preencher -->
+                            <div><label>Nível da Conta:</label><input type="text" id="plan_nivel" class="erp-input" placeholder="Ex: 1.1.2"></div>
+                            
+                            <div><label>Tipo:</label>
+                                <select id="plan_tipo" class="erp-select" required>
+                                    <option value="Sintético">Sintético</option>
+                                    <option value="Analítico">Analítico</option>
+                                </select>
+                            </div>
+                            <div><label>Classificação:</label>
+                                <select id="plan_classificacao" class="erp-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Crédito">Crédito</option>
+                                    <option value="Débito">Débito</option>
+                                </select>
+                            </div>
+                            <div><label>Ocorrência:</label>
+                                <select id="plan_ocorrencia" class="erp-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Fixo">Fixo</option>
+                                    <option value="Variável">Variável</option>
+                                </select>
+                            </div>
+                            
+                            <div><label>Natureza:</label>
+                                <select id="plan_natureza" class="erp-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Contas de Ativos">Contas de Ativos</option>
+                                    <option value="Contas de Passivos">Contas de Passivos</option>
+                                    <option value="Patrimônio Líquido">Patrimônio Líquido</option>
+                                    <option value="Contas de Resultados">Contas de Resultados</option>
+                                    <option value="Contas de Compensação">Contas de Compensação</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                            
+                            <div><label>Código Referencia:</label><input type="text" id="plan_codigo_referencia" class="erp-input"></div>
+                            
+                            <div class="check-container col-span-full">
+                                <label><input type="checkbox" id="plan_inativo"> Inativo</label>
+                            </div>
+                        </div>
+
+                        <!-- Várias Naturezas Financeiras na Grid Interna -->
+                        <div class="col-span-full mt-15 border-top pt-10">
+                            <h4 class="text-success mt-0 mb-10">Naturezas Financeiras Vinculadas</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div><label>Adicionar Natureza:</label><select id="tmp_plan_natureza_grid" class="erp-select ddl-naturezas"></select></div>
+                                <div>
+                                    <div class="check-container pt-5">
+                                        <label><input type="checkbox" id="tmp_plan_natureza_inativo"> Inativar?</label>
+                                    </div>
+                                </div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-success w-100" onclick="addPlanNatureza()">➕ Salvar/Add à Tabela</button></div>
+                            </div>
+                            <input type="hidden" id="plan_plan_naturezas_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_plan_naturezas">
+                                    <thead><tr><th>Natureza Financeira</th><th>Status Inativo?</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= NATUREZA FINANCEIRA ======================= -->
+        <div id="view_natureza" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🌱 Lista de Naturezas Financeiras</h3>
+                <button class="btn-neon btn-neon-primary" onclick="novoCadastroFinanceiro('form_natureza')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_natureza" placeholder="🔍 Pesquisar naturezas..." onkeyup="filterTable('search_natureza', 'tb_natureza')">
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Natureza Financeira</th><th>SKU</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_natureza"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL NATUREZA -->
+            <div id="form_natureza_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_natureza')">&times;</span>
+                    <h3 class="modal-title">Nova Natureza Financeira</h3>
+                    <form id="form_natureza" onsubmit="salvarFinanceiro(event, 'natureza')">
+                        <input type="hidden" id="nat_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label>Descrição:</label><input type="text" id="nat_descricao" class="erp-input" required></div>
+                            <div class="col-span-full"><label>SKU:</label><input type="text" id="nat_sku" class="erp-input"></div>
+                            
+                            <div class="check-container col-span-full">
+                                <label><input type="checkbox" id="nat_inativo"> Inativo</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-primary">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= CONDIÇÕES PGTO ======================= -->
+        <div id="view_condicoes" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">📆 Lista de Condições de Pagamento</h3>
+                <button class="btn-neon btn-neon-warning" onclick="novoCadastroFinanceiro('form_condicoes')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_condicoes" placeholder="🔍 Pesquisar condições..." onkeyup="filterTable('search_condicoes', 'tb_condicoes')">
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th>Forma Pgto</th><th>Parcelas</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_condicoes"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL CONDIÇÕES -->
+            <div id="form_condicoes_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_condicoes')">&times;</span>
+                    <h3 class="modal-title">Nova Condição</h3>
+                    <form id="form_condicoes" onsubmit="salvarFinanceiro(event, 'condicoes')">
+                        <input type="hidden" id="cond_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="cond_nome" class="erp-input" required></div>
+                            <div class="col-span-2"><label>Forma de Pagamento:</label><select id="cond_forma_pgto" class="erp-select ddl-formas"></select></div>
+                            
+                            <div><label>Num. Parcelas:</label><input type="number" id="cond_no_parcelas" class="erp-input" required></div>
+                            <div><label>Dia 1ª Parcela:</label><input type="number" id="cond_dia_1a_parcela" class="erp-input"></div>
+                            <div><label>Dias Entre Parcelas:</label><input type="number" id="cond_dias_entre_parcelas" class="erp-input"></div>
+                            
+                            <div class="check-container col-span-full">
+                                <label><input type="checkbox" id="cond_inativo"> Inativo</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-warning">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= FORMAS PGTO ======================= -->
+        <div id="view_formas" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">💳 Lista de Formas de Pagamento</h3>
+                <button class="btn-neon btn-neon-success" onclick="novoCadastroFinanceiro('form_formas')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_formas" placeholder="🔍 Pesquisar formas..." onkeyup="filterTable('search_formas', 'tb_formas')">
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Forma de Pagamento</th><th>Cód Fiscal</th><th>Conta Banco</th><th>Status</th><th>Gera Finan?</th><th>Baixa Aut?</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_formas"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL FORMAS -->
+            <div id="form_formas_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_formas')">&times;</span>
+                    <h3 class="modal-title">Nova Forma de Pgto</h3>
+                    <form id="form_formas" onsubmit="salvarFinanceiro(event, 'formas')">
+                        <input type="hidden" id="form_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Descrição:</label><input type="text" id="form_descricao" class="erp-input" required></div>
+                            
+                            <div><label>Código Fiscal:</label>
+                                <select id="form_codigo_fiscal" class="erp-select">
+                                    <option value="01">01 - Dinheiro</option><option value="02">02 - Cheque</option><option value="03">03 - Cartão Crédito</option>
+                                    <option value="04">04 - Cartão Débito</option><option value="15">15 - Boleto</option><option value="17">17 - PIX</option>
+                                    <option value="99">99 - Outros</option>
+                                </select>
+                            </div>
+                            
+                            <div><label>Conta Banco:</label><select id="form_conta_banco" class="erp-select ddl-contas"></select></div>
+                            <div><label>$ Parcela Mínima:</label><input type="number" id="form_parcela_minima" step="0.01" class="erp-input"></div>
+                            
+                            <div class="check-container col-span-full">
+                                <label><input type="checkbox" id="form_inativo"> Inativo</label>
+                                <label><input type="checkbox" id="form_gera_financeiro"> Gera Financeiro</label>
+                                <label><input type="checkbox" id="form_baixa_automatica"> Automático</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= BANDEIRAS ======================= -->
+        <div id="view_bandeiras" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🚩 Lista de Bandeiras</h3>
+                <button class="btn-neon btn-neon-primary" onclick="novoCadastroFinanceiro('form_bandeiras')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_bandeiras" placeholder="🔍 Pesquisar bandeiras..." onkeyup="filterTable('search_bandeiras', 'tb_bandeiras')">
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Nome</th><th>Forma Pgto</th><th>Bandeira NF-e</th><th>Operadora</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_bandeiras"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL BANDEIRAS -->
+            <div id="form_bandeiras_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_bandeiras')">&times;</span>
+                    <h3 class="modal-title">Nova Bandeira</h3>
+                    <form id="form_bandeiras" onsubmit="salvarFinanceiro(event, 'bandeiras')">
+                        <input type="hidden" id="band_id">
+                        <div class="form-grid">
+                            <div><label>Bandeira NF-e:</label>
+                                <select id="band_bandeira_nfe" class="erp-select">
+                                    <option value="">Selecione</option>
+                                    <option value="01">01 - Visa</option>
+                                    <option value="02">02 - Mastercard</option>
+                                    <option value="03">03 - American Express</option>
+                                    <option value="04">04 - Sorocred</option>
+                                    <option value="05">05 - Diners Club</option>
+                                    <option value="06">06 - Elo</option>
+                                    <option value="07">07 - Hipercard</option>
+                                    <option value="08">08 - Aura</option>
+                                    <option value="09">09 - Cabal</option>
+                                    <option value="99">99 - Outros</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="band_nome" class="erp-input" required></div>
+                            <div><label>F.Pagamento:</label><select id="band_f_pgto" class="erp-select ddl-formas"></select></div>
+                            
+                            <div><label>Prazo Rcto (Dias):</label><input type="number" id="band_prazo_rcto" class="erp-input"></div>
+                            <div><label>Operadora:</label><select id="band_operadora" class="erp-select ddl-operadoras"></select></div>
+                            
+                            <div class="check-container col-span-full">
+                                <label><input type="checkbox" id="band_inativo"> Inativo</label>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full mt-15 border-top pt-10">
+                            <h4 class="text-warning mt-0 mb-10">Faixas de Parcelas</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div><label>Parc. Inicial:</label><input type="number" id="tmp_parc_ini" class="erp-input"></div>
+                                <div><label>Parc. Final:</label><input type="number" id="tmp_parc_fim" class="erp-input"></div>
+                                <div><label>Tarifa %:</label><input type="number" id="tmp_taxa" step="0.01" class="erp-input"></div>
+                                <div class="form-actions m-0"><button type="button" class="btn-neon btn-neon-success w-100" onclick="addFaixaBandeira()">➕ Adicionar</button></div>
+                            </div>
+                            <input type="hidden" id="band_faixas_json">
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table" id="tb_bandeiras_faixas">
+                                    <thead><tr><th>Parc. Inicial</th><th>Parc. Final</th><th>Tarifa %</th><th class="text-center">Ação</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-primary">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= CONTAS BANCÁRIAS ======================= -->
+        <div id="view_contas_banc" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🏛️ Lista de Contas Bancárias</h3>
+                <button class="btn-neon btn-neon-info" onclick="novoCadastroFinanceiro('form_contas_bancarias')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_contas" placeholder="🔍 Pesquisar contas..." onkeyup="filterTable('search_contas', 'tb_contas_bancarias')">
+                <button class="btn-action" onclick="exportToCSV('tb_contas_bancarias', 'Contas_Bancarias')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th>Conta</th><th>Agência</th><th>% Juros</th><th>% Multa</th><th>Carência</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_contas_bancarias"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL CONTAS -->
+            <div id="form_contas_bancarias_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_contas_bancarias')">&times;</span>
+                    <h3 class="modal-title">Nova Conta Bancária</h3>
+                    <form id="form_contas_bancarias" onsubmit="salvarFinanceiro(event, 'contas_bancarias')">
+                        <input type="hidden" id="cb_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="cb_nome" class="erp-input" required></div>
+                            <div><label>Banco:</label><select id="cb_banco" class="erp-select ddl-bancos" required></select></div>
+                            
+                            <div><label>Agência:</label><input type="text" id="cb_agencia" class="erp-input"></div>
+                            <div><label>Dígito (Ag):</label><input type="text" id="cb_digito_ag" class="erp-input"></div>
+                            
+                            <div><label>Conta Corrente:</label><input type="text" id="cb_conta_corrente" class="erp-input"></div>
+                            <div><label>Dígito (Cc):</label><input type="text" id="cb_digito_cc" class="erp-input"></div>
+                            
+                            <div><label>% Juros / Mês:</label><input type="number" id="cb_juros_mes" step="0.01" class="erp-input"></div>
+                            <div><label>% Multa:</label><input type="number" id="cb_multa" step="0.01" class="erp-input"></div>
+                            <div><label>Dias de Carência:</label><input type="number" id="cb_dias_de_carencia" class="erp-input"></div>
+                            
+                            <div><label>Data Saldo:</label><input type="date" id="cb_data_saldo" class="erp-input"></div>
+                            <div><label>Saldo Inicial:</label><input type="number" id="cb_saldo_inicial" step="0.01" class="erp-input"></div>
+                            <div><label>Último Fechamento:</label><input type="date" id="cb_ultimo_fechamento" class="erp-input"></div>
+                            
+                            <div class="check-container col-span-full">
+                                <label><input type="checkbox" id="cb_fluxo_caixa"> Fluxo Caixa</label>
+                                <label><input type="checkbox" id="cb_boleto"> Boleto</label>
+                                <label><input type="checkbox" id="cb_inativo"> Inativo</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-info">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= BANCOS ======================= -->
+        <div id="view_bancos" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-primary">🏦 Lista de Bancos</h3>
+                <button class="btn-neon btn-neon-primary" onclick="novoCadastroFinanceiro('form_bancos')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_bancos" placeholder="🔍 Pesquisar bancos..." onkeyup="filterTable('search_bancos', 'tb_bancos')">
+            </div>
+
+            <div id="form_bancos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_bancos')">&times;</span>
+                    <h3 class="modal-title">Novo Banco</h3>
+                    <form id="form_bancos" onsubmit="salvarFinanceiro(event, 'bancos')">
+                        <input type="hidden" id="ban_id">
+                        <div class="form-grid">
+                            <div><label>ID (Código):</label><input type="text" id="ban_codigo" class="erp-input" required></div>
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="ban_nome" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-primary">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Nome</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_bancos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= CENTRO DE CUSTO ======================= -->
+        <div id="view_centro_custo" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">📊 Lista de Centros de Custo</h3>
+                <button class="btn-neon btn-neon-warning" onclick="novoCadastroFinanceiro('form_centro_custo')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_centros" placeholder="🔍 Pesquisar centros de custo..." onkeyup="filterTable('search_centros', 'tb_centro_custo')">
+                <button class="btn-action" onclick="exportToCSV('tb_centro_custo', 'Centros_Custo')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+
+            <div id="form_centro_custo_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_centro_custo')">&times;</span>
+                    <h3 class="modal-title">Novo Centro de Custo</h3>
+                    <form id="form_centro_custo" onsubmit="salvarFinanceiro(event, 'centro_custo')">
+                        <input type="hidden" id="cc_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="cc_nome" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-warning">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_centro_custo"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= STATUS FINANCEIRO ======================= -->
+        <div id="view_status" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-success">🚦 Lista de Status Financeiros</h3>
+                <button class="btn-neon btn-neon-success" onclick="novoCadastroFinanceiro('form_status_financeiro')">➕ Novo</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="search_status" placeholder="🔍 Pesquisar status..." onkeyup="filterTable('search_status', 'tb_status_financeiro')">
+                <button class="btn-action" onclick="exportToCSV('tb_status_financeiro', 'Status_Financeiro')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+
+            <div id="form_status_financeiro_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_status_financeiro')">&times;</span>
+                    <h3 class="modal-title">Novo Status</h3>
+                    <form id="form_status_financeiro" onsubmit="salvarFinanceiro(event, 'status_financeiro')">
+                        <input type="hidden" id="stat_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome:</label><input type="text" id="stat_nome" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width: 30px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_status_financeiro"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- ======================= MOCK OPERADORAS CARTÃO ======================= -->
+        <div id="view_operadoras" class="erp-view" style="display:none;"></div>
+
+    </div>
+</div>
+
+<!-- Modal Genérico de Pesquisa -->
+<div id="modal_pesquisa_generica" class="erp-modal">
+    <div class="erp-modal-content" style="max-width: 600px; width: 95vw; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+        <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+            <h3 class="m-0 text-info" id="mpesq_titulo">Pesquisar Registro</h3>
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="fecharPesquisa()">X</button>
+        </div>
+        <div class="d-flex gap-10 mb-15 flex-wrap">
+            <input type="text" id="mpesq_input" class="erp-input flex-1" style="min-width: 200px;" placeholder="Digite para buscar...">
+            <button type="button" class="btn-neon btn-neon-primary" onclick="executarPesquisa()">🔍 Procurar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 400px; overflow-y: auto;">
+            <table class="erp-table" style="width: 100%;">
+                <thead><tr><th>ID</th><th>Nome / Descrição</th><th>Ação</th></tr></thead>
+                <tbody id="mpesq_tb"><tr><td colspan="3" class="text-center text-muted">Aguardando busca...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/financeiro.js"></script>
+{% endblock %}

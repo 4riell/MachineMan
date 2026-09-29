@@ -1,0 +1,1099 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    
+
+    <meta charset="utf-8" />
+    <meta name="description" content="Degustto Pizzaria e Cafeteria - Todas as del&#237;cias do Degustto Pizzaria e Cafeteria voc&#234; encontra por aqui, fa&#231;a pedidos online :: Alegre" />
+
+    <meta name="theme-color" content="#261d02">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" href="/Content/cliente/img/favicon.ico" />
+    <link rel="icon" href="/Content/cliente/img/favicon.png" />
+    <title>Delivery :: Degustto Pizzaria</title>
+
+    <link href="/Content/projeto/bootstrap/css/boots?v=BOR1UcBiZmDmflKz_8RGZ_MJl-TZK4870cWsx9bWbac1" rel="stylesheet"/>
+
+    <link href="/Content/cliente/css/cliente?v=-bfdJqEssbDH92i7H2sORmntK5YiGc7zkhuV-6JA8XE1" rel="stylesheet"/>
+
+
+    <link href="/CssCliente" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+
+    <!-- Fonts and icons -->
+    <script src="/Content/assets/js/plugin/webfont/webfont.min.js"></script>
+    <script>
+        WebFont.load({
+            google: { "families": ["Lato:300,400,700,900"] },
+            custom: { "families": ["Flaticon", "Font Awesome 5 Solid", "Font Awesome 5 Regular", "Font Awesome 5 Brands", "simple-line-icons"], urls: ['/Content/assets/css/fonts.min.css'] },
+            active: function () {
+                sessionStorage.fonts = true;
+            }
+        });
+    </script>
+
+    <style type="text/css">
+        .w-modal .modal-header, #carrinho h3, #cardapio h3, #favoritos h3 {
+            background-color: #261d02;
+            color: white;
+        }
+        body {
+            background-color: white !important;
+        }
+    </style>
+
+    
+
+    
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "gl4jtxj93r");
+    </script>
+
+</head>
+<body>
+    
+
+    
+    <div id="fb-root"></div>
+
+    <script>
+
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "//connect.facebook.net/pt_BR/sdk.js#xfbml=1&version=v2.9";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+
+    </script>
+
+    <div id="FixBg"></div>
+
+    
+
+<header class="hidden-print">
+
+    
+    <div id="topo" class="container">
+        <div class="row">
+            <div class="col-md-12 text-center">
+
+                <a href="/degusttopizzaria">
+                    <img id="logoTopoNovo" src="https://sachefmio.blob.core.windows.net/chefmio/logo/Degustto-Pizzaria-e-Cafeteria.png" alt="Degustto Pizzaria" />
+                </a>
+
+                <div id="divStatusTopo" data-toggle="modal" data-target="#modalInfoEmpresa">
+                    
+        <div class="divStatusInfo fechadoInfo">
+            Fechado para pedidos
+        </div>
+
+
+
+
+
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+
+    
+    <div class="container container-informacao-restaurante">
+        <a class="card-informacoes-restaurante" data-toggle="modal" data-target="#modalInfoEmpresa">
+            <div class="d-flex div-infomacoes-restaurante size-informacoes-tempo">
+                <i class="far fa-clock flex-column-center"></i>
+                <span class="label-large-medium text-tempo-informacao">60-90</span>
+            </div>
+            <div class="d-flex div-infomacoes-restaurante">
+                <span>•</span>
+            </div>
+            <div class="d-flex div-infomacoes-restaurante">
+                <span class="label-large-medium text-tempo-informacao">Pedido min. R$ 45,00</span>
+            </div>
+            <div class="d-flex div-infomacoes-restaurante">
+                <span>•</span>
+            </div>
+            <div>
+                <span class="label-large-medium link-verMais">Ver mais</span>
+            </div>
+        </a>
+    </div>
+    
+
+</header>
+
+
+
+    
+
+    <section class="container container-desk body-background">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xm-12">
+                
+    
+
+
+
+
+
+                
+
+
+
+
+
+
+
+
+
+<div class="div-search-restaurante">
+<form action="/degusttopizzaria" method="get">        <div class="input-group seach-detalhes">
+            <div class="input-group-addon icon-seach-home" id="btnBusca">
+                <img src="/Content/img/ic_ Search.svg" width="18" />
+            </div>
+            <input type="text" class="form-control input-search-home search-home InputSearch" placeholder="Buscar no cardápio" value="Frango com Catupiry"
+                   maxlength="150" name="filtro" id="filtro">
+        </div>
+</form></div>
+
+<div class="stick-categoria" id="CategoriasMenu">
+
+    <div class="search-stick-home">
+<form action="/degusttopizzaria" method="get">            <div class="input-group seach-detalhes">
+                <div class="input-group-addon icon-seach-detalhes">
+                    <img src="/Content/img/ic_ Search.svg" width="18" />
+                </div>
+                <input type="text" class="form-control input-search-detalhes InputSearch" placeholder="Buscar no cardápio" value="Frango com Catupiry"
+                       maxlength="150" name="filtro" id="filtro">
+            </div>
+</form>    </div>
+
+    <div class="categoria-stick-home slideCategoria">
+
+
+
+            <a class="categoria-home linkCategoria" data-id="17545" href="#17545" data-categoria="17545" onclick="linkCategoria(17545)">
+                <span class="label-large-medium">pizzas salgadas</span>
+                <div class="sublinhado-categoria"></div>
+            </a>
+    </div>
+</div>
+
+
+<div class="row">
+
+            <div class="col-md-12 text-center">
+                <a href="/degusttopizzaria">filtrando por <strong>Frango com Catupiry</strong> <u>limpar filtro</u></a>
+            </div>
+
+</div>
+
+
+<div class="row div-mostrar" id="divCardapio">
+
+    <div class="col-md-12">
+
+                <div>
+                    <div class="row gap-8 row-cardapio-home">
+
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+
+        <div data-cat="17545"
+             data-id="244622"
+             class="cardProduto addProduto item-media height-98">
+
+            <div class="item-body   div-info-produto-home">
+
+                <h5 class="label-large-medium titulo-produto-home" title='PIZZA FRANGO COM CATUPIRY' style="text-transform: capitalize">
+                    pizza frango com catupiry
+                </h5>
+
+                    <div>
+                        <span class="quebra-linha body-small-regular descricao-produto-home">molho, mussarela, frango, catupiry, milho, or&#233;gano e azeitona.</span>
+                    </div>
+
+                <div class="d-flex gap-8">
+                    
+                                    <div>
+                                        <span>A partir de</span>
+                                        <span class="label-large-medium valor-produto-home">R$ 62,00</span>
+                                    </div>
+
+                </div>
+            </div>
+
+                <div class="flex-column-center">
+                    <img src="/Content/img/no-photo.png" class="imgProd" />
+                </div>
+        </div>
+
+    </div>
+                    </div>
+                </div>
+
+    </div>
+
+</div>
+
+<!--Modal do Categorias-->
+<div class="modal w-modal" id="ModalCardapio" role="dialog" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="margin-top: 0">
+        <div class="modal-content">
+
+    <div class="btn-success" style="padding: 15px; display: flex; justify-content: space-between">
+        <a data-dismiss="modal" aria-label="Close" style="color: white"><i class="glyphicon glyphicon-chevron-left"></i></a>
+        <span class="titulo-topo">Cardápio</span>
+        <div class="space"></div>
+    </div>
+
+    <div class="modal-body body-cardapio">
+        <ul class="nav nav-pills nav-stacked">
+                    <li onclick="clickCardapio()">
+                        <a style="text-align: center" data-id="17545" class="menuPrincipalLateral" href="#17545" title='PIZZAS SALGADAS'>PIZZAS SALGADAS</a>
+                    </li>
+
+        </ul>
+    </div>
+
+</div>
+
+<script>
+    function clickCardapio() {
+        $('#ModalCardapio').modal('hide');
+    }
+</script>
+    </div>
+</div>
+
+<div class="modal bottom" id="modalCartaoFidelidade" tabindex="-1" role="dialog">
+</div>
+
+
+<div class="modal w-modal in" id="modalProduto" tabindex="-1" role="dialog">
+</div>
+
+<div class="modal w-modal in" id="modalLoding" tabindex="-1" role="dialog">
+    <div class="modal-dialog mobile-center" role="document" style="width: 300px; height: 100px !important;">
+        <div class="modal-content">
+            <div class="modal-body flex-column-center">
+                <div class="d-flex justify-content-center gap-8">
+                    <div class="loader-dark"></div>
+                    <span class="flex-column-center title-medium-medium">Carregando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+            </div>
+        </div>
+    </section>
+
+    <div class="container container-footer">
+            <footer class="row hidden-print">
+                <div id="chefmioFooter" class="col-md-12 div-footer-cardapio">
+                    <p class="text-center text-white-novo" style="margin:15px;">
+                        <img style="margin-bottom:5px;" width="50" src="https://sachefmio.blob.core.windows.net/chefmio/logo/Degustto-Pizzaria-e-Cafeteria.png" alt="Degustto Pizzaria" /><br />
+                        <strong>028 99912-2076 </strong> <br />
+                        Rua Dr. Chacon, 138 Galeria do Edf. Las Palmas, Alegre - ES
+                    </p>
+
+                    <p class="text-center text-white-novo" style="margin:5px; padding:5px; opacity: 0.7">
+                        <a target="_blank" class="linkWhite" href="https://cooki.com.br/">
+                            <strong>Cooki</strong> - Tenho um restaurante e quero vender online
+                        </a>
+                    </p>
+
+                    <ul class="list-unstyled list-inline social text-center">
+                        <li class="list-inline-item"><a target="_blank" style="color:whitesmoke" href="/privacidade">Política de Privacidade</a></li>
+                        <li class="list-inline-item"><a target="_blank" style="color:whitesmoke" href="/termodeuso">Termos de Uso</a></li>
+                    </ul>
+                </div>
+
+            </footer>
+    </div>
+
+    <script src="/bundles/jquery-bootstrap?v=nQumG6DQ2VGsthDxIPzZkx5GQwRx3HZ7NAJsuEhL8rY1"></script>
+
+
+    <script src="/bundles/unobtrusiveajaxval?v=WwY3e1EgKhyR_yU9wZoY4ujtgdnZY596TtIbGPDXmPo1"></script>
+
+
+    <script src="/bundles/js_Layout?v=-4IRycu1VkXKdLBBlSGdZLKWPIdn50znl6EI-2P1jr01"></script>
+
+
+    
+    
+<script src="/bundles/banner?v=wVu0QXV3I2aMaUjf5zf8fffWqJhx3keGnRI_-IH35hg1"></script>
+
+<script>
+        {
+            $(function () {
+                $("#slider1").responsiveSlides({
+                    auto: true,
+                    pager: true,
+                    nav: true,
+                    speed: 500,
+                    maxwidth: 800,
+                    namespace: "centered-btns"
+                });
+            });
+        }
+</script>
+
+
+
+    <script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+
+    <script>
+
+        jQuery(document).ready(function ($) {
+
+            $("#linkCardapio").click(function () {
+                sessionStorage.removeItem("idCat");
+            });
+        });
+
+        function itemAdicionado() {
+
+            try {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'AddToCart');
+                }
+            } catch (ex) { }
+        }
+
+        //se veio de algum app
+        if ('' !== "") {
+            window.sessionStorage.setItem('app', '');
+        }
+
+    </script>
+
+        <script>
+            jQuery(document).ready(function ($) {
+                window.setTimeout(updateStatus, 30000);
+            });
+            function updateStatus() {
+                $.ajax({
+                    url: "/StatusDelivery",
+                    type: "GET",
+                    success: function (result) {
+                        $("#divStatusTopo").html(result);
+                        $('[data-toggle="tooltip"]').tooltip();
+                    },
+                    complete: function () {
+                        window.setTimeout(updateStatus, 30000);
+                    }
+                });
+            }
+        </script>
+
+    <script>
+        
+    </script>
+
+
+    
+
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.11/jquery.lazy.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazy/1.7.11/jquery.lazy.plugins.min.js"></script>
+
+    <script>
+
+        $(document).ready(function () {
+
+            $(".menuHomeActive").addClass("active");
+
+            $('.slideDestaque').slick({
+                infinite: false,
+                dots: false,
+                speed: 300,
+                centerMode: false,
+                variableWidth: true,
+                dots: false,
+                prevArrow: false,
+                nextArrow: false,
+                slidesToScroll: 2,
+            });
+
+            var qtdePontosClientes = $(".qtdePontosClientes").attr("value");
+            var pontos = $(".pontos").attr("value");
+
+            if (qtdePontosClientes == pontos) {
+                $(".presenteFidelidade").addClass("ative");
+            }
+
+            $('.lazy').lazy({
+                effect: "fadeIn",
+                effectTime: 200,
+                threshold: 0
+            });
+
+            $('.myAccordion').on('show.bs.collapse	', function (e) {
+                $(e.target).find('.lazy').each(function () {
+                    $(this).attr('src', $(this).data('src'));
+                });
+            })
+
+            $("#formaPagamentoFooter,#formaPagamentoOnlineFooter,#telefonesFooter,#chefmioFooter").removeClass("hidden-xs");
+
+            //menu select
+            $('#menuCatDrop').change(function () {
+
+                $('.panel-collapse.in')
+                /* .removeClass('in');*/
+
+                var idPai = $("#menuCatDrop option:selected").attr("data-id-pai");
+
+                if (idPai != null) {
+                    if (!$("#collapse" + idPai).hasClass('collapse in')) {
+                        $("#collapse" + idPai).collapse('show');
+                    }
+
+                    var $el = $($(this).find(':selected').attr('class'));
+                    $('html,body').animate({
+                        scrollTop: $el.offset().top - 50
+                    }, 200);
+                }
+
+                var id = $("#menuCatDrop option:selected").attr("data-id");
+                if (id != null) {
+                    if (!$("#collapse" + id).hasClass('collapse in')) {
+                        $("#collapse" + id).collapse('show');
+                    }
+
+                    var $el = $($(this).find(':selected').attr('class'));
+                    $('html,body').animate({
+                        scrollTop: $el.offset().top - 50
+                    }, 200);
+                }
+            });
+
+            //clique menu lateral
+            $('.menuPrincipalLateral').click(function () {
+
+                $('#cbxMenu').trigger('click');
+
+                var idPai = $(this).attr("data-id-pai");
+                if (idPai != null) {
+                    $("#menuCatDrop").val(idPai);
+                    $('#menuCatDrop').trigger('change');
+                }
+
+                var id = $(this).attr("data-id");
+                if (id != null) {
+                    $("#menuCatDrop").val(id);
+                    $('#menuCatDrop').trigger('change');
+                }
+
+            });
+
+            //abrirModalPagina quando abre o produto pela URL
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('exibirModal') === 'True') {
+                abrirModalProduto(urlParams.get('idProduto'))
+            }
+        });
+
+        $("body").on("click", ".addProduto", addItem);
+
+        function addItem() {
+            // MensagemLoadAcao();
+            $("#modalLoding").modal();
+            var id = $(this).attr("data-id");
+            abrirModalProduto(id);
+        }
+
+        function abrirModalProduto(id) {
+
+            var parsedId = Number(id);
+            if (!parsedId || parsedId <= 0) {
+                console.warn('Id de produto invalido:', id);
+                $("#modalLoding").modal('hide');
+                window.location.reload();
+                return;
+            }
+
+            $("#modalProduto").load("/Produto/DetalhesProdutoModal?idProduto=" + parsedId, function (responseText, textStatus, req) {
+                if (textStatus === "error") {
+                    console.error('Falha ao carregar modal do produto', req.status);
+                    $("#modalLoding").modal('hide');
+                    window.location.reload();
+                    return;
+                }
+
+                $("#modalLoding").modal('hide');
+
+                $("#modalProduto").modal();
+            });
+
+            $("#modalProduto").on("hidden.bs.modal", function () {
+                animateCSS('.barra-sacola', 'shakeY');
+            });
+
+            try {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'CustomizeProduct');
+                }
+            } catch (ex) { }
+
+        }
+
+        function mostrarLoading() {
+            document.getElementById('loadingModal').style.display = 'block';
+        }
+
+        $('[data-toggle="tooltip"]').tooltip();
+
+        let isScrolling;
+
+        window.onscroll = function () {
+
+            window.clearTimeout(isScrolling);
+
+            isScrolling = setTimeout(function () {
+                // Chama a função para mostrar ou esconder a div
+                identificarDivNoTopo();
+            }, 50);
+        };
+
+        function identificarDivNoTopo() {
+            var divMostrar = document.getElementById('divCardapio');
+            var divEsconder = document.getElementById('CategoriasMenu');
+
+            var rect = divMostrar.getBoundingClientRect();
+
+            // Se a div-mostrar atingir o topo da janela, exibe a div-esconder
+            if (rect.top <= 0) {
+                divEsconder.style.display = 'block';
+            } else {
+                divEsconder.style.display = 'none';
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var secoes = document.querySelectorAll('.cardapioDiv');
+            var menuLinks = document.querySelectorAll('.linkCategoria');
+            var isPaused = false; // Flag para controlar se o carrossel está pausado
+            var ultimoLink = menuLinks[menuLinks.length - 1];
+
+            // Inicializa o Slick Carousel
+            $('.slideCategoria').slick({
+                dots: false,
+                infinite: false,
+                speed: 300,
+                centerMode: false,
+                variableWidth: true,
+                prevArrow: false,
+                nextArrow: false,
+                slidesToScroll: 3,
+                responsive: [
+                    {
+                        breakpoint: 680,
+                        settings: {
+                            slidesToShow: 6
+                        }
+                    },
+                    {
+                        breakpoint: 480,
+                        settings: {
+                            slidesToShow: 3
+                        }
+                    },
+                    {
+                        breakpoint: 400,
+                        settings: {
+                            slidesToShow: 2
+                        }
+                    },
+                ]
+            });
+
+
+            window.addEventListener('scroll', function () {
+                // Se o carrossel estiver pausado, não execute a lógica de rolar para o slide ativo
+                if (isPaused) {
+                    return;
+                }
+
+                secoes.forEach(function (secao, index) {
+                    var bounding = secao.getBoundingClientRect();
+
+                    if (bounding.top <= 180 && bounding.bottom >= 50) {
+                        menuLinks.forEach(function (link) {
+                            link.classList.remove('categoria-home-ativo');
+                        });
+                        menuLinks[index].classList.add('categoria-home-ativo');
+
+                        // Move para o slide correspondente
+                        $('.slideCategoria').slick('slickGoTo', index);
+                    }
+                });
+            });
+        });
+
+
+
+
+
+    </script>
+
+    
+
+    
+    <div class="modal w-modal" id="modalInfoEmpresa" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content text-center" style="padding-bottom: 50px;">
+                <div class="btn-success" style="padding: 15px; display: flex; justify-content: space-between">
+                    <a data-dismiss="modal" aria-label="Close" style="color: white"><i class="glyphicon glyphicon-chevron-left"></i></a>
+                    <span class="titulo-topo">Informações importantes</span>
+                    <div class="space"></div>
+                </div>
+                <div class="modal-body panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                    <div class="panel">
+
+                        <div class="panel-heading collapsed" role="tab" id="headingOne telefonesFooter">
+                            <h5 id="pb-3" class="menuInfo panel-title item-categoria-nome" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    Tempo de Entrega e Pedido Mínimo
+                                    <i class="more-less glyphicon glyphicon-chevron-down"></i>
+                                </a>
+                            </h5>
+                            <div id="collapseOne" class="collapse in" role="tabpanel" aria-labelledby="headingOne" style="padding: 10px;">
+                                <div class="panel-body">
+
+
+                                    <p>Pedido mínimo: <strong>R$ 45,00</strong></p>
+                                    <p>Tempo médio de entrega: <strong>60-90</strong></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel-heading collapsed" role="tab" id="headingFour telefonesFooter">
+                            <h5 id="pb-3" class="menuInfo panel-title item-categoria-nome" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+                                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+                                    Telefone e Localização
+                                    <i class="more-less glyphicon glyphicon-chevron-down"></i>
+                                </a>
+                            </h5>
+                            <div id="collapseFour" class="collapse in" role="tabpanel" aria-labelledby="headingFour" style="padding: 10px;">
+                                    <p style="font-size:1.5em;" class="text-center">028 99912-2076  </p>
+
+                                    <p class="text-center">Rua Dr. Chacon, 138 Galeria do Edf. Las Palmas, Alegre - ES </p>
+                            </div>
+                        </div>
+
+                        <div class="panel-heading collapsed" role="tab" id="headingTwo telefonesFooter">
+                            <h5 id="pb-3" class="menuInfo panel-title item-categoria-nome" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                                <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                                    Pagamento na Entrega
+                                    <i class="more-less glyphicon glyphicon-chevron-down"></i>
+                                </a>
+                            </h5>
+                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo" style="padding: 10px;">
+                                    <span id="pagamentodinheirospan" class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                        <img height="16" title="Dinheiro" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/dinheiro.png" alt="Dinheiro" /> Dinheiro
+                                    </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Visa - Cr&#233;dito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/visa-64px.png" alt="Cart&#227;o Visa - Cr&#233;dito" /> Cart&#227;o Visa - Cr&#233;dito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Master - Cr&#233;dito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/mastercard-64px.png" alt="Cart&#227;o Master - Cr&#233;dito" /> Cart&#227;o Master - Cr&#233;dito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Amex - Cr&#233;dito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/amex-64px.png" alt="Cart&#227;o Amex - Cr&#233;dito" /> Cart&#227;o Amex - Cr&#233;dito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Elo - Cr&#233;dito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/elo-64px.png" alt="Cart&#227;o Elo - Cr&#233;dito" /> Cart&#227;o Elo - Cr&#233;dito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Hipercard - Cr&#233;dito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/hipercard-64px.png" alt="Cart&#227;o Hipercard - Cr&#233;dito" /> Cart&#227;o Hipercard - Cr&#233;dito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Diners - Cr&#233;dito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/diners-64px.png" alt="Cart&#227;o Diners - Cr&#233;dito" /> Cart&#227;o Diners - Cr&#233;dito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Visa - D&#233;bito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/visa-64px.png" alt="Cart&#227;o Visa - D&#233;bito" /> Cart&#227;o Visa - D&#233;bito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o MasterCard - D&#233;bito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/mastercard-64px.png" alt="Cart&#227;o MasterCard - D&#233;bito" /> Cart&#227;o MasterCard - D&#233;bito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Elo - D&#233;bito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/elo-64px.png" alt="Cart&#227;o Elo - D&#233;bito" /> Cart&#227;o Elo - D&#233;bito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="Cart&#227;o Dieners - D&#233;bito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/diners-64px.png" alt="Cart&#227;o Dieners - D&#233;bito" /> Cart&#227;o Dieners - D&#233;bito
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="PicPay" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/picpay-64px.png" alt="PicPay" /> PicPay
+                                        </span>
+                                        <span class="badge" style="color: #797978; background-color: #f8f9fa; margin: 2px; border-radius: 2rem; border: solid 1px #eaeaea; ">
+                                            <img style="border-radius:5px;" height="16" title="PIX - D&#233;bito" src="https://sachefmio.blob.core.windows.net/arquivosdiversos/Cartoes64px/pix-64px.png" alt="PIX - D&#233;bito" /> PIX - D&#233;bito
+                                        </span>
+                            </div>
+                        </div>
+
+                        <div class="panel-heading collapsed" role="tab" id="headingFive telefonesFooter">
+                                <h5 id="pb-3" class="menuInfo panel-title item-categoria-nome" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+                                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+                                        Horário de Funcionamento
+                                        <i class="more-less glyphicon glyphicon-chevron-down"></i>
+                                    </a>
+                                </h5>
+                                    <div id="collapseFive" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFive" style="padding: 10px;">
+                                        <ul class="list-unstyled text-center" style="color: #797978">
+                                                        <li>Dom: 18:00 às 23:00</li>
+                                                        <li>Seg: 18:00 às 22:00</li>
+                                                        <li>Ter: Fechado</li>
+                                                        <li>Qua: 18:00 às 22:00</li>
+                                                        <li>Qui: 18:00 às 22:00</li>
+                                                        <li>Sex: 18:00 às 23:00</li>
+                                                        <li>Sab: 18:00 às 23:00</li>
+                                        </ul>
+                                    </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="myModal">
+        <div class="modal-dialog w-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Informação</h4>
+                </div>
+                <div class="modal-body" style="margin: 10px">
+                    <span id="infoModal"></span>
+                </div>
+                <div class="modal-footer" style="padding: 10px">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" aria-label="Close">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="myModalJs">
+        <div class="modal-dialog w-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Endereço de entrega</h4>
+                </div>
+                <div class="modal-body">
+                    <div>
+                            <a class="btn btn-default btn-full" href="/degusttopizzaria/EnderecoEntrega/CadastroEndereco">Selecionar Endereço </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        <div class="menu-mobile-css">
+
+
+            <div class="menuSacola d-none" style="min-height: 45px;">
+                <div class="navbar navbar-default navbar-fixed-bottom div-barra-sacola menuSacola">
+                    <div class="barra-sacola">
+
+                        <a href="/degusttopizzaria/Carrinho" class="a-sacola">
+                            <div class="txt-padrao">
+                                <span class="title-medium-medium" id="valorSacola">0</span>
+                                <span class="body-small-regular">/</span>
+                                <span class="label-small-medium" id="QuantPedido">
+                                    0
+                                </span>
+                                <span class="label-small-medium" id="itemCarrinho">
+                                    Item
+                                </span>
+                            </div>
+
+                            <div class="txt-padrao txt-sacola-home">
+                                <i class="icon-bag"></i>
+                                <span class="label-large-medium">Ver pedido</span>
+                                <i class="fas fa-angle-right"></i>
+                            </div>
+
+
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="navbar navbar-default navbar-fixed-bottom btn-success div-menu-restaurante">
+                
+                <div class="menu-home-restaurante">
+
+
+
+                    <a class="item-menu-restaurante menuHomeActive" href="/degusttopizzaria">
+                        <i class="icon-home"></i>
+                        <span>Início</span>
+                    </a>
+
+                        <a data-toggle="modal" data-target="#ModalPerfil" class="item-menu-restaurante menuPerfilActive">
+                            <i class="far fa-user"></i>
+                            <span>Perfil</span>
+                        </a>
+
+
+                    
+
+                        <a href="/degusttopizzaria/AdminCliente/ListarPedidosCliente" class="item-menu-restaurante menuPedidoActive">
+                            <i class="far fa-file-alt"></i>
+                            <span>Pedidos</span>
+                        </a>
+
+                </div>
+            </div>
+        </div>
+
+
+    <!--Modal do Perfil-->
+    <div class="modal w-modal" id="ModalPerfil" role="dialog" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="btn-success btn-full flex-modal-header">
+                    <a data-dismiss="modal" aria-label="Close" class="btn-full">
+                        <div class="flex-page-header">
+                            <div class="modal-title close-modal">
+                                <i class="glyphicon glyphicon-chevron-left"></i>
+                            </div>
+                            <span class="titulo-topo">Perfil</span>
+                            <div class="space right-cabecalho-modal"></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="div-perfil">
+                        <div class="card-perfil">
+                            <a class="a-perfil" href="/degusttopizzaria/AdminCliente/ListarEnderecosCliente">
+                                <div class="div-flex-perfil d-flex justify-content-between">
+                                    <div class="d-flex flex-perfil">
+                                        <img src="/Content/img/ic_ Location.svg" width="24" />
+                                        <span class="title-medium-medium">Endereços de entrega</span>
+                                    </div>
+                                    <i class="icon-arrow-right icon-arrow-perfil"></i>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="card-perfil">
+                            <a class="a-perfil" href="/degusttopizzaria/AdminCliente/Index">
+                                <div class="div-flex-perfil d-flex justify-content-between">
+                                    <div class="d-flex flex-perfil">
+                                        <img src="/Content/img/ic_ user detail.svg" width="24" />
+                                        <span class="title-medium-medium">Meus dados</span>
+                                    </div>
+                                    <i class="icon-arrow-right icon-arrow-perfil"></i>
+                                </div>
+                            </a>
+                        </div>
+                            <div class="card-perfil">
+                                <a class="a-perfil" href="/degusttopizzaria/Manage/ChangePassword">
+                                    <div class="div-flex-perfil d-flex justify-content-between">
+                                        <div class="d-flex flex-perfil">
+                                            <img src="/Content/img/ic_ password.svg" width="24" />
+                                            <span class="title-medium-medium">Alterar senha</span>
+                                        </div>
+                                        <i class="icon-arrow-right icon-arrow-perfil"></i>
+                                    </div>
+                                </a>
+                            </div>
+                        <div class="card-perfil">
+                            <a class="a-perfil" href="/degusttopizzaria/Account/LogOff" role="menuitem" tabindex="-1">
+                                <div class="div-flex-perfil d-flex justify-content-between">
+                                    <div class="d-flex flex-perfil">
+                                        <img src="/Content/img/ic_ exit.svg" />
+                                        <span class="title-medium-medium">Sair</span>
+                                    </div>
+                                    <i class="icon-arrow-right icon-arrow-perfil"></i>
+                                </div>
+                            </a>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="divModalProduto" style="position: absolute">
+        <div id="modalProduto">
+        </div>
+    </div>
+
+    <div id="divModalPagina" style="position: absolute">
+        <div id="modalPagina">
+        </div>
+    </div>
+
+    <div id="modalLogin">
+    </div>
+
+    <script src="/Content/lib/jquery.mask/jquery.mask.min.js"></script>
+
+
+
+    <script>
+
+        $('#myModal').on('hidden.bs.modal', function () {
+        });
+
+        $(".modalEnderecoNovo").click(function () {
+            $("#myModalJs").modal();
+        });
+
+        function abrirPagina(rota) {
+            var id = $(this).attr("data-id");
+            $("#modalPagina").load(rota, function (responseText, textStatus, req) {
+                if (textStatus == "error") {
+                    location.reload();
+                    return;
+                }
+                $("#modalPagina").modal();
+            });
+
+            try {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'CustomizeProduct');
+                }
+            } catch (ex) { }
+
+        }
+
+        //Fechar modal produto voltar celular*****************************
+        $("#modalProduto").on("shown.bs.modal", function () {
+            var urlReplace = "#" + $(this).attr('id');
+            history.pushState(null, null, urlReplace);
+        });
+
+        $(window).on('popstate', function () {
+            $("#modalProduto").modal('hide');
+        });
+
+        $(document).keydown(function (event) {
+            if (event.keyCode == 27) {
+                $("#modalProduto").modal('hide');
+                location.reload();
+            }
+        })
+        //*****************************************************************
+
+        $(document).ready(function () {
+            itensCarrinho();
+        });
+
+        function valorSacola() {
+
+            $.ajax({
+                url: "/ObterValorCarrinhoCarrinho",
+                type: "GET",
+                success: function (response) {
+                    var valorTotalCarrinho = response.valorTotalCarrinho;
+                    if (valorTotalCarrinho > 0) {
+                        var valorTotalCarrinhoFormatado = valorTotalCarrinho.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        $("#valorSacola").html(valorTotalCarrinhoFormatado);
+                    }
+                }
+            });
+        }
+
+        function itensCarrinho() {
+
+            $.ajax({
+                url: "/ObterQtdeItensCarrinho",
+                type: "GET",
+                success: function (response) {
+                    let qtdeItensCarrinho = response.qtdeItensCarrinho;
+                    if (qtdeItensCarrinho == '0') {
+                        $(".menuSacola").addClass('d-none');
+                    }
+                    else {
+                        valorSacola();
+                        $("#QuantPedido").html(qtdeItensCarrinho);
+                        $(".menuSacola").removeClass('d-none');
+
+                        if (qtdeItensCarrinho <= 1) {
+                            $("#itemCarrinho").text('Item');
+                        } else {
+                            $("#itemCarrinho").text('Itens');
+                        }
+                    }
+                }
+            });
+        }
+
+    </script>
+
+    <script>
+
+        jQuery(document).ready(function ($) {
+
+            window.fbAsyncInit = function () {
+                //SDK loaded, initialize it
+                FB.init({
+                    appId: '311218385957036',
+                    //appId: '150589245398915',
+                    //appId: '284159421965932',
+                    //appId: '884005691783678',
+                    //appId: '750501711720843',
+                    //appId: '1520242291619642',
+                    //appId: '499166345085240',
+                    xfbml: true,
+                    version: 'v2.2'
+                });
+
+                //check user session and refresh it
+                FB.getLoginStatus(function (response) {
+                    if (response.status === 'connected') {
+                        var accessToken = response.authResponse.accessToken;
+                        if ($(".imgFacePicture").length) {
+                            $(".imgFacePicture").attr('src', 'https://graph.facebook.com/me/picture?access_token=' + accessToken);
+                        }
+                    }
+                });
+            };
+
+        });
+
+    </script>
+
+    <script src="/bundles/modalPartial?v=M9MIXjBhOm2G9IzJ9_5KMmX-8pGHTNNFxXILIR2W-3Q1"></script>
+
+
+    
+
+    
+</body>
+</html>

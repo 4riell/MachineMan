@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Obrigações e Documentos Fiscais{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .badge-fiscal { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .bg-autorizada { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .bg-cancelada { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .bg-alerta { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 6px;}
+        .checkbox-grid label { font-size: 0.85rem; display: flex; align-items: center; gap: 5px; color: #cbd5e1; cursor: pointer;}
+        .section-box { border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.15);}
+        .filter-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .filter-row > div { flex: 1; min-width: 150px; }
+
+        .erp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .erp-modal.active { display: flex; }
+        .erp-modal-content { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #444; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+        .erp-modal-close { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; }
+        .erp-modal-close:hover { color: #ff4757; }
+        .modal-title { margin-top: 0; margin-bottom: 20px; color: #4cd137; border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        /* Animações dos Toasts (Notificações) */
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">🏛️ Documentos Fiscais & SPED</h1>
+        <div class="page-subtitle">Emissão, Mensageria SEFAZ, Apurações e Obrigações Acessórias.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Mensageria e DF-e</div>
+            <button class="menu-item active" onclick="switchDocView('view_mde', this)">📥 MD-e (Entradas)</button>
+            <button class="menu-item" onclick="switchDocView('view_nfce', this)">🧾 NFC-e / NF-e</button>
+            <button class="menu-item" onclick="switchDocView('view_mdfe', this)">🚚 MDF-e (Transporte)</button>
+            <button class="menu-item" onclick="switchDocView('view_ciap', this)">🏭 Controle CIAP</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Obrigações Acessórias</div>
+            <button class="menu-item" onclick="switchDocView('view_sped_icms', this)">📦 SPED Fiscal (ICMS/IPI)</button>
+            <button class="menu-item" onclick="switchDocView('view_sped_pis', this)">💰 SPED Contribuições</button>
+            <button class="menu-item" onclick="switchDocView('view_sintegra', this)">📄 SINTEGRA</button>
+            <button class="menu-item" onclick="switchDocView('view_inventario', this)">📋 Inventário</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Central e Ferramentas</div>
+            <button class="menu-item" onclick="switchDocView('view_downloads', this)">⬇️ Downloads e Anexos</button>
+            <button class="menu-item" onclick="switchDocView('view_relatorios', this)">📊 Relatórios Fiscais</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- ======================= MD-e ======================= -->
+        <div id="view_mde" class="erp-view active">
+            <h3 class="m-0 text-primary mb-15">📥 Manifestação do Destinatário (MD-e)</h3>
+            
+            <div class="d-flex gap-10 mb-20 flex-wrap">
+                <!-- BOTÕES COM AS AÇÕES REAIS -->
+                <button type="button" class="btn-neon btn-neon-success" onclick="enviarManifestacao('210210', this)">✅ Ciência</button>
+                <button type="button" class="btn-neon btn-neon-info" onclick="enviarManifestacao('210200', this)">🤝 Confirmação</button>
+                <button type="button" class="btn-neon btn-neon-warning" onclick="enviarManifestacao('210220', this)">🤷 Desconhecimento</button>
+                <button type="button" class="btn-neon btn-neon-danger" onclick="enviarManifestacao('210240', this)">🚫 Não Realizada</button>
+                
+                <button type="button" class="btn-neon btn-neon-primary bg-transparent" onclick="baixarSelecionados(this)">⬇️ Download XML</button>
+                <button type="button" class="btn-neon btn-neon-primary bg-transparent font-bold" onclick="consultarSefaz(this)">🔍 Consultar SEFAZ pelo NSU</button>
+            </div>
+
+            <div class="filter-row">
+                <div><label>Data:</label><input type="date" class="erp-input"></div>
+                <div>
+                    <label>Situação:</label>
+                    <select class="erp-select"><option>Todas</option><option>Sem Manifestação</option><option>Ciência da Operação</option></select>
+                </div>
+                <div><button class="btn-neon btn-neon-info" style="width:100%" onclick="showToast('Filtro Aplicado!', 'success')">🔍 Filtrar</button></div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_mde_table" class="erp-table">
+                    <thead>
+                        <tr>
+                            <th width="30"><input type="checkbox" onchange="toggleAllCheckboxes(this, 'tb_mde')"></th>
+                            <th>Data Emissão</th>
+                            <th>Nº Doc / Chave</th>
+                            <th>Fornecedor</th>
+                            <th>Situação Atual</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tb_mde"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= NFC-e / NF-e ======================= -->
+        <div id="view_nfce" class="erp-view">
+            <h3 class="m-0 text-success mb-15">🧾 Documentos Fiscais Emitidos (NFC-e / NF-e)</h3>
+            <div class="table-responsive-wrapper">
+                <table id="tb_notas_table" class="erp-table">
+                    <thead>
+                        <tr>
+                            <th width="30"><input type="checkbox" onchange="toggleAllCheckboxes(this, 'tb_notas')"></th>
+                            <th>Número / Série</th>
+                            <th>Data</th>
+                            <th>Chave</th>
+                            <th>Status</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tb_notas"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= OUTRAS TELAS (OCULTAS) ======================= -->
+        <div id="view_mdfe" class="erp-view"><h3 class="m-0 text-info">🚚 MDF-e em Desenvolvimento...</h3></div>
+        
+        <div id="view_ciap" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">🏭 Controle CIAP</h3>
+                <button class="btn-neon btn-neon-warning" onclick="novoCadastroFis('form_ciap')">➕ Novo CIAP</button>
+            </div>
+            <!-- O formulário manteve-se oculto por brevidade visual, mas a funcionalidade foi garantida via JS -->
+            <div class="table-responsive-wrapper">
+                <table id="tb_ciap_table" class="erp-table">
+                    <thead><tr><th>ID</th><th>Número / Modelo / Série</th><th>Data Entrada</th><th>Produto</th><th>Fornecedor</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_ciap"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="view_inventario" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">📋 Controle de Inventário</h3>
+                <div class="d-flex gap-5">
+                    <button class="btn-neon btn-neon-warning ml-10" onclick="novoCadastroFis('form_inventario')">➕ Novo Inventário</button>
+                    <button type="button" class="btn-neon btn-neon-success text-xs p-5" onclick="exportarExcel('tb_inv_table', 'Inventario')">📊 Excel</button>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table id="tb_inv_table" class="erp-table">
+                    <thead><tr><th>Data Relatório</th><th>Livro</th><th>Tipo Estoque</th><th>Tipo Valor</th><th>Total</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_inventario"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="view_sped_icms" class="erp-view"><h3 class="m-0 text-primary">📦 Módulo SPED ICMS/IPI em Desenvolvimento...</h3></div>
+        <div id="view_sped_pis" class="erp-view"><h3 class="m-0 text-success">💰 Módulo SPED PIS/COFINS em Desenvolvimento...</h3></div>
+        <div id="view_sintegra" class="erp-view"><h3 class="m-0 text-info">📄 Módulo SINTEGRA em Desenvolvimento...</h3></div>
+        <div id="view_downloads" class="erp-view"><h3 class="m-0 text-primary">⬇️ Downloads de Documentos...</h3></div>
+        <div id="view_relatorios" class="erp-view"><h3 class="m-0 text-success">📊 Relatórios Fiscais...</h3></div>
+    </div>
+</div>
+
+<!-- ======================= MODAL DE CONFIRMAÇÃO ======================= -->
+<div id="custom_confirm_modal" class="erp-modal">
+    <div class="erp-modal-content" style="max-width: 400px; text-align: center;">
+        <h3 class="modal-title" style="color: #fbbf24; border:none; margin-bottom: 10px;">Atenção</h3>
+        <p id="custom_confirm_msg" style="margin-bottom: 25px; font-size: 1.1rem; color: #ddd;">Tem certeza?</p>
+        <div class="d-flex gap-10 justify-center">
+            <button id="btn_confirm_yes" class="btn-neon btn-neon-danger">Sim, Excluir</button>
+            <button class="btn-neon btn-neon-info" onclick="document.getElementById('custom_confirm_modal').classList.remove('active')">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Container de Toasts (Notificações) -->
+<div id="toast_container" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="/static/js/doc_fiscais.js"></script>
+{% endblock %}

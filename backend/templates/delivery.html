@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}App Delivery{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .erp-workspace { display: flex; flex-direction: column; width: 100%; overflow-x: hidden;}
+        
+        .selected-group-badge { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; color: #34d399; display: inline-block; }
+        .selected-adic-badge { background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; color: #fbbf24; display: inline-block; }
+        
+        .modal-content { scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">🛵 Gestão do Delivery Digital</h1>
+        <div class="page-subtitle">Configure o Cardápio, Complementos e Categorias visíveis para o Cliente.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Cardápio Digital</div>
+            <button class="menu-item" onclick="switchDeliveryView('view_menu', this)">🍕 Categorias e Produtos</button>
+            <button class="menu-item" onclick="switchDeliveryView('view_adicionais', this)">➕ Grupos de Adicionais</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- CARDÁPIO / MENU -->
+        <div id="view_menu" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-primary">🍕 Configuração do Cardápio</h3>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+                
+                <!-- Categorias do Menu -->
+                <div style="flex: 1; min-width: 320px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; background: rgba(0,0,0,0.15);">
+                    <div class="d-flex justify-between align-center mb-15">
+                        <h4 class="text-info m-0">1. Categorias</h4>
+                        <button type="button" class="btn-neon btn-neon-primary bg-transparent p-5 text-xs" onclick="novoCadastroDelivery('form_menu_grupos')">➕ Nova</button>
+                    </div>
+                    <div class="table-responsive-wrapper" style="max-height: 500px; overflow-y: auto;">
+                        <table class="erp-table text-xs">
+                            <thead><tr><th>Ord</th><th>Categoria</th><th>Ação</th></tr></thead>
+                            <tbody id="tb_menu_grupos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Itens do Menu -->
+                <div style="flex: 2; min-width: 400px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; background: rgba(0,0,0,0.15);">
+                    <div class="d-flex justify-between align-center flex-wrap gap-10 mb-15">
+                        <div class="d-flex align-center gap-10">
+                            <h4 class="text-success m-0">2. Produtos</h4>
+                            <div id="menu_badge" class="selected-group-badge" style="display:none;"></div>
+                        </div>
+                        <button type="button" class="btn-neon btn-neon-success bg-transparent p-5 text-xs" id="btn_novo_item_menu" onclick="novoCadastroDelivery('form_menu_itens')" style="display:none;">➕ Novo Produto</button>
+                    </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="erp-table">
+                            <thead><tr><th>Produto/Nome</th><th>Cód.PDV</th><th>Preço</th><th>Ativo</th><th class="text-center">Ações</th></tr></thead>
+                            <tbody id="tb_menu_itens">
+                                <tr><td colspan="5" class="text-center text-muted">Selecione uma Categoria primeiro.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL MENU GRUPOS -->
+            <div id="form_menu_grupos_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Cadastro de Categoria</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalDel('form_menu_grupos')">X</button>
+                    </div>
+                    <form id="form_menu_grupos" class="form-panel border-0 mb-0 p-0" onsubmit="salvarMenuGrupo(event)">
+                        <input type="hidden" id="mg_id">
+                        <div class="form-grid" style="grid-template-columns: 1fr;">
+                            <div class="form-grid">
+                                <div><label>Ordem:</label><input type="number" id="mg_ordem" class="erp-input" value="1"></div>
+                                <div class="col-span-2">
+                                    <label>Nome da Categoria:</label>
+                                    <select id="mg_nome_grupo" class="erp-select font-bold ddl-categorias-erp" required>
+                                        <option value="">-- Carregando... --</option>
+                                    </select>
+                                </div>
+                                <div><label>Ícone (Emoji/URL):</label><input type="text" id="mg_icone" class="erp-input" placeholder="Ex: 🍕"></div>
+                            </div>
+                            <div><label>Descrição Opcional:</label><input type="text" id="mg_descricao" class="erp-input"></div>
+                            <div><label>Disponível no App?</label><select id="mg_disponivel" class="erp-select"><option value="1">SIM</option><option value="0">NÃO</option></select></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormulario('form_menu_grupos')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-primary">💾 Salvar Categoria</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL MENU ITENS -->
+            <div id="form_menu_itens_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-success">Cadastro de Produto no App</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalDel('form_menu_itens')">X</button>
+                    </div>
+                    <form id="form_menu_itens" class="form-panel border-0 mb-0 p-0" onsubmit="salvarMenuItem(event)">
+                        <input type="hidden" id="mi_id">
+                        <input type="hidden" id="mi_grupo_id">
+                        <div class="form-grid align-end">
+                            <div class="col-span-2">
+                                <label>Vincular Produto ERP:</label>
+                                <select id="mi_produto_id" class="erp-select ddl-produtos-erp" onchange="updateMenuNamePrice(this)" required>
+                                    <option value="">-- Carregando Produtos... --</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label>Nome Exibição (App/Site):</label>
+                                <input type="text" id="mi_nome_personalizado" class="erp-input" required placeholder="Ex: Pizza Calabresa">
+                            </div>
+                            
+                            <div><label>Nome ERP (Auto):</label><input type="text" id="mi_produto_nome" class="erp-input text-muted" readonly></div>
+                            <div><label>Cód. PDV (Integração):</label><input type="text" id="mi_codigo_pdv" class="erp-input text-warning"></div>
+                            
+                            <div><label>Preço Venda (R$):</label><input type="number" step="0.01" id="mi_preco_venda" class="erp-input text-success font-bold" required></div>
+                            
+                            <div class="col-span-full"><label>Descrição (Ingredientes):</label><textarea id="mi_descricao" class="erp-input" rows="2"></textarea></div>
+                            <div class="col-span-full"><label>URL da Imagem do Produto:</label><input type="text" id="mi_imagem_url" class="erp-input text-info" placeholder="https://link-da-imagem.com/foto.jpg"></div>
+
+                            <div><label>Ativo no App?</label><select id="mi_ativo" class="erp-select"><option value="1">SIM</option><option value="0">NÃO</option></select></div>
+                            <div><label>Destaque?</label><select id="mi_destaque" class="erp-select"><option value="0">NÃO</option><option value="1">SIM</option></select></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="submit" class="btn-neon btn-neon-success w-100">➕ Adicionar/Atualizar Produto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRUPOS DE ADICIONAIS -->
+        <div id="view_adicionais" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">➕ Configuração de Adicionais e Bordas</h3>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+                
+                <!-- Grupos de Adicionais -->
+                <div style="flex: 1; min-width: 320px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; background: rgba(0,0,0,0.15);">
+                    <div class="d-flex justify-between align-center mb-15">
+                        <h4 class="text-info m-0">1. Grupos (Ex: Bordas)</h4>
+                        <button type="button" class="btn-neon btn-neon-primary bg-transparent p-5 text-xs" onclick="novoCadastroDelivery('form_adic_grupos')">➕ Novo Grupo</button>
+                    </div>
+                    <div class="table-responsive-wrapper" style="max-height: 500px; overflow-y: auto;">
+                        <table class="erp-table text-xs">
+                            <thead><tr><th>Grupo / Descrição</th><th>Limites</th><th>Ação</th></tr></thead>
+                            <tbody id="tb_adic_grupos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Itens dos Adicionais -->
+                <div style="flex: 2; min-width: 400px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; background: rgba(0,0,0,0.15);">
+                    <div class="d-flex justify-between align-center flex-wrap gap-10 mb-15">
+                        <div class="d-flex align-center gap-10">
+                            <h4 class="text-warning m-0">2. Opções do Grupo</h4>
+                            <div id="adic_badge" class="selected-adic-badge" style="display:none;"></div>
+                        </div>
+                        <button type="button" class="btn-neon btn-neon-warning bg-transparent p-5 text-xs" id="btn_novo_item_adic" onclick="novoCadastroDelivery('form_adic_itens')" style="display:none;">➕ Nova Opção</button>
+                    </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="erp-table">
+                            <thead><tr><th>Opção</th><th>Custo (+)</th><th>Ações</th></tr></thead>
+                            <tbody id="tb_adic_itens">
+                                <tr><td colspan="3" class="text-center text-muted">Selecione um Grupo de Adicional primeiro.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL GRUPO ADICIONAL -->
+            <div id="form_adic_grupos_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Cadastro de Grupo de Adicionais</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalDel('form_adic_grupos')">X</button>
+                    </div>
+                    <form id="form_adic_grupos" class="form-panel border-0 mb-0 p-0" onsubmit="salvarAdicGrupo(event)">
+                        <input type="hidden" id="adg_id">
+                        <div class="form-grid" style="grid-template-columns: 1fr;">
+                            <div>
+                                <label>Nome do Grupo:</label>
+                                <select id="adg_nome_grupo" class="erp-select font-bold ddl-grupos-erp" required>
+                                    <option value="">-- Carregando... --</option>
+                                </select>
+                            </div>
+                            <div class="col-span-full"><label>Descrição para o Cliente:</label><input type="text" id="adg_descricao" class="erp-input text-info" placeholder="Ex: Escolha até 2 opções de borda recheada"></div>
+                            
+                            <div class="form-grid">
+                                <div><label>Mínimo de Escolhas:</label><input type="number" id="adg_minimo" class="erp-input" value="0"></div>
+                                <div><label>Máximo de Escolhas:</label><input type="number" id="adg_maximo" class="erp-input" value="1"></div>
+                            </div>
+                            <div><label>Obrigatório?</label><select id="adg_obrigatorio" class="erp-select"><option value="0">NÃO</option><option value="1">SIM</option></select></div>
+                            <div><label>Ativo?</label><select id="adg_disponivel" class="erp-select"><option value="1">SIM</option><option value="0">NÃO</option></select></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormulario('form_adic_grupos')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-warning">💾 Salvar Grupo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL ITEM ADICIONAL -->
+            <div id="form_adic_itens_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-warning">Cadastro de Opção (Adicional)</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalDel('form_adic_itens')">X</button>
+                    </div>
+                    <form id="form_adic_itens" class="form-panel border-0 mb-0 p-0" onsubmit="salvarAdicItem(event)">
+                        <input type="hidden" id="adi_id">
+                        <input type="hidden" id="adi_grupo_id">
+                        <div class="form-grid align-end">
+                            <div class="col-span-2">
+                                <label>Vincular Produto ERP:</label>
+                                <select id="adi_produto_id" class="erp-select ddl-produtos-erp" onchange="updateAdicNamePrice(this)" required>
+                                    <option value="">-- Carregando Produtos... --</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label>Nome Exibição (Adicional):</label>
+                                <input type="text" id="adi_nome" class="erp-input" required placeholder="Ex: Borda de Catupiry">
+                            </div>
+                            <div><label>Custo Adicional (R$):</label><input type="number" step="0.01" id="adi_preco_adicional" class="erp-input text-warning" required></div>
+                            <div><label>Disponível?</label><select id="adi_disponivel" class="erp-select"><option value="1">SIM</option><option value="0">NÃO</option></select></div>
+                        </div>
+                        <div class="form-actions mt-15 justify-end">
+                            <button type="submit" class="btn-neon btn-neon-warning w-100">➕ Adicionar Opção</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Bibliotecas para Exportação (Excel e PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="/static/js/delivery.js"></script>
+{% endblock %}

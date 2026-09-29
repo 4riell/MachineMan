@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Operacional e PDV{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .section-box { border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.15);}
+        .top-actions button { margin-left: 5px; }
+        .modal-content { scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow text-primary">🛠️ Operações e PDV</h1>
+        <div class="page-subtitle">Caixa, Sangrias, Vales, Logística (MDF-e) e Integração com Balança.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Frente de Loja</div>
+            <button class="menu-item" onclick="switchOpView('view_pdv_movimentos', this)">💵 Caixa (Sangria/Suprimento)</button>
+            <button class="menu-item" onclick="switchOpView('view_vales', this)">🎟️ Vales de Troca/Crédito</button>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-title">Logística</div>
+            <button class="menu-item" onclick="switchOpView('view_mdfe', this)">🚚 Manifesto MDF-e</button>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-group-title">Hardware</div>
+            <button class="menu-item" onclick="switchOpView('view_balanca', this)">⚖️ Integração Balança</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+
+        <!-- ======================= MOVIMENTOS DE CAIXA ======================= -->
+        <div id="view_pdv_movimentos" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-success">💵 Histórico de Caixa (Sangria/Suprimento)</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroOp('form_pdv_movimentos')">➕ Novo Movimento</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="exportarExcelOp('tb_pdv_movimentos_table', 'Movimentos_Caixa')">⬇️ Excel</button>
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="exportarPDFOp('tb_pdv_movimentos_table', 'Relatório de Caixa')">📄 PDF</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_pdv_movimentos_table" class="erp-table">
+                    <thead><tr><th>Data/Hora</th><th>Caixa</th><th>Operador</th><th>Tipo</th><th>Valor (R$)</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_pdv_movimentos"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL MOVIMENTOS DE CAIXA -->
+            <div id="form_pdv_movimentos_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-success">Registar Movimento de Caixa</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalOp('form_pdv_movimentos')">X</button>
+                    </div>
+                    <form id="form_pdv_movimentos" class="form-panel mb-0 border-0 p-0" onsubmit="salvarOperacional(event, 'pdv_movimentos')">
+                        <input type="hidden" id="pdv_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Data e Hora:</label><input type="datetime-local" id="pdv_data_hora" class="erp-input" required></div>
+                            <div><label>Caixa / PDV (Conta):</label><select id="pdv_caixa_nome" class="erp-select ddl-caixas" required></select></div>
+                            <div><label>Operador Responsável:</label><select id="pdv_operador" class="erp-select ddl-operadores" required></select></div>
+                            <div><label>Tipo de Movimento:</label>
+                                <select id="pdv_tipo" class="erp-select" required>
+                                    <option value="Sangria">Sangria (Retirada)</option>
+                                    <option value="Suprimento">Suprimento (Entrada de Troco)</option>
+                                </select>
+                            </div>
+                            <div><label>Valor (R$):</label><input type="number" step="0.01" id="pdv_valor" class="erp-input font-bold text-warning" required></div>
+                            <div class="col-span-full"><label>Justificativa / Observação:</label><input type="text" id="pdv_justificativa" class="erp-input" required placeholder="Motivo da retirada ou entrada..."></div>
+                        </div>
+                        <div class="form-actions mt-15 text-right">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormularioOp('form_pdv_movimentos')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Registar Movimento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= VALES DE TROCA ======================= -->
+        <div id="view_vales" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-info">🎟️ Vales de Troca e Crédito</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroOp('form_vales')">➕ Novo Vale</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="exportarExcelOp('tb_vales_table', 'Vales_Troca')">⬇️ Excel</button>
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="exportarPDFOp('tb_vales_table', 'Relatório de Vales')">📄 PDF</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_vales_table" class="erp-table">
+                    <thead><tr><th>Código</th><th>Data</th><th>Cliente</th><th>Valor</th><th>Validade</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_vales"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL VALES DE TROCA -->
+            <div id="form_vales_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Emissão de Vale / Crédito</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalOp('form_vales')">X</button>
+                    </div>
+                    <form id="form_vales" class="form-panel mb-0 border-0 p-0" onsubmit="salvarOperacional(event, 'vales')">
+                        <input type="hidden" id="val_id">
+                        <div class="form-grid">
+                            <div><label>Código do Vale:</label><input type="text" id="val_codigo" class="erp-input font-bold text-warning" placeholder="Gerado automaticamente" required></div>
+                            <div><label>Data de Emissão:</label><input type="date" id="val_data_emissao" class="erp-input" required></div>
+                            <div><label>Data Referência (Opcional):</label><input type="date" id="val_data" class="erp-input"></div>
+                            
+                            <div class="col-span-2">
+                                <label>Cliente Beneficiado:</label>
+                                <select id="val_cliente_id" class="erp-select ddl-clientes-id" onchange="document.getElementById('val_cliente_nome').value = this.options[this.selectedIndex].getAttribute('data-nome') || ''"></select>
+                                <input type="hidden" id="val_cliente_nome">
+                            </div>
+                            
+                            <div><label>Funcionário Responsável:</label>
+                                <select id="val_funcionario_id" class="erp-select ddl-funcionarios-id"></select>
+                            </div>
+
+                            <div><label>Valor do Crédito (R$):</label><input type="number" step="0.01" id="val_valor" class="erp-input font-bold text-success" required></div>
+                            <div><label>Validade (Expira em):</label><input type="date" id="val_validade" class="erp-input"></div>
+                            
+                            <div><label>Status do Vale:</label>
+                                <select id="val_status" class="erp-select">
+                                    <option value="Ativo">Ativo (Disponível)</option>
+                                    <option value="Utilizado">Utilizado</option>
+                                    <option value="Expirado">Expriado/Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="col-span-full"><label>Notas (Referente a qual devolução?):</label><input type="text" id="val_notas" class="erp-input" placeholder="Ex: Devolução NF-e 1234"></div>
+                        </div>
+                        <div class="form-actions mt-15 text-right">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormularioOp('form_vales')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-info">💾 Gerar Vale</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= MDF-E LOGÍSTICA ======================= -->
+        <div id="view_mdfe" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-primary">🚚 Manifesto Eletrónico (MDF-e)</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroOp('form_mdfe')">➕ Novo MDF-e</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="exportarExcelOp('tb_mdfe_table', 'Manifestos_MDFe')">⬇️ Excel</button>
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="exportarPDFOp('tb_mdfe_table', 'Relatório de MDF-e')">📄 PDF</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_mdfe_table" class="erp-table">
+                    <thead><tr><th>MDF-e</th><th>Data</th><th>Motorista</th><th>Placa</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_mdfe"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL MDF-E -->
+            <div id="form_mdfe_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Emissão de MDF-e</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalOp('form_mdfe')">X</button>
+                    </div>
+                    <form id="form_mdfe" class="form-panel mb-0 border-0 p-0" onsubmit="salvarOperacional(event, 'mdfe')">
+                        <input type="hidden" id="mdf_id">
+                        <div class="form-grid">
+                            <div><label>Número do MDF-e:</label><input type="text" id="mdf_numero" class="erp-input" required></div>
+                            <div><label>Série:</label><input type="text" id="mdf_serie" class="erp-input" value="1" required></div>
+                            <div><label>Data de Emissão:</label><input type="date" id="mdf_data_emissao" class="erp-input" required></div>
+                            
+                            <div class="col-span-2"><label>Motorista / Condutor:</label><select id="mdf_motorista_nome" class="erp-select ddl-motoristas" required></select></div>
+                            <div><label>Veículo (Placa):</label><select id="mdf_placa_veiculo" class="erp-select ddl-veiculos" required></select></div>
+                            
+                            <div><label>UF Origem:</label><input type="text" id="mdf_uf_origem" class="erp-input" maxlength="2" placeholder="SP"></div>
+                            <div><label>UF Destino:</label><input type="text" id="mdf_uf_destino" class="erp-input" maxlength="2" placeholder="MG"></div>
+                            
+                            <div><label>Valor Total da Carga (R$):</label><input type="number" step="0.01" id="mdf_valor_carga" class="erp-input text-warning"></div>
+                            <div><label>Status Sefaz:</label>
+                                <select id="mdf_status" class="erp-select">
+                                    <option value="Em Digitação">Em Digitação</option>
+                                    <option value="Autorizado">Autorizado</option>
+                                    <option value="Encerrado">Encerrado</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="col-span-full"><label>Chave de Acesso (NFe/CTe):</label><input type="text" id="mdf_chave_acesso" class="erp-input" placeholder="Digite a chave de 44 dígitos"></div>
+                            <div class="col-span-full"><label>Notas / Observações:</label><input type="text" id="mdf_notas" class="erp-input" placeholder="Informações adicionais sobre o manifesto..."></div>
+                        </div>
+
+                        <div class="form-actions mt-15 text-right">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormularioOp('form_mdfe')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-primary">💾 Salvar MDF-e</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= HARDWARE BALANÇA ======================= -->
+        <div id="view_balanca" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">⚖️ Auditoria e Relatório de Balança</h3>
+                <div class="top-actions m-0 d-flex gap-10">
+                    <button class="btn-neon btn-neon-primary" onclick="loadRelBalanca()">🔄 Sincronizar com Balança RS232</button>
+                    <button class="btn-neon btn-neon-info bg-transparent" onclick="window.print()">🖨️ Imprimir</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th>Data/Hora</th><th>Item Produzido/Conferido</th><th>Peso ERP (Kg)</th><th>Peso Real Balança (Kg)</th><th>Status da Conferência</th></tr></thead>
+                    <tbody id="tb_rel_balanca"><tr><td colspan="5" class="text-center text-muted">Clique em Sincronizar para buscar os dados de pesagem.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="/static/js/operacional.js"></script>
+{% endblock %}

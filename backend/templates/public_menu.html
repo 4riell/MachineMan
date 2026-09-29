@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ loja_nome }} - Cardápio Digital</title>
+    <style>
+        :root { --primary: #ff5722; --dark: #121212; --light: #ffffff; }
+        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding-bottom: 80px; }
+        header { background: var(--dark); color: white; padding: 1.5rem 1rem; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);}
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        
+        details.category-card { background: white; margin: 15px 0; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; transition: all 0.3s ease; }
+        summary.category-title { font-weight: bold; font-size: 1.2rem; padding: 15px; background: var(--primary); color: white; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        summary.category-title::-webkit-details-marker { display: none; }
+        summary.category-title::after { content: "▼"; font-size: 1rem; transition: transform 0.3s; }
+        details[open] summary.category-title::after { transform: rotate(180deg); }
+        .category-content { padding: 10px; background: #fdfdfd; }
+
+        .product-card { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .prod-info { flex: 1; margin-right: 15px; }
+        .prod-nome { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; color: #222;}
+        .prod-desc { font-size: 0.85rem; color: #777; margin-bottom: 8px; line-height: 1.4;}
+        .prod-preco { font-weight: bold; color: var(--primary); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.2s;}
+        .btn-add:active { transform: scale(0.95); }
+        
+        #cart-bar { position: fixed; bottom: 0; width: 100%; background: var(--primary); color: white; padding: 18px; text-align: center; font-weight: bold; cursor: pointer; box-sizing: border-box; font-size: 1.1rem; z-index: 900; box-shadow: 0 -2px 10px rgba(0,0,0,0.2);}
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: flex-end; justify-content: center;}
+        .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px; border-radius: 15px 15px 0 0; max-height: 85vh; overflow-y: auto; box-sizing: border-box; animation: slideUp 0.3s ease-out;}
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .section-title { font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; color: #444; font-size: 1.1rem;}
+        .opt-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 1rem; color: #555;}
+        
+        .input-std { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; font-size: 1rem;}
+        .btn-block { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; margin-top: 15px; }
+        .btn-outline { background: transparent; color: #666; border: 1px solid #ccc; margin-top: 10px;}
+        
+        input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; margin-right: 8px; accent-color: var(--primary); }
+    </style>
+</head>
+<body>
+    <header>
+        <h2 style="margin:0; font-size: 1.6rem;">{{ loja_nome }}</h2>
+        <p style="margin:8px 0 0 0; font-size: 1rem; opacity: 0.9;">Faça o seu pedido online!</p>
+    </header>
+
+    <div class="container">
+        {% if menu_completo|length == 0 %}
+            <div style="text-align: center; margin-top: 50px; color: #777;">
+                <h3>Nenhum produto disponível no momento.</h3>
+            </div>
+        {% else %}
+            {% for cat in menu_completo %}
+                <details class="category-card" {% if loop.index == 1 %}open{% endif %}>
+                    <summary class="category-title">{{ cat.emoji }} {{ cat.nome }}</summary>
+                    <div class="category-content">
+                        {% for p in cat.produtos %}
+                            <div class="product-card">
+                                <div class="prod-info">
+                                    <div class="prod-nome">{{ p.nome }}</div>
+                                    {% if p.descricao %}<div class="prod-desc">{{ p.descricao }}</div>{% endif %}
+                                    {% if p.preco > 0 %}<div class="prod-preco">A partir de R$ {{ "%.2f"|format(p.preco) }}</div>{% endif %}
+                                </div>
+                                
+                                <button class="btn-add" 
+                                        data-id="{{ p.id }}" 
+                                        data-cat="{{ cat.id }}" 
+                                        data-nome="{{ p.nome }}" 
+                                        data-preco="{{ p.preco }}" 
+                                        onclick="prepararModalProduto(this)">
+                                    Adicionar
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </details>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div id="cart-bar" onclick="abrirCheckout()" style="display: none;">
+        🛒 Ver Carrinho (<span id="cart-count">0</span>) - R$ <span id="cart-total">0.00</span>
+    </div>
+
+    <script id="dados-menu" type="application/json">{{ menu_completo | tojson | safe }}</script>
+    <script id="dados-variacoes" type="application/json">{{ variacoes | tojson | safe }}</script>
+    <script id="dados-adicionais" type="application/json">{{ grupos_adicionais | tojson | safe }}</script>
+
+    <div class="modal-overlay" id="modalProduto" onclick="if(event.target === this) fecharModalProduto()">
+        <div class="modal-content">
+            <h2 id="modalProdNome" style="margin-top:0; color: var(--dark);">Produto</h2>
+            
+            <div id="modalVariacoesArea"></div>
+            <div id="modalSaboresArea"></div>
+            <div id="modalAdicionaisArea"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; font-weight: bold; font-size: 1.3rem;">
+                <span>Total:</span>
+                <span style="color: var(--primary);">R$ <span id="modalProdTotal">0.00</span></span>
+            </div>
+            
+            <button class="btn-block" onclick="confirmarProduto()">Adicionar ao Pedido</button>
+            <button class="btn-block btn-outline" onclick="fecharModalProduto()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE CHECKOUT (Dividido em Login e Formulário) -->
+    <div class="modal-overlay" id="modalCheckout">
+        <div class="modal-content">
+            
+            <!-- PASSO 1: LOGIN -->
+            <div id="step-login">
+                <h2 style="margin-top:0; color: var(--dark); text-align:center;">Identifique-se</h2>
+                <p style="text-align:center; color:#555;">Qual o seu WhatsApp? Buscaremos seu cadastro automaticamente para adiantar o pedido.</p>
+                <input type="tel" id="cli_tel_login" class="input-std" placeholder="(DD) 99999-9999">
+                
+                <button class="btn-block" onclick="efetuarLoginPublico(event)">Entrar e Continuar</button>
+                <button class="btn-block btn-outline" onclick="fecharCheckout()">Voltar ao Cardápio</button>
+            </div>
+
+            <!-- PASSO 2: FINALIZAR PEDIDO -->
+            <div id="step-checkout" style="display:none;">
+                <h2 style="margin-top:0; color: var(--dark);">O Seu Pedido</h2>
+                <div id="lista-carrinho" style="margin-bottom: 20px; font-size: 0.95rem; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
+                
+                <h3 style="text-align: right; color: var(--primary); font-size: 1.4rem;">Total: R$ <span id="checkout-total">0.00</span></h3>
+                
+                <div class="section-title">1. Seus Dados</div>
+                <input type="text" id="cli_nome" class="input-std" placeholder="O seu Nome Completo">
+                <input type="tel" id="cli_tel" class="input-std" placeholder="O seu Telefone" readonly style="background: #f0f0f0;">
+
+                <div class="section-title">2. Como deseja receber?</div>
+                <select id="cli_tipo_entrega" class="input-std" onchange="document.getElementById('box_endereco').style.display = this.value === 'Entrega' ? 'block' : 'none'">
+                    <option value="Entrega">Entrega (Delivery)</option>
+                    <option value="Retirada">Retirada no Local</option>
+                    <option value="Mesa">Comer na Mesa</option>
+                </select>
+
+                <div id="box_endereco">
+                    <input type="text" id="cli_rua" class="input-std" placeholder="Rua / Avenida">
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="cli_numero" class="input-std" placeholder="Número" style="flex:1;">
+                        <input type="text" id="cli_bairro" class="input-std" placeholder="Bairro" style="flex:2;">
+                    </div>
+                    <input type="text" id="cli_ref" class="input-std" placeholder="Ponto de Referência (Opcional)">
+                </div>
+
+                <div class="section-title">3. Pagamento</div>
+                <select id="cli_pagamento" class="input-std">
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro (Levar Troco)</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito (Levar Máquina)</option>
+                    <option value="Cartão de Débito">Cartão de Débito (Levar Máquina)</option>
+                </select>
+                
+                <button class="btn-block" id="btn-finalizar" onclick="finalizarPedido()">Enviar Pedido Agora</button>
+                <button class="btn-block btn-outline" onclick="voltarLogin()">Mudar meu Número</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const menuDados = JSON.parse(document.getElementById('dados-menu').textContent);
+        const variacoes = JSON.parse(document.getElementById('dados-variacoes').textContent);
+        const gruposAdicionais = JSON.parse(document.getElementById('dados-adicionais').textContent);
+        
+        const LOJA_ID = parseInt("{{ loja_id }}", 10);
+        
+        let carrinho = [];
+        let totalCarrinho = 0;
+        let prodAtual = null;
+        let sessaoLogada = false;
+
+        function formatMoney(val) { return val.toFixed(2); }
+
+        function prepararModalProduto(btnElement) {
+            const id = parseInt(btnElement.getAttribute('data-id'), 10);
+            const catId = btnElement.getAttribute('data-cat');
+            const nome = btnElement.getAttribute('data-nome');
+            const preco = parseFloat(btnElement.getAttribute('data-preco'));
+            abrirModalProduto(id, catId, nome, preco);
+        }
+
+        function abrirModalProduto(id, catId, nome, preco) {
+            prodAtual = { id: id, catId: catId, nome: nome, preco: preco };
+            document.getElementById('modalProdNome').innerText = nome;
+            
+            const varProduto = variacoes.filter(v => v.produto_id == id || v.categoria == catId);
+            const areaVar = document.getElementById('modalVariacoesArea');
+            areaVar.innerHTML = '';
+            
+            if (varProduto.length > 0) {
+                let html = '<div class="section-title">Escolha o Tamanho / Opção:</div>';
+                html += '<select id="selVariacao" class="input-std" onchange="mudouVariacao()">';
+                varProduto.forEach((v, idx) => {
+                    let preDisp = v.preco > 0 ? ` (+ R$ ${formatMoney(v.preco)})` : '';
+                    let valObj = {nome: v.nome, preco: v.preco, max_sabores: (v.max_sabores || 1)};
+                    html += `<option value='${JSON.stringify(valObj)}' ${idx===0?'selected':''}>${v.nome}${preDisp}</option>`;
+                });
+                html += '</select>';
+                areaVar.innerHTML = html;
+            }
+
+            const areaAdd = document.getElementById('modalAdicionaisArea');
+            areaAdd.innerHTML = '';
+            const gruposValidos = gruposAdicionais.filter(g => g.categoria_alvo == catId || g.produto_alvo_id == id);
+            
+            if (gruposValidos.length > 0) {
+                let html = '';
+                gruposValidos.forEach(g => {
+                    html += `<div class="section-title">${g.titulo || g.nome}</div>`;
+                    if (g.opcoes && g.opcoes.length > 0) {
+                        g.opcoes.forEach(op => {
+                            const isRadio = g.tipo === 'unica';
+                            const type = isRadio ? 'radio' : 'checkbox';
+                            const name = `grupo_${g.id}`;
+                            const displayPreco = op.preco_adicional > 0 ? `+ R$ ${formatMoney(op.preco_adicional)}` : 'Grátis';
+                            
+                            html += `
+                            <div class="opt-row">
+                                <label style="display:flex; align-items:center;">
+                                    <input type="${type}" name="${name}" class="chk-adicional" value='{"nome":"${op.nome}","preco":${op.preco_adicional}}' onchange="atualizarPrecoModal()"> 
+                                    ${op.nome}
+                                </label>
+                                <span style="color:#777; font-size: 0.9rem;">${displayPreco}</span>
+                            </div>`;
+                        });
+                    }
+                });
+                areaAdd.innerHTML = html;
+            }
+
+            mudouVariacao();
+            document.getElementById('modalProduto').style.display = 'flex';
+        }
+
+        function mudouVariacao() {
+            const selVar = document.getElementById('selVariacao');
+            let maxSabores = 1;
+            if (selVar && selVar.value) {
+                const varObj = JSON.parse(selVar.value);
+                maxSabores = varObj.max_sabores || 1;
+            }
+            renderizarSaboresExtras(maxSabores);
+            atualizarPrecoModal();
+        }
+
+        function renderizarSaboresExtras(maxSabores) {
+            const area = document.getElementById('modalSaboresArea');
+            if (maxSabores <= 1) {
+                area.innerHTML = '';
+                return;
+            }
+            
+            const cat = menuDados.find(c => String(c.id) === String(prodAtual.catId));
+            if (!cat) return;
+            
+            const permitidos = maxSabores - 1;
+            let html = `<div class="section-title">Dividir com mais sabores? (Até +${permitidos})</div>`;
+            html += `<div style="font-size: 0.9rem; margin-bottom: 10px; color: #555;">Sabor Principal: <b>${prodAtual.nome}</b></div>`;
+            
+            cat.produtos.forEach(p => {
+                if (String(p.id) !== String(prodAtual.id)) {
+                    html += `
+                    <div class="opt-row" style="margin-bottom: 8px;">
+                        <label style="display:flex; align-items:center;">
+                            <input type="checkbox" name="sabores_extra" class="chk-sabor-extra" value="${p.nome}" data-preco="${p.preco}" onchange="validarLimiteSabores(${permitidos})">
+                            ${p.nome}
+                        </label>
+                    </div>`;
+                }
+            });
+            area.innerHTML = html;
+        }
+
+        function validarLimiteSabores(limite) {
+            const checks = document.querySelectorAll('.chk-sabor-extra');
+            const selecionados = document.querySelectorAll('.chk-sabor-extra:checked');
+            
+            if (selecionados.length >= limite) {
+                checks.forEach(c => { if (!c.checked) c.disabled = true; });
+            } else {
+                checks.forEach(c => c.disabled = false);
+            }
+            atualizarPrecoModal();
+        }
+
+        function atualizarPrecoModal() {
+            let precoProdBase = prodAtual.preco;
+            document.querySelectorAll('.chk-sabor-extra:checked').forEach(chk => {
+                const pPreco = parseFloat(chk.getAttribute('data-preco'));
+                if (pPreco > precoProdBase) { precoProdBase = pPreco; }
+            });
+            
+            let precoTotal = precoProdBase;
+            const selVar = document.getElementById('selVariacao');
+            if (selVar && selVar.value) {
+                const varObj = JSON.parse(selVar.value);
+                precoTotal += varObj.preco;
+            }
+            
+            document.querySelectorAll('.chk-adicional:checked').forEach(chk => {
+                const addObj = JSON.parse(chk.value);
+                precoTotal += addObj.preco;
+            });
+
+            document.getElementById('modalProdTotal').innerText = formatMoney(precoTotal);
+        }
+
+        function fecharModalProduto() { document.getElementById('modalProduto').style.display = 'none'; }
+        function fecharCheckout() { document.getElementById('modalCheckout').style.display = 'none'; }
+        
+        function voltarLogin() {
+            sessaoLogada = false;
+            document.getElementById('step-checkout').style.display = 'none';
+            document.getElementById('step-login').style.display = 'block';
+        }
+
+        function confirmarProduto() {
+            let precoProdBase = prodAtual.preco;
+            let saboresEscolhidos = [prodAtual.nome];
+            
+            document.querySelectorAll('.chk-sabor-extra:checked').forEach(chk => {
+                const pPreco = parseFloat(chk.getAttribute('data-preco'));
+                if (pPreco > precoProdBase) precoProdBase = pPreco;
+                saboresEscolhidos.push(chk.value);
+            });
+            
+            let precoTotal = precoProdBase;
+            let nomeFinal = saboresEscolhidos.join(" / ");
+            let detalhes = [];
+
+            const selVar = document.getElementById('selVariacao');
+            if (selVar && selVar.value) {
+                const varObj = JSON.parse(selVar.value);
+                precoTotal += varObj.preco;
+                nomeFinal = `${nomeFinal} (${varObj.nome})`;
+            }
+
+            document.querySelectorAll('.chk-adicional:checked').forEach(chk => {
+                const addObj = JSON.parse(chk.value);
+                precoTotal += addObj.preco;
+                detalhes.push(addObj.nome);
+            });
+            
+            if (detalhes.length > 0) { nomeFinal += `\n   + ${detalhes.join(', ')}`; }
+
+            carrinho.push({ nome: nomeFinal, preco: precoTotal, quantidade: 1 });
+            totalCarrinho += precoTotal;
+            
+            atualizarBarraCarrinho();
+            fecharModalProduto();
+        }
+
+        function atualizarBarraCarrinho() {
+            const bar = document.getElementById('cart-bar');
+            if (carrinho.length > 0) {
+                document.getElementById('cart-count').innerText = carrinho.length;
+                document.getElementById('cart-total').innerText = formatMoney(totalCarrinho);
+                bar.style.display = 'block';
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function abrirCheckout() {
+            const lista = document.getElementById('lista-carrinho');
+            lista.innerHTML = '';
+            carrinho.forEach((item, idx) => {
+                let nomeFormatado = item.nome.replace(/\n/g, '<br><span style="color:#777;font-size:0.85rem;">') + '</span>';
+                lista.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #ddd; padding:10px 0; align-items: center;">
+                        <div style="flex:1; margin-right:10px;"><b>${item.quantidade}x</b> ${nomeFormatado}</div>
+                        <div style="font-weight:bold; white-space:nowrap;">R$ ${formatMoney(item.preco)} <span style="color:#ff5722; cursor:pointer; margin-left:10px; font-size:1.2rem;" onclick="removerItem(${idx})">✖</span></div>
+                    </div>`;
+            });
+            document.getElementById('checkout-total').innerText = formatMoney(totalCarrinho);
+            
+            document.getElementById('modalCheckout').style.display = 'flex';
+            
+            // Controle de tela de login
+            if (sessaoLogada) {
+                document.getElementById('step-login').style.display = 'none';
+                document.getElementById('step-checkout').style.display = 'block';
+            } else {
+                document.getElementById('step-login').style.display = 'block';
+                document.getElementById('step-checkout').style.display = 'none';
+                
+                // Tenta puxar do navegador se ele já fechou a tela e voltou
+                const telSalvo = localStorage.getItem('app_cliente_tel');
+                if (telSalvo) document.getElementById('cli_tel_login').value = telSalvo;
+            }
+        }
+
+        function removerItem(idx) {
+            totalCarrinho -= carrinho[idx].preco;
+            carrinho.splice(idx, 1);
+            atualizarBarraCarrinho();
+            if (carrinho.length === 0) {
+                fecharCheckout();
+            } else {
+                abrirCheckout();
+            }
+        }
+
+        // ====== LÓGICA DE AUTO LOGIN DO CLIENTE ======
+        async function efetuarLoginPublico(e) {
+            const btn = e.target;
+            const telInput = document.getElementById('cli_tel_login').value.replace(/\D/g, '');
+            
+            if (telInput.length < 10) return alert("Por favor, digite seu WhatsApp com DDD.");
+
+            btn.innerText = "Buscando cadastro...";
+            btn.disabled = true;
+
+            try {
+                // Tenta buscar no banco da loja
+                const res = await fetch(`/api/public/cliente/${LOJA_ID}/${telInput}`);
+                const data = await res.json();
+                
+                // Grava o telefone definitivo
+                document.getElementById('cli_tel').value = telInput;
+                localStorage.setItem('app_cliente_tel', telInput);
+                
+                if (data.encontrado) {
+                    document.getElementById('cli_nome').value = data.dados.nome || '';
+                    document.getElementById('cli_rua').value = data.dados.rua || '';
+                    document.getElementById('cli_numero').value = data.dados.numero_casa || '';
+                    document.getElementById('cli_bairro').value = data.dados.bairro || '';
+                    document.getElementById('cli_ref').value = data.dados.ponto_referencia || '';
+                } else {
+                    // Fallback para cache local se ele se cadastrou só no navegador
+                    const clienteSalvo = localStorage.getItem('app_cliente_dados');
+                    if (clienteSalvo) {
+                        const c = JSON.parse(clienteSalvo);
+                        if (c.tel === telInput) {
+                            document.getElementById('cli_nome').value = c.nome || '';
+                            document.getElementById('cli_rua').value = c.rua || '';
+                            document.getElementById('cli_numero').value = c.numero || '';
+                            document.getElementById('cli_bairro').value = c.bairro || '';
+                            document.getElementById('cli_ref').value = c.ref || '';
+                        } else { limparFormCheckout(); }
+                    } else { limparFormCheckout(); }
+                }
+                
+                // Libera o passo de checkout
+                sessaoLogada = true;
+                document.getElementById('step-login').style.display = 'none';
+                document.getElementById('step-checkout').style.display = 'block';
+
+            } catch (error) {
+                alert("Falha ao buscar dados, mas você pode continuar e preencher manualmente.");
+                document.getElementById('cli_tel').value = telInput;
+                sessaoLogada = true;
+                document.getElementById('step-login').style.display = 'none';
+                document.getElementById('step-checkout').style.display = 'block';
+            } finally {
+                btn.innerText = "Entrar e Continuar";
+                btn.disabled = false;
+            }
+        }
+
+        function limparFormCheckout() {
+            document.getElementById('cli_nome').value = '';
+            document.getElementById('cli_rua').value = '';
+            document.getElementById('cli_numero').value = '';
+            document.getElementById('cli_bairro').value = '';
+            document.getElementById('cli_ref').value = '';
+        }
+
+        async function finalizarPedido() {
+            const nome = document.getElementById('cli_nome').value.trim();
+            const tel = document.getElementById('cli_tel').value; 
+            const tipoEntrega = document.getElementById('cli_tipo_entrega').value;
+            const pagamento = document.getElementById('cli_pagamento').value;
+            
+            const endereco = {
+                rua: document.getElementById('cli_rua').value.trim(),
+                numero: document.getElementById('cli_numero').value.trim(),
+                bairro: document.getElementById('cli_bairro').value.trim(),
+                ref: document.getElementById('cli_ref').value.trim()
+            };
+
+            if (!nome) return alert("Preencha seu Nome para podermos identificar o pedido.");
+            if (tipoEntrega === "Entrega" && (!endereco.rua || !endereco.numero || !endereco.bairro)) {
+                return alert("Para entrega, Rua, Número e Bairro são obrigatórios.");
+            }
+            if (carrinho.length === 0) return alert("Carrinho vazio!");
+
+            // Atualiza o Cache local
+            localStorage.setItem('app_cliente_dados', JSON.stringify({ nome, tel, ...endereco }));
+
+            const btn = document.getElementById('btn-finalizar');
+            btn.disabled = true;
+            btn.innerText = "⏳ A enviar Pedido...";
+
+            const payload = {
+                cliente_nome: nome,
+                cliente_telefone: tel,
+                valor_total: totalCarrinho,
+                tipo_entrega: tipoEntrega,
+                forma_pagamento: pagamento,
+                endereco: endereco,
+                itens: carrinho
+            };
+
+            try {
+                const res = await fetch(`/api/public/pedido/${LOJA_ID}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert("✅ Pedido enviado! Acompanhe o preparo e entrega nas notificações do seu WhatsApp.");
+                    carrinho = []; totalCarrinho = 0; atualizarBarraCarrinho();
+                    fecharCheckout();
+                } else {
+                    alert("❌ Erro ao processar. Tente novamente.");
+                }
+            } catch(e) {
+                alert("❌ Erro de conexão com a loja.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Enviar Pedido Agora";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Login SEFAZ - Certificado Digital{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 20px;
+        }
+        .login-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+        .cert-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 60px;
+            border: 2px dashed rgba(0, 242, 255, 0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 242, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-upload-wrapper:hover {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: #00f2ff;
+        }
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-name-display {
+            color: #00f2ff;
+            font-size: 0.9rem;
+            font-weight: bold;
+            pointer-events: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-header">
+            <div class="cert-icon">🔐</div>
+            <h2 class="text-primary m-0">Autenticação SEFAZ (SVRS)</h2>
+            <p class="text-muted text-sm mt-5">Faça o upload do seu Certificado Digital A1 (.pfx) e informe o CNPJ para ativar as integrações fiscais.</p>
+        </div>
+
+        <form id="form_login_sefaz">
+            <div class="form-grid" style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <div>
+                    <label class="font-bold mb-5" style="display: block;">Ambiente Sefaz:</label>
+                    <select id="cert_ambiente" class="erp-input" required style="width: 100%; box-sizing: border-box; padding: 12px;">
+                        <option value="2">Homologação (Testes)</option>
+                        <option value="1">Produção (Validade Jurídica)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="font-bold mb-5" style="display: block;">CNPJ da Empresa (Apenas números):</label>
+                    <input type="text" id="cert_cnpj" class="erp-input" placeholder="Ex: 12345678000199" maxlength="14" required style="width: 100%; box-sizing: border-box; padding: 12px;">
+                </div>
+
+                <div>
+                    <label class="font-bold mb-5" style="display: block;">Arquivo do Certificado:</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="cert_arquivo" accept=".pfx,.p12" required>
+                        <span class="file-name-display" id="cert_nome_exibicao">Clique ou arraste o arquivo .pfx</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="font-bold mb-5" style="display: block;">Senha de Instalação:</label>
+                    <input type="password" id="cert_senha" class="erp-input" placeholder="Digite a senha do certificado..." required style="width: 100%; box-sizing: border-box; padding: 12px;">
+                </div>
+
+            </div>
+            
+            <div class="mt-30">
+                <button type="submit" class="btn-neon btn-neon-primary" id="btn_conectar" style="width: 100%; padding: 15px; font-size: 1.1rem; margin-top: 15px;">
+                    🚀 Conectar à SEFAZ
+                </button>
+            </div>
+            
+            <div id="cert_msg" class="mt-20 text-sm font-bold text-center" style="min-height: 20px;"></div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/config_fiscal.js"></script>
+{% endblock %}

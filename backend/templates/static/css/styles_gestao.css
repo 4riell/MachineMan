@@ -1,0 +1,53 @@
+/* =========================================================
+   ESTILOS ESPECÍFICOS - GESTÃO E FINANCEIRO
+   ========================================================= */
+
+/* Dashboard & Cards (Resumo) */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.dash-card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; }
+.dash-card.clickable { cursor: pointer; }
+.dash-card.clickable:hover { transform: translateY(-3px); border-color: var(--primary); }
+.dash-card h3 { font-size: 1rem; margin-top: 0; margin-bottom: 10px; }
+.dash-card .value { font-size: 1.8rem; font-weight: 900; margin: 0; }
+.dash-card-title { margin: 0 0 15px 0; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+/* Barras de Estatísticas (Progresso) */
+.stat-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; color: #ccc; }
+.stat-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 4px; }
+
+/* Paineis de Controle e Resumos Superiores */
+.control-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 15px; border-radius: 8px; flex-wrap: wrap; gap: 15px; }
+.summary-row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.summary-card { background: #1e1e1e; border: 1px solid #333; padding: 15px 20px; border-radius: 8px; flex: 1; min-width: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.summary-card h4 { margin: 0 0 5px 0; font-size: 0.9rem; color: #bbb; text-transform: uppercase; }
+.summary-card p { margin: 0; font-size: 1.5rem; font-weight: 900; }
+.filter-row { display: flex; gap: 15px; margin-bottom: 15px; background: #252525; padding: 15px; border-radius: 8px; flex-wrap: wrap; align-items: flex-end; }
+
+/* Badges e Status de Pagamento */
+.status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+.badge-pago { background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3); }
+.badge-pendente { background: rgba(255, 23, 68, 0.15); color: #ff1744; border: 1px solid rgba(255, 23, 68, 0.3); }
+
+/* Ficha Técnica e Layout Dividido (Equipe/Estoque) */
+.ficha-container { display: flex; gap: 20px; flex-wrap: wrap; align-items: stretch; }
+.ficha-side { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; flex: 1; min-width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); box-sizing: border-box; }
+.help-text { font-size: 0.75rem; color: #666; margin-bottom: 10px; display: block; font-style: italic; margin-top: 2px; }
+
+/* Funcionários e Acertos */
+.func-card { background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
+.func-card:hover { border-color: #00e676; background: rgba(0, 230, 118, 0.05); }
+.func-card.active { border-color: #00e676; background: rgba(0, 230, 118, 0.15); box-shadow: 0 0 10px rgba(0,230,118,0.2); }
+.acerto-box { background: rgba(255,255,255,0.05); padding:10px; border-radius:6px; border:1px solid #444; margin-bottom: 10px; }
+
+/* Tabela e Linhas do DRE (Modal de Detalhes) */
+.dre-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #444; font-size: 0.9rem; }
+.dre-row.sub { padding-left: 15px; color: #aaa; }
+.dre-row.total { font-size: 1.1rem; font-weight: bold; margin-top: 10px; border-top: 2px solid #555; border-bottom: none; padding-top: 15px; }
+
+/* Utilitários JS Injection */
+.hidden { display: none !important; }
+.tag-mini { display: inline-block; font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; margin: 2px 2px 0 0; border: 1px solid #444; }
+.sub-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; border: 1px solid #444; }
+.sub-table th { padding: 6px; border-bottom: 1px solid #444; color: #aaa; background: #222; text-align: left; }
+.sub-table td { padding: 6px; border-bottom: 1px solid #333; }

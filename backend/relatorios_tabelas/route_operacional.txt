@@ -1,0 +1,48 @@
+=== ANÁLISE DO MÓDULO: route_operacional.py ===
+
+>>> TABELAS CRIADAS NESTE ARQUIVO (3) <<<
+Estas tabelas possuem sua estrutura (schema) definida aqui.
+
+[+] Tabela: erp_mdfe
+    Colunas (13):
+      - id (INTEGER)
+      - numero (TEXT)
+      - serie (TEXT)
+      - data_emissao (TEXT)
+      - motorista_nome (TEXT)
+      - placa_veiculo (TEXT)
+      - status (TEXT)
+      - chave_acesso (VARCHAR(100))
+      - uf_origem (VARCHAR(2))
+      - uf_destino (VARCHAR(2))
+      - valor_carga (REAL)
+      - chaves_nfe_json (TEXT)
+      - notas (TEXT)
+----------------------------------------
+
+[+] Tabela: erp_pdv_movimentos
+    Colunas (7):
+      - id (INTEGER)
+      - data_hora (TEXT)
+      - caixa_nome (TEXT)
+      - operador (TEXT)
+      - tipo (TEXT)
+      - valor (TEXT)
+      - justificativa (TEXT)
+----------------------------------------
+
+[+] Tabela: erp_vales
+    Colunas (11):
+      - id (INTEGER)
+      - codigo (TEXT)
+      - data_emissao (TEXT)
+      - cliente_nome (TEXT)
+      - valor (TEXT)
+      - status (TEXT)
+      - funcionario_id (INTEGER)
+      - data (DATE)
+      - cliente_id (INTEGER)
+      - validade (DATE)
+      - notas (TEXT)
+----------------------------------------
+

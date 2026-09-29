@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}Serviços e Ordens de Serviço{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .inner-grid-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .inner-grid-table th, .inner-grid-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: left; font-size: 0.85rem; }
+        .inner-grid-table th { background: rgba(0,255,255,0.1); color: #0ff; font-weight: bold; }
+        .grid-input { width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.8rem; }
+        .section-box { border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.15);}
+        .top-actions button { margin-left: 5px; }
+        .filter-bar { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        
+        /* Barra de Ações (Filtro e Exportações) */
+        .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
+        .action-bar input[type="text"] { background: #000; color: #fff; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem; flex: 1; min-width: 250px; }
+        .action-bar .btn-action { background: #222; color: #fff; border: 1px solid #444; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; display:flex; align-items:center; gap:5px; transition: all 0.3s ease; }
+        .action-bar .btn-action:hover { background: #333; border-color: #00ffcc; color: #00ffcc; }
+
+        .erp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .erp-modal.active { display: flex; }
+        .erp-modal-content { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #444; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+        .erp-modal-close { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; }
+        .erp-modal-close:hover { color: #ff4757; }
+        .modal-title { margin-top: 0; margin-bottom: 20px; color: #4cd137; border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        /* Impressão / PDF nativo */
+        @media print {
+            body * { visibility: hidden; }
+            .erp-workspace, .erp-workspace * { visibility: visible; }
+            .erp-sidebar, .filter-bar, .action-bar, .page-header, .btn-neon, button, .erp-modal, .modal-overlay { display: none !important; }
+            .erp-workspace { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0; }
+            .erp-table { border-collapse: collapse; width: 100%; border: 1px solid #000; }
+            .erp-table th, .erp-table td { border: 1px solid #aaa; color: #000; padding: 5px; font-size: 12px; }
+            .text-success, .text-danger, .text-warning, .text-info, .text-primary { color: #000 !important; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">🛠️ Gestão de Serviços</h1>
+        <div class="page-subtitle">Ordens de Serviço, Itens de Serviço e Identificadores.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Operação Técnica</div>
+            <button class="menu-item active" onclick="switchServicosView('view_ordens', this)">📝 Ordens de Serviço (OS)</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Cadastros Base</div>
+            <button class="menu-item" onclick="switchServicosView('view_itens_servico', this)">💻 Itens de Serviço</button>
+            <button class="menu-item" onclick="switchServicosView('view_identificadores', this)">🏷️ Identificadores da OS</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- ======================= ORDENS DE SERVIÇO ======================= -->
+        <div id="view_ordens" class="erp-view active">
+            
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">📝 Ordens de Serviço</h3>
+                <div class="top-actions m-0">
+                    <button class="btn-neon btn-neon-success ml-10" onclick="novoCadastroSrv('form_ordens_servico')">➕ Nova OS</button>
+                </div>
+            </div>
+
+            <!-- ACTION BAR -->
+            <div class="action-bar">
+                <input type="text" id="search_ordens" placeholder="🔍 Pesquisar OS..." onkeyup="filterTable('search_ordens', 'tb_ordens_servico')">
+                <button class="btn-action text-warning" onclick="alert('Funcionalidade: Comparativo XML vs Cupom')">⚖️ Comp. XML x Cupom</button>
+                <button class="btn-action text-danger" onclick="alert('Funcionalidade: Inutilizáveis')">🚫 Inutilizáveis</button>
+                <button class="btn-action text-info" onclick="alert('Funcionalidade de Relatórios')">📈 Relatórios</button>
+                <button class="btn-action" onclick="exportToCSV('tb_ordens_servico', 'Ordens_Servico')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="filter-bar">
+                <div class="form-grid-4">
+                    <div><label>Data</label><input type="date" id="filtro_data" class="erp-input" onchange="filtrarOS()"></div>
+                    <div><label>Tipo de Data</label>
+                        <select id="filtro_tipo_data" class="erp-select" onchange="filtrarOS()">
+                            <option value="registro">Data de Registro</option>
+                        </select>
+                    </div>
+                    <div><label>Cliente</label><select id="filtro_cliente" class="erp-select ddl-clientes-filtro" onchange="filtrarOS()"></select></div>
+                    <div><label>Atendente</label><select id="filtro_atendente" class="erp-select ddl-atendentes-filtro" onchange="filtrarOS()"></select></div>
+                    <div><label>Status</label>
+                        <select id="filtro_status" class="erp-select" onchange="filtrarOS()">
+                            <option value="">Todos</option>
+                            <option value="Aberto">Aberto</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div><label>Finalidade</label>
+                        <select id="filtro_finalidade" class="erp-select" onchange="filtrarOS()">
+                            <option value="">Todos</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Conserto">Conserto</option>
+                            <option value="Instalação">Instalação</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 d-flex align-end">
+                        <button type="button" class="btn-neon btn-neon-warning w-full" onclick="limparFiltrosOS()">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th>Número</th><th>Data</th><th>Cliente</th><th>Valor Total</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_ordens_servico"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL ORDEM DE SERVIÇO -->
+            <div id="form_ordens_servico_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModalSrv('form_ordens_servico')">&times;</span>
+                    <h3 class="modal-title">Ordem de Serviço</h3>
+                    <form id="form_ordens_servico" class="form-panel mb-0 border-0 p-0" onsubmit="salvarOrdemServico(event)">
+                        <input type="hidden" id="os_id">
+                        
+                        <!-- Status invisível, pois o usuário pediu a remoção da tela para auto-assumir o padrão -->
+                        <input type="hidden" id="os_status" value="Aberto">
+                        
+                        <!-- 1. ABERTURA -->
+                        <div class="section-box mt-0">
+                            <div class="section-title text-primary m-0 mb-10">Abertura</div>
+                            <div class="form-grid">
+                                <div class="col-span-2">
+                                    <label>Cliente</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="os_cliente_id">
+                                        <input type="text" id="os_cliente_nome" class="erp-input flex-1" readonly placeholder="Pesquisar..." required>
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisaSrv('clientes', 'os_cliente_id', 'os_cliente_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label>Atendente</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="text" id="os_atendente_nome" class="erp-input flex-1" readonly placeholder="Pesquisar...">
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisaSrv('atendentes', '', 'os_atendente_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Tabela de Preço</label><select id="os_tabela_preco" class="erp-select ddl-tabelas-preco"></select></div>
+                                <div><label>Finalidade</label>
+                                    <select id="os_finalidade" class="erp-select">
+                                        <option value="Manutenção">Manutenção</option>
+                                        <option value="Conserto">Conserto</option>
+                                        <option value="Instalação">Instalação</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2"><label>Item Serviço</label><select id="os_item_servico_nome" class="erp-select ddl-itens-servico"></select></div>
+                                
+                                <div class="col-span-full"><label>Descrição</label><textarea id="os_descricao" class="erp-input" rows="2"></textarea></div>
+                                <div class="col-span-full"><label>Problema</label><textarea id="os_problema" class="erp-input" rows="2"></textarea></div>
+                                <div class="col-span-full"><label>Solução</label><textarea id="os_solucao" class="erp-input" rows="2"></textarea></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. ITENS -->
+                        <div class="section-box">
+                            <div class="section-title text-info m-0 mb-10">Itens</div>
+                            <div class="form-grid align-end p-10 mb-10" style="background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                <div class="col-span-2">
+                                    <label>Adicionar Produto/Serviço</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="tmp_os_item_tipo" class="ignore-serialize">
+                                        <input type="text" id="tmp_os_item_nome" class="erp-input flex-1 ignore-serialize" readonly placeholder="Pesquisar Produto/Serviço...">
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisaSrv('produtos_servicos', '', 'tmp_os_item_nome', true)">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Técnico</label><select id="tmp_os_item_tecnico" class="erp-select ddl-tecnicos ignore-serialize"></select></div>
+                                <div><label>Qtd</label><input type="number" id="tmp_os_item_qtd" class="erp-input ignore-serialize" value="1" oninput="calcularTempItem()"></div>
+                                <div><label>Valor Uni</label><input type="number" id="tmp_os_item_vlr" class="erp-input ignore-serialize" step="0.01" oninput="calcularTempItem()"></div>
+                                <div><label>Acréscimos</label><input type="number" id="tmp_os_item_acresc" class="erp-input ignore-serialize" step="0.01" oninput="calcularTempItem()"></div>
+                                <div><label>Desconto %</label><input type="number" id="tmp_os_item_descp" class="erp-input ignore-serialize" step="0.01" oninput="calcularTempItem(true)"></div>
+                                <div><label>Desconto $</label><input type="number" id="tmp_os_item_descv" class="erp-input ignore-serialize" step="0.01" oninput="calcularTempItem(false)"></div>
+                                <div><label>Subtotal (Auto)</label><input type="number" id="tmp_os_item_sub" class="erp-input text-info ignore-serialize" readonly></div>
+                                <div><button type="button" class="btn-neon btn-neon-info w-full" onclick="addOsItem()">➕ Add</button></div>
+                            </div>
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Produto</th><th>Técnico</th><th>Qtd</th><th>Valor Uni</th><th>Descontos</th><th>Total</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_os_itens"><tr><td colspan="7" class="text-center text-muted">Nenhum item adicionado.</td></tr></tbody>
+                                </table>
+                            </div>
+                            <input type="hidden" id="os_itens_json">
+                        </div>
+
+                        <!-- 3. FINANCEIRO E 4. COBRANÇA -->
+                        <div class="d-flex gap-20 flex-wrap">
+                            <div class="flex-1 min-w-300 section-box">
+                                <div class="section-title text-success m-0 mb-10">Financeiro</div>
+                                <div class="d-flex gap-5 mb-10 flex-wrap align-end">
+                                    <div class="flex-1"><label>Forma Pgto</label><select id="tmp_fin_forma" class="erp-select ddl-formas-pgto ignore-serialize"></select></div>
+                                    <div class="flex-1"><label>Condição</label><select id="tmp_fin_cond" class="erp-select ddl-condicoes ignore-serialize"></select></div>
+                                    <div style="width: 80px;"><label>Valor</label><input type="number" id="tmp_fin_valor" class="erp-input ignore-serialize" step="0.01"></div>
+                                    <div style="width: 80px;"><label>T.Parcelas</label><input type="number" id="tmp_fin_parc" class="erp-input ignore-serialize" value="1"></div>
+                                    <button type="button" class="btn-neon btn-neon-success p-5" onclick="addOsFinanceiro()">➕ Add</button>
+                                </div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table mb-0">
+                                        <thead><tr><th>Seq</th><th>Forma Pgto</th><th>Condição</th><th>Valor</th><th>T.Parcelas</th><th style="width:40px;"></th></tr></thead>
+                                        <tbody id="tb_os_financeiro"><tr><td colspan="6" class="text-center text-muted">Nenhum.</td></tr></tbody>
+                                    </table>
+                                </div>
+                                <input type="hidden" id="os_financeiro_json">
+                            </div>
+                            
+                            <div class="flex-1 min-w-300 section-box">
+                                <div class="section-title text-warning m-0 mb-10">Cobrança</div>
+                                <div class="d-flex gap-5 mb-10 flex-wrap align-end">
+                                    <div class="flex-1"><label>Banco</label><select id="tmp_cob_banco" class="erp-select ddl-bancos ignore-serialize"></select></div>
+                                    <div class="flex-1"><label>Vencimento</label><input type="date" id="tmp_cob_venc" class="erp-input ignore-serialize"></div>
+                                    <div style="width: 80px;"><label>Valor</label><input type="number" id="tmp_cob_valor" class="erp-input ignore-serialize" step="0.01"></div>
+                                    <button type="button" class="btn-neon btn-neon-warning p-5" onclick="addOsCobranca()">➕ Add</button>
+                                </div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table mb-0">
+                                        <thead><tr><th>Seq</th><th>Banco</th><th>Vencimento</th><th>Valor</th><th style="width:40px;"></th></tr></thead>
+                                        <tbody id="tb_os_cobranca"><tr><td colspan="5" class="text-center text-muted">Nenhuma.</td></tr></tbody>
+                                    </table>
+                                </div>
+                                <input type="hidden" id="os_cobranca_json">
+                            </div>
+                        </div>
+
+                        <!-- 5. TOTALIZADORES -->
+                        <div class="section-box">
+                            <div class="section-title text-danger m-0 mb-10">Totalizadores</div>
+                            <div class="form-grid-4">
+                                <div><label>Total Produtos</label><input type="number" id="os_total_produtos" class="erp-input text-muted" readonly step="0.01"></div>
+                                <div><label>Total Serviços</label><input type="number" id="os_total_servicos" class="erp-input text-info" readonly step="0.01"></div>
+                                <div><label>$ Despesas</label><input type="number" id="os_despesas" class="erp-input" step="0.01" oninput="calcularTotalGeralOS()"></div>
+                                <div><label>% Desconto Global</label><input type="number" id="os_desconto_percent" class="erp-input" step="0.01" oninput="calcularTotalGeralOS(true)"></div>
+                                <div><label>$ Desconto Global</label><input type="number" id="os_desconto_valor" class="erp-input" step="0.01" oninput="calcularTotalGeralOS(false)"></div>
+                                <div class="col-span-2"><label class="text-success font-bold" style="font-size: 1.1rem;">TOTAL (R$)</label><input type="number" id="os_total_geral" class="erp-input text-success font-bold bg-transparent border-0" step="0.01" style="font-size: 1.5rem;" readonly></div>
+                            </div>
+                        </div>
+
+                        <!-- 6. ANOTAÇÕES -->
+                        <div class="section-box mb-0">
+                            <div class="section-title m-0 mb-10">Anotações</div>
+                            <div class="form-grid">
+                                <div class="col-span-2">
+                                    <label>Adicionar Portarias / Termos Legais</label>
+                                    <div class="d-flex gap-10 mb-5">
+                                        <select id="tmp_os_sel_portaria" class="erp-select ddl-portarias flex-1 ignore-serialize"></select>
+                                        <button type="button" class="btn-neon btn-neon-info p-5" onclick="inserirPortariaNaOS()">📥 Inserir</button>
+                                    </div>
+                                    <textarea id="os_portarias" class="erp-input" rows="3"></textarea>
+                                </div>
+                                <div class="col-span-2"><label>Notas Gerais</label><textarea id="os_notas" class="erp-input" rows="4"></textarea></div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-20 text-right justify-end">
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar OS</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= ITENS DE SERVIÇO ======================= -->
+        <div id="view_itens_servico" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-info">💻 Itens de Serviço</h3>
+                <div class="top-actions m-0"><button class="btn-neon btn-neon-success ml-10" onclick="novoCadastroSrv('form_itens_servico')">➕ Novo Item de Serviço</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <input type="text" id="search_itens" placeholder="🔍 Pesquisar itens de serviço..." onkeyup="filterTable('search_itens', 'tb_itens_servico')">
+                <button class="btn-action" onclick="exportToCSV('tb_itens_servico', 'Itens_Servico')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome do Item</th><th>Identificadores Vinculados</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_itens_servico"></tbody></table></div>
+
+            <div id="form_itens_servico_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 800px;">
+                    <span class="erp-modal-close" onclick="closeModalSrv('form_itens_servico')">&times;</span>
+                    <h3 class="modal-title">Item de Serviço</h3>
+                    <form id="form_itens_servico" class="form-panel mb-0" onsubmit="salvarItemServico(event)">
+                        <input type="hidden" id="its_id">
+                        <div class="form-grid mb-20">
+                            <div class="col-span-full"><label>Nome</label><input type="text" id="its_nome" class="erp-input" required></div>
+                        </div>
+                        
+                        <!-- ADIÇÃO AUTOMÁTICA DE IDENTIFICADORES -->
+                        <div class="section-box mb-0">
+                            <div class="section-title text-warning m-0 mb-10">Identificadores</div>
+                            
+                            <!-- Nova grid de adição de identificadores com Informações e Índice de Pesquisa -->
+                            <div class="d-flex gap-10 flex-wrap align-end mb-10 p-10" style="background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                <div class="flex-1 min-w-150">
+                                    <label>Identificador</label>
+                                    <select id="tmp_ident_nome_sel" class="erp-select ddl-identificadores ignore-serialize"></select>
+                                </div>
+                                <div class="flex-2 min-w-200">
+                                    <label>Informações do Identificador</label>
+                                    <input type="text" id="tmp_ident_info_sel" class="erp-input ignore-serialize" placeholder="Ex: Placa, IMEI, etc.">
+                                </div>
+                                <div style="width: 120px;">
+                                    <label>Índice Pesquisa</label>
+                                    <select id="tmp_ident_idx_sel" class="erp-select ignore-serialize">
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                                <div style="width: 100px;">
+                                    <button type="button" class="btn-neon btn-neon-warning p-5 w-full" onclick="addIdentificadorVinculo()">➕ Add</button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Ordenação</th><th>Nome</th><th>Informações</th><th>Índice Pesquisa</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_vinculos_ident"><tr><td colspan="5" class="text-center text-muted">Nenhum vínculo.</td></tr></tbody>
+                                </table>
+                            </div>
+                            <input type="hidden" id="its_identificadores_json">
+                        </div>
+
+                        <div class="form-actions mt-20 text-right justify-end"><button type="submit" class="btn-neon btn-neon-info">💾 Salvar Item</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= IDENTIFICADORES ======================= -->
+        <div id="view_identificadores" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">🏷️ Identificadores da OS</h3>
+                <div class="top-actions m-0"><button class="btn-neon btn-neon-success ml-10" onclick="novoCadastroSrv('form_identificadores')">➕ Novo Identificador</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <input type="text" id="search_ident" placeholder="🔍 Pesquisar identificadores..." onkeyup="filterTable('search_ident', 'tb_identificadores')">
+                <button class="btn-action" onclick="exportToCSV('tb_identificadores', 'Identificadores')">📊 Excel/CSV</button>
+                <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+            </div>
+
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_identificadores"></tbody></table></div>
+
+            <div id="form_identificadores_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModalSrv('form_identificadores')">&times;</span>
+                    <h3 class="modal-title">Identificador</h3>
+                    <form id="form_identificadores" class="form-panel mb-0" onsubmit="salvarServicoBase(event, 'identificadores')">
+                        <input type="hidden" id="idt_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label>Nome</label><input type="text" id="idt_nome" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-20 text-right justify-end"><button type="submit" class="btn-neon btn-neon-warning">💾 Salvar Identificador</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="modal_pesquisa_srv" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
+        <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+            <h3 class="m-0 text-info" id="msrv_titulo">Pesquisar</h3>
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="fecharPesquisaSrv()">X</button>
+        </div>
+        <div class="d-flex gap-10 mb-15 search-group">
+            <input type="text" id="msrv_input" class="erp-input flex-1" placeholder="Digite para buscar..." onkeyup="if(event.key==='Enter') executarPesquisaSrv()">
+            <button type="button" class="btn-neon btn-neon-primary" onclick="executarPesquisaSrv()">🔍 Procurar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="erp-table">
+                <thead><tr><th>ID</th><th>Nome / Info</th><th class="text-center">Selecionar</th></tr></thead>
+                <tbody id="msrv_resultados"><tr><td colspan="3" class="text-center text-muted">Aguardando busca...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/servicos.js"></script>
+{% endblock %}

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cupom #{{ p.id }}</title>
+    <style>
+        /* Configuração da página física */
+        @page {
+            margin: 0;
+            size: 80mm auto;
+        }
+
+        body {
+            background: #fff;
+            color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px; /* Aumentado para garantir leitura perfeita */
+            font-weight: bold;
+            margin: 0;
+            padding: 5px 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* CABEÇALHO */
+        .header { 
+            text-align: center; 
+            border-bottom: 2px dashed #000; 
+            padding-bottom: 8px; 
+            margin-bottom: 10px; 
+        }
+        .h-title { font-size: 1.2em; font-weight: 900; margin: 0; display: block; text-transform: uppercase; }
+        
+        /* BLOCOS DE INFORMAÇÃO */
+        .info-block { 
+            margin-bottom: 10px; 
+            border-bottom: 1px dashed #000; 
+            padding-bottom: 8px; 
+            line-height: 1.3;
+        }
+        .label { font-weight: 900; text-transform: uppercase; }
+
+        /* ITENS DO PEDIDO */
+        .item-row { 
+            display: flex; 
+            flex-direction: column; 
+            margin-bottom: 10px; 
+            border-bottom: 1px dotted #000; 
+            padding-bottom: 4px;
+        }
+        .item-main { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            font-size: 1.0em; /* Segue o tamanho base aumentado */
+        }
+        .item-nome { 
+            flex: 1; 
+            margin-right: 10px; 
+        }
+        .item-preco { 
+            white-space: nowrap; 
+        }
+        .item-details { 
+            font-size: 0.9em; 
+            padding-left: 0; 
+            margin-top: 2px;
+            font-weight: normal;
+            color: #000; /* Preto absoluto para contraste */
+        }
+
+        /* TOTAIS */
+        .total-block { 
+            text-align: right; 
+            font-size: 1.4em; 
+            font-weight: 900; 
+            margin-top: 15px; 
+            border-top: 2px dashed #000; 
+            padding-top: 10px;
+        }
+        .obs-pgt { 
+            font-size: 0.85em; 
+            font-weight: normal; 
+            margin-top: 5px; 
+            text-align: right; 
+        }
+
+        /* BOTÕES DE TELA */
+        .no-print { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding: 10px; 
+            background: #eee; 
+            border-bottom: 1px solid #ccc;
+        }
+        .btn {
+            background: #000; color: #fff; border: none; padding: 12px 25px;
+            cursor: pointer; font-weight: bold; border-radius: 4px;
+            font-size: 16px; text-decoration: none; display: inline-block;
+        }
+        
+        @media print {
+            .no-print { display: none; }
+            html, body { width: 100%; margin: 0; padding: 0 5px; }
+        }
+    </style>
+</head>
+<body onload="setTimeout(function(){ window.print(); }, 500)">
+
+    <div class="no-print">
+        <button onclick="window.print()" class="btn">🖨️ IMPRIMIR</button>
+        <button onclick="window.close()" class="btn" style="background:#555;">FECHAR</button>
+    </div>
+
+    <div class="header">
+        <span class="h-title">COOK DEGUSTTO</span>
+        <div style="font-size: 1.1em;">Pedido #{{ p.id }}</div>
+        <small>{{ p.data_formatada }}</small>
+    </div>
+
+    <div class="info-block">
+        <span class="label">CLIENTE:</span> {{ p.cliente_nome or 'Consumidor' }}<br>
+        
+        {% if p.cpf %}
+            <b>CPF:</b> {{ p.cpf }}<br>
+        {% endif %}
+
+        {% if p.tipo_entrega != 'Mesa' and p.telefone %}
+            {{ p.telefone }}
+        {% endif %}
+    </div>
+
+    <div class="info-block">
+        <span class="label">TIPO: {{ p.tipo_entrega }}</span><br>
+        {% if p.tipo_entrega == 'Entrega' %}
+            {{ p.endereco_completo }}<br>
+            {% if p.ponto_referencia %}Ref: {{ p.ponto_referencia }}{% endif %}
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom: 10px;">
+        {% for pizza in pizzas %}
+        <div class="item-row">
+            <div class="item-main">
+                <span class="item-nome">{{ pizza.quantidade }}x {{ pizza.tamanho }}</span>
+                <span class="item-preco">R$ {{ "%.2f"|format(pizza.preco * pizza.quantidade) }}</span>
+            </div>
+            <div class="item-details">
+                Sabores: {{ pizza.sabores }}
+                {% if pizza.borda %}<br>+ {{ pizza.borda }}{% endif %}
+                {% if pizza.observacao %}<br>Obs: {{ pizza.observacao }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% for ex in extras %}
+        <div class="item-row">
+            <div class="item-main">
+                <span class="item-nome">{{ ex.quantidade }}x {{ ex.nome_item }}</span>
+                <span class="item-preco">R$ {{ "%.2f"|format(ex.preco * ex.quantidade) }}</span>
+            </div>
+            <div class="item-details">
+                {% if ex.adicionais %}+ {{ ex.adicionais }}<br>{% endif %}
+                {% if ex.observacao %}Obs: {{ ex.observacao }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="total-block">
+        TOTAL: R$ {{ "%.2f"|format(p.valor_total if p.valor_total is not none else 0.0) }}
+        <div class="obs-pgt">
+            Pagamento: {{ p.forma_pagamento }}<br>
+            {{ p.detalhe_pagamento }}
+        </div>
+    </div>
+    
+    <center style="margin-top: 20px; font-size: 0.8em;">
+        --- Fim do Cupom ---
+    </center>
+
+</body>
+</html>

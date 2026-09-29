@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações - Cook Degustto{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles_notificacoes.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="page-header page-header-glow d-flex justify-between align-center" style="position: relative; z-index: 20;">
+        <div>
+            <h1 class="page-title-glow">🔔 Central de Notificações</h1>
+            <div class="page-subtitle">Gerenciador de Alertas e Suporte em Tempo Real</div>
+        </div>
+        <button class="btn-neon-outline btn-neon-outline-danger" onclick="limparTudo()">
+            <span>🗑️</span> Limpar Histórico
+        </button>
+    </div>
+    
+    <div class="controls-panel">
+        <div class="control-item">
+            <label class="switch">
+                <input type="checkbox" id="toggleSom" onchange="salvarPreferencias()">
+                <span class="slider"></span>
+            </label>
+            <span class="font-bold text-white">🔊 Som Ativo</span>
+        </div>
+        <div class="control-item">
+            <label class="switch">
+                <input type="checkbox" id="toggleVisual" onchange="salvarPreferencias()">
+                <span class="slider"></span>
+            </label>
+            <span class="font-bold text-white">🚨 Alerta Tela Cheia</span>
+        </div>
+        
+        <div class="header-divider"></div>
+
+        <div class="control-item">
+            <label class="switch">
+                <input type="checkbox" id="toggleInativos" {% if pref_inativos %}checked{% endif %} onchange="atualizarFiltros()">
+                <span class="slider"></span>
+            </label>
+            <span class="text-muted">😴 Clientes Inativos</span>
+        </div>
+        <div class="control-item">
+            <label class="switch">
+                <input type="checkbox" id="toggleRestritos" {% if pref_restritos %}checked{% endif %} onchange="atualizarFiltros()">
+                <span class="slider"></span>
+            </label>
+            <span class="text-muted">🚫 Clientes Restritos</span>
+        </div>
+    </div>
+
+    <audio id="audio-sirene" loop preload="auto">
+        <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+    </audio>
+
+    <div id="tela-cheia-alerta" onclick="garantirSom()">
+        <h1 style="text-shadow: 0 0 30px #fff, 0 0 50px #ff1744; color: #fff; font-size: 3rem; margin-bottom: 20px;">⚠️ ATENÇÃO!</h1>
+        <div class="text-white font-bold text-xl mb-25">HÁ UMA NOVA NOTIFICAÇÃO PENDENTE</div>
+        <button id="btn-parar" class="btn-neon" style="background: #fff; color: #ff1744; padding: 20px 50px; font-size: 1.5rem; border-radius: 50px;" onclick="pararAlarme(event)">ATENDER AGORA</button>
+    </div>
+
+    <div id="lista-notificacoes" class="notif-grid pb-25">
+        {% for n in notificacoes %}
+        {% set is_inativo = n.is_inativo %}
+        {% set is_restrito = n.is_restrito %}
+
+        <div class="notif-card tipo-{{ n.tipo }} {% if n.lida %}lida{% endif %} card-neon-notif" 
+             data-id="{{ n.id }}"
+             data-inativo="{{ 'true' if is_inativo else 'false' }}"
+             data-restrito="{{ 'true' if is_restrito else 'false' }}">
+             
+            <div class="info">
+                <h3 class="m-0 mb-10">
+                    {% if n.tipo == 'CANCELAMENTO' %} <span class="badge bg-danger">Cancelamento</span>
+                    {% elif n.tipo == 'SUPORTE' %} <span class="badge bg-warn">Suporte</span>
+                    {% else %} <span class="badge bg-info">Info</span> {% endif %}
+                    
+                    <span class="text-white ml-5">{{ n.cliente_nome or 'Cliente' }}</span>
+                    
+                    {% if is_inativo %} <span class="tag-inativo">INATIVO</span> {% endif %}
+                    {% if is_restrito %} <span class="tag-restrito">RESTRITO</span> {% endif %}
+                </h3>
+                <p class="text-muted line-height-base m-0">{{ n.mensagem }}</p>
+                <div class="text-muted font-bold mt-10 text-sm">📅 {{ n.data_hora }}</div>
+            </div>
+            
+            <div class="actions">
+                <a href="https://wa.me/55{{ n.cliente_telefone }}" target="_blank" class="btn-neon-outline btn-neon-outline-success p-0 w-100 text-center" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;">💬</a>
+                {% if not n.lida %}
+                <button class="btn-neon-outline btn-neon-outline-primary p-0 w-100 text-center" style="width: 45px; height: 45px;" onclick="marcarLida('{{ n.id }}')">✔</button>
+                {% endif %}
+                <button class="btn-neon-outline btn-neon-outline-danger p-0 w-100 text-center" style="width: 45px; height: 45px;" onclick="excluirNotificacao('{{ n.id }}')">🗑️</button>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-table-msg">
+            <div class="text-xl mb-15">📭</div>
+            <h2>Nenhuma notificação por aqui.</h2>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/notificacoes.js') }}"></script>
+{% endblock %}

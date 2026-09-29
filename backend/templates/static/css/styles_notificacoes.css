@@ -1,0 +1,54 @@
+/* =========================================================
+   ESTILOS ESPECÍFICOS - NOTIFICAÇÕES
+   ========================================================= */
+
+.controls-panel { display: flex; gap: 20px; padding: 15px; border-radius: 8px; margin-bottom: 25px; align-items: center; flex-wrap: wrap; }
+.control-item { display: flex; align-items: center; gap: 10px; }
+
+/* Animação de piscar como sirene */
+@keyframes piscarAlarme {
+    0% { background-color: rgba(255, 23, 68, 0.98); }
+    50% { background-color: rgba(180, 0, 30, 0.98); }
+    100% { background-color: rgba(255, 23, 68, 0.98); }
+}
+
+#tela-cheia-alerta { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    z-index: 99999; 
+    display: none; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    text-align: center; 
+    backdrop-filter: blur(10px); 
+    animation: piscarAlarme 1s infinite; 
+}
+
+body.modo-alarme { overflow: hidden; }
+
+.notif-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+.notif-card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+.notif-card:hover { transform: translateY(-3px); }
+.notif-card.lida { opacity: 0.6; filter: grayscale(50%); }
+
+.card-neon-notif::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.tipo-PEDIDO.card-neon-notif::before { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; }
+.tipo-CANCELAMENTO.card-neon-notif::before { background: #ff1744; box-shadow: 0 0 10px #ff1744; }
+.tipo-SUPORTE.card-neon-notif::before { background: #ff9100; box-shadow: 0 0 10px #ff9100; }
+
+.notif-card .info { flex: 1; }
+.notif-card .actions { display: flex; flex-direction: column; gap: 10px; }
+.hidden-filter { display: none !important; }
+
+/* Badges Notificação */
+.badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; color: #fff; }
+.bg-danger { background: #ff1744; }
+.bg-warn { background: #ff9100; }
+.bg-info { background: #00e5ff; }
+
+.tag-inativo { background: #555; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+.tag-restrito { background: #ff1744; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }

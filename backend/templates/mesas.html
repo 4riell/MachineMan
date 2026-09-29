@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Controle de Mesas{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles_mesas.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-between align-center" style="position: relative; z-index: 20;">
+    <div>
+        <h1 class="page-title-glow">🍽️ Gestão de Mesas</h1>
+        <div class="page-subtitle">Controle de comandas, adição de itens e fechamento de contas</div>
+    </div>
+    <button onclick="definirQtdMesas()" class="btn-neon-outline btn-neon-outline-info">🔢 Definir N° Mesas</button>
+</div>
+
+<div class="mesas-container" id="gridMesas"><div class="empty-table-msg">⏳ Carregando...</div></div>
+
+<div class="modal-overlay" id="modalMesa" onclick="if(event.target === this) fecharModal()">
+    <div class="modal-content modal-mesa-fullscreen bg-dark border-dark">
+        
+        <div class="modal-header p-15" style="background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: nowrap; overflow: hidden;">
+            
+            <h3 id="tituloMesa" class="m-0 text-white font-bold text-lg" style="white-space: nowrap; flex-shrink: 0;">Mesa X</h3>
+            
+            <input type="text" id="nomeClienteMesa" class="input-std font-bold" style="flex: 1; min-width: 60px; margin: 0; padding: 8px;" placeholder="Nome..." onblur="salvarNomeCliente()">
+            
+            <span id="statusMesaBadge" class="badge-livre" style="white-space: nowrap; flex-shrink: 0; margin: 0;">Livre</span>
+            
+            <button onclick="fecharModal()" class="btn-del bg-transparent text-danger" style="border: none; font-size: 2.2rem; line-height: 0.5; padding: 0 5px; margin: 0; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">&times;</button>
+            
+        </div>
+
+        <div class="modal-body-split d-flex flex-1" style="overflow: hidden;">
+            
+            <div class="col-esquerda p-25" style="background: #181818; border-right: 1px solid #333; overflow-y: auto;">
+                <h4 class="text-warning m-0 mb-15">📋 Conta</h4>
+                <div class="print-actions d-flex gap-10 mb-15 flex-wrap">
+                    <button onclick="imprimirCozinha()" class="btn-neon-outline btn-neon-outline-info flex-1">👨‍🍳 Cozinha</button>
+                    <button onclick="imprimirCliente()" class="btn-neon-outline btn-neon-outline-primary flex-1">🖨️ Cliente</button>
+                </div>
+                
+                <div id="listaItens" class="lista-itens-mesa flex-1 overflow-y-auto mb-15"></div>
+                
+                <div class="p-15 mb-20" style="background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 8px;">
+                    <label class="text-sm text-muted mb-8 d-block">Adicionar Manual:</label>
+                    <div class="extra-inline-box d-flex gap-8 flex-wrap w-100">
+                        <select id="extra_tipo" class="input-std flex-2 m-0 h-100">
+                            <option value="extra">➕ Extra / Taxa</option>
+                            <option value="desconto">➖ Desconto</option>
+                        </select>
+                        <input type="number" id="extra_valor" class="input-std flex-1 m-0 text-right h-100" placeholder="R$ 0.00" step="0.10">
+                        <button onclick="lancarExtraOuDesconto()" class="btn-neon-outline btn-neon-outline-success flex-1 h-100 px-15 m-0">OK</button>
+                    </div>
+                </div>
+                
+                <div class="area-fechamento-mesa">
+                    <div class="total-display">
+                        <span class="text-muted font-bold">Total:</span>
+                        <span class="text-success text-xl font-bold">R$ <span id="totalMesa">0.00</span></span>
+                    </div>
+                    <button onclick="abrirPagamento()" class="btn-neon btn-neon-success w-100 p-15 text-lg" id="btnFecharMesa">💰 Fechar Conta</button>
+                    <button onclick="cancelarMesa()" class="btn-neon-outline btn-neon-outline-danger w-100 mt-10" id="btnCancelarMesa" style="display:none;">🚫 Liberar Mesa</button>
+                </div>
+            </div>
+
+            <div class="col-direita p-25" style="background: #1e1e1e; overflow-y: auto;">
+                <h4 class="text-success m-0 mb-15">➕ Novo Item</h4>
+                
+                <div class="mb-15" style="position: relative; z-index: 100;">
+                    <input type="text" id="busca_global" class="input-std w-100" placeholder="🔍 Buscar produto (ex: 1.5l, pizza...)" onkeyup="buscarProdutoGlobal()" autocomplete="off">
+                    <div id="resultado_busca" class="search-result-box" style="display:none;"></div>
+                </div>
+                
+                <div class="text-center text-muted text-sm mb-10 font-bold">-- OU SELECIONE MANUALMENTE --</div>
+                
+                <div class="d-flex gap-10 mb-10">
+                    <select id="sel_categoria" class="input-std w-100" onchange="carregarProdutosDaCategoria()">
+                        <option value="">📂 Categoria...</option>
+                        {% for cat in categorias %}<option value="{{ cat.id }}">{{ cat.emoji }} {{ cat.nome }}</option>{% endfor %}
+                    </select>
+                </div>
+                
+                <select id="sel_produto" class="input-std w-100 mb-10" onchange="produtoPrincipalSelecionado()">
+                    <option value="">Selecione...</option>
+                </select>
+                
+                <div id="box_detalhes_dinamicos" class="box-detalhes-produto">
+                    <div class="text-muted text-center mt-10">Selecione um produto</div>
+                </div>
+                
+                <div class="d-flex align-center gap-15 mb-20 p-15 flex-wrap" style="background: rgba(41, 121, 255, 0.05); border-radius: 8px; border: 1px solid rgba(41, 121, 255, 0.2);">
+                     <label class="text-muted m-0 font-bold">Qtd:</label>
+                     <input type="number" id="sys_qtd" class="input-std m-0 text-center font-bold" value="1" min="1" style="width: 80px;">
+                     <button onclick="adicionarItemMesa()" class="btn-neon btn-neon-primary flex-1 m-0 p-10">Adicionar à Mesa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalPagamento" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-pagamento-content w-500" id="modalPgContent" style="background: #1e1e1e; box-shadow: 0 0 50px rgba(41,121,255,0.2); border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; transition: width 0.3s ease;">
+        
+        <div style="flex-shrink: 0; background: #252525; border-bottom: 1px solid #333;">
+            <div class="p-15 d-flex justify-between align-center">
+                <h3 class="m-0 text-white text-lg">💳 Caixa</h3>
+                <button onclick="document.getElementById('modalPagamento').style.display='none'" class="btn-del bg-transparent text-xl m-0 p-0 text-danger">&times;</button>
+            </div>
+            
+            <div class="p-15 d-flex align-center justify-between" style="background: #1a1a1a; border-top: 1px solid #333; gap: 8px; width: 100%; box-sizing: border-box; flex-wrap: nowrap;">
+                
+                <div style="flex: 1; min-width: 0; text-align: left;">
+                    <div class="text-muted text-xs mb-4 uppercase" style="white-space: nowrap; font-size: 0.65rem;">Total Mesa</div>
+                    <div class="text-success font-bold" style="white-space: nowrap; font-size: clamp(0.85rem, 3vw, 1.125rem);">R$ <span id="pg_total_mesa">0.00</span></div>
+                </div>
+                
+                <div style="flex: 1.5; min-width: 0; display: flex; justify-content: center;">
+                    <button onclick="iniciarSeparacaoComandas(event)" id="btn_abrir_separador" class="btn-neon-outline btn-neon-outline-info w-100" style="display: block; padding: 8px 4px; font-size: clamp(0.7rem, 2.5vw, 0.85rem); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">🗂️ DIVIDIR CONTA</button>
+                </div>
+
+                <div style="flex: 1; min-width: 0; text-align: right;">
+                    <div class="text-muted text-xs mb-4 uppercase" style="white-space: nowrap; font-size: 0.65rem;">Falta Pagar</div>
+                    <div class="text-danger font-bold" id="pg_restante" style="white-space: nowrap; font-size: clamp(0.85rem, 3vw, 1.125rem);">R$ 0.00</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="modal_pg_body" class="p-20 flex-1 overflow-y-auto" style="background: #1e1e1e;">
+            
+            <div id="area_pgto_simples">
+                <div class="p-15 mb-15" style="background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid #333;">
+                    
+                    <div class="d-flex justify-between align-center mb-15">
+                        <span class="text-muted text-sm">Rachar valor em:</span>
+                        <div class="d-flex align-center gap-5">
+                            <button class="btn-neon-outline btn-neon-outline-gray p-0" style="width: 35px; height: 35px;" onclick="mudarDivisorSimples(-1)">-</button>
+                            <input type="number" id="pg_divisor" value="1" min="1" class="input-std m-0 text-center font-bold" style="width:60px; background:#111; height: 35px; padding: 0;" oninput="aplicarDivisao()">
+                            <button class="btn-neon-outline btn-neon-outline-gray p-0" style="width: 35px; height: 35px;" onclick="mudarDivisorSimples(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-10">
+                        <div class="d-flex gap-10 flex-wrap w-100">
+                            <select id="pg_metodo" class="input-std flex-1 m-0 h-100" style="background: #222;" onchange="togglePgtoDetalhes('simples')">
+                                <option value="">Método...</option>
+                                {% for fp in formas_pagamento %}<option value="{{ fp.nome }}" data-pede="{{ fp.pede_detalhe }}" data-pergunta="{{ fp.pergunta_detalhe }}">{{ fp.nome }}</option>{% endfor %}
+                            </select>
+                            <input type="number" id="pg_valor" class="input-std flex-1 m-0 text-right font-bold text-warning h-100" style="background: #222;" placeholder="Valor" step="0.01" oninput="calcularTrocoVisual('simples')">
+                        </div>
+                        
+                        <div id="pg_detalhe_container" style="display: none; width: 100%;">
+                            <input type="text" id="pg_detalhe" class="input-std w-100 m-0 h-100" style="background: #222;" placeholder="Detalhes (Troco para, etc)..." oninput="calcularTrocoVisual('simples')">
+                        </div>
+                    </div>
+
+                    <div class="text-right mt-10 text-sm min-h-20">
+                        <span id="display_troco" class="text-info font-bold"></span>
+                    </div>
+                    
+                    <button id="btn_lancar_simples" onclick="lancarPagamentoSimples()" class="btn-neon-outline btn-neon-outline-success w-100 mt-10 p-10">➕ Lançar Pagamento</button>
+                </div>
+            </div>
+
+            <div id="area_pgto_separado" style="display:none;">
+                
+                <div class="d-flex gap-10 mb-15 flex-wrap w-100">
+                    <button class="btn-neon-outline btn-neon-outline-danger flex-1 p-10 justify-center" onclick="voltarPagamentoSimples()">⬅️ Voltar</button>
+                    <input type="text" id="filtro_itens_mesa" class="input-std flex-2 m-0 p-10" style="background:#111;" placeholder="🔍 Buscar..." onkeyup="renderInterfaceSeparacao()">
+                    <button class="btn-neon-outline btn-neon-outline-warning flex-1 p-10 justify-center" onclick="iniciarSeparacaoComandas(event)">🔄 Reset</button>
+                </div>
+
+                <div class="d-flex gap-15 flex-wrap">
+                    
+                    <div class="flex-1 d-flex flex-column p-10" style="background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid #333;">
+                        <h4 class="m-0 mb-10 text-muted text-center text-sm">🍕 Livres na Mesa</h4>
+                        <div id="lista_sep_mesa" class="flex-1 overflow-y-auto pr-5"></div>
+                    </div>
+                    
+                    <div class="flex-1 d-flex flex-column p-10" style="background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid #333;">
+                        <h4 class="m-0 mb-10 text-success text-center text-sm">👤 Comanda Atual</h4>
+                        <button onclick="imprimirComandaSeparada()" class="btn-neon-outline btn-neon-outline-primary p-0" style="width: 32px; height: 32px;" title="Imprimir Comanda">🖨️</button>
+                        
+                        <div id="lista_sep_pessoa" class="flex-1 overflow-y-auto min-h-80 max-h-150 p-10 mb-10" style="background: #111; border-radius: 6px; border: 1px solid #444;"></div>
+                        
+                        <div class="d-flex justify-between align-center mb-10 p-10" style="background: rgba(255, 145, 0, 0.1); border-radius: 6px; border: 1px solid rgba(255,145,0,0.3);">
+                            <span class="text-muted text-sm">Total:</span>
+                            <strong class="text-warning text-lg">R$ <span id="total_sep_pessoa">0.00</span></strong>
+                        </div>
+                        
+                        <div class="d-flex flex-column gap-10">
+                            <div class="d-flex gap-10 flex-wrap w-100">
+                                <select id="pg_metodo_pessoa" class="input-std flex-1 m-0 h-100 p-5 text-sm" style="background:#222;" onchange="togglePgtoDetalhes('separado')">
+                                    <option value="">Método...</option>
+                                    {% for fp in formas_pagamento %}<option value="{{ fp.nome }}" data-pede="{{ fp.pede_detalhe }}" data-pergunta="{{ fp.pergunta_detalhe }}">{{ fp.nome }}</option>{% endfor %}
+                                </select>
+                                <input type="number" id="pg_valor_pessoa" class="input-std flex-1 m-0 text-right font-bold text-success h-100 p-5 text-sm" style="background:#222;" placeholder="R$" oninput="calcularTrocoVisual('separado')">
+                            </div>
+
+                            <div id="pg_detalhe_container_pessoa" class="w-100">
+                                <input type="text" id="pg_detalhe_pessoa" class="input-std w-100 m-0 h-100 p-5 text-sm" style="background:#222; display:none;" placeholder="Detalhes..." oninput="calcularTrocoVisual('separado')">
+                            </div>
+                            
+                            <div class="text-right font-bold text-sm min-h-15">
+                                <span id="display_troco_pessoa" class="text-info"></span>
+                            </div>
+
+                            <button id="btn_lancar_separado" class="btn-neon-outline btn-neon-outline-success w-100 p-10 text-sm" onclick="pagarComandaAtual()">✅ Pagar Comanda</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <div style="padding: 20px; flex-shrink: 0; border-top: 1px solid #333; background: #181818; box-sizing: border-box;">
+            <div class="text-muted text-xs mb-8 uppercase font-bold">Lançamentos Efetuados:</div>
+            
+            <div class="lista-pagamentos p-5 mb-10 overflow-y-auto max-h-100 text-sm" id="lista_pagamentos_adicionados" style="background: #111; border: 1px solid #333; border-radius: 6px;">
+                </div>
+            
+            <button onclick="finalizarFechamento()" id="btn_finalizar_pg" class="btn-neon btn-neon-primary text-lg font-bold" style="width: 100%; box-sizing: border-box; margin: 10px 0 15px 0;" disabled>✅ Finalizar Conta</button>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/mesas.js') }}"></script>
+{% endblock %}

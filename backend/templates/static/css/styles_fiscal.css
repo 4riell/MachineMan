@@ -1,0 +1,35 @@
+/* Área de Drag and Drop para o Modal Fiscal */
+.dropzone {
+    border: 2px dashed var(--primary);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    background: rgba(41, 121, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dropzone:hover, .dropzone.dragover {
+    background: rgba(41, 121, 255, 0.15);
+    border-color: var(--info);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+}
+
+/* Badge específica para NCM e CFOP */
+.tag-fiscal {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #ccc;
+    border: 1px solid #444;
+    display: inline-block;
+    margin-right: 5px;
+    margin-top: 5px;
+    font-family: monospace;
+}
+
+/* Ocultador de estado vazio */
+.hidden {
+    display: none !important;
+}

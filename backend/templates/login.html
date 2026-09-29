@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍕</text></svg>">
+    <title>Login - 🦾MACHINEMAN</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; margin: 0; font-family: Arial, sans-serif; }
+        .auth-container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .auth-container h2 { text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 10px; background-color: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn:hover { background-color: #555; }
+        .toggle-link { display: block; text-align: center; margin-top: 15px; color: #0066cc; cursor: pointer; text-decoration: underline; font-size: 14px; }
+        .hidden { display: none; }
+        .error-msg { color: red; font-size: 13px; text-align: center; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <form id="login-form" onsubmit="realizarLogin(event)">
+            <h2>🦾 Entrar no ERP</h2>
+            <div id="login-error" class="error-msg"></div>
+            <div class="form-group">
+                <label for="login-email">E-mail</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-senha">Senha</label>
+                <input type="password" id="login-senha" required>
+            </div>
+            <button type="submit" class="btn">Acessar Sistema</button>
+            <span class="toggle-link" onclick="alternarAbas('recuperar-form')">Esqueceu a senha? Recuperar acesso</span>
+            <span class="toggle-link" onclick="alternarAbas('cadastro-form')">Não tem uma conta? Cadastre-se</span>
+        </form>
+
+        <form id="cadastro-form" class="hidden" onsubmit="realizarCadastro(event)">
+            <h2>🦾 Criar Conta</h2>
+            <div id="cadastro-error" class="error-msg"></div>
+            <div class="form-group">
+                <label for="cad-nome">Nome do Estabelecimento</label>
+                <input type="text" id="cad-nome" required>
+            </div>
+            <div class="form-group">
+                <label for="cad-email">E-mail</label>
+                <input type="email" id="cad-email" required>
+            </div>
+            <div class="form-group">
+                <label for="cad-email-conf">Confirmar E-mail</label>
+                <input type="email" id="cad-email-conf" required>
+            </div>
+            <div class="form-group">
+                <label for="cad-senha">Senha</label>
+                <input type="password" id="cad-senha" required>
+            </div>
+            <div class="form-group">
+                <label for="cad-senha-conf">Confirmar Senha</label>
+                <input type="password" id="cad-senha-conf" required>
+            </div>
+            <button type="submit" class="btn">Cadastrar e Acessar</button>
+            <span class="toggle-link" onclick="alternarAbas('login-form')">Já possui conta? Faça Login</span>
+        </form>
+
+        <form id="recuperar-form" class="hidden" onsubmit="recuperarSenha(event)">
+            <h2>🦾 Recuperar Senha</h2>
+            <p style="text-align: center; font-size: 14px; margin-bottom: 15px;">Digite seu e-mail para receber as instruções de redefinição.</p>
+            <div class="form-group">
+                <label for="rec-email">E-mail</label>
+                <input type="email" id="rec-email" required>
+            </div>
+            <button type="submit" class="btn">Enviar Instruções</button>
+            <span class="toggle-link" onclick="alternarAbas('login-form')">Voltar para o Login</span>
+        </form>
+    </div>
+
+    <script>
+        function alternarAbas(abaAtiva) {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('cadastro-form').classList.add('hidden');
+            document.getElementById('recuperar-form').classList.add('hidden');
+            
+            // Limpar mensagens de erro ao trocar de aba
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('cadastro-error').style.display = 'none';
+
+            document.getElementById(abaAtiva).classList.remove('hidden');
+        }
+
+        function mostrarErro(id, mensagem) {
+            const erroEl = document.getElementById(id);
+            erroEl.innerText = mensagem;
+            erroEl.style.display = 'block';
+        }
+
+        async function realizarLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/pedidos'; 
+                } else {
+                    const data = await response.json();
+                    mostrarErro('login-error', data.detail || "E-mail ou senha incorretos.");
+                }
+            } catch (error) {
+                mostrarErro('login-error', "Erro de conexão com o servidor.");
+            }
+        }
+
+        async function realizarCadastro(e) {
+            e.preventDefault();
+            const nome_estabelecimento = document.getElementById('cad-nome').value;
+            const email = document.getElementById('cad-email').value;
+            const emailConf = document.getElementById('cad-email-conf').value;
+            const senha = document.getElementById('cad-senha').value;
+            const senhaConf = document.getElementById('cad-senha-conf').value;
+
+            // Validações locais
+            if (email !== emailConf) {
+                mostrarErro('cadastro-error', "Os e-mails informados não são iguais.");
+                return;
+            }
+
+            if (senha !== senhaConf) {
+                mostrarErro('cadastro-error', "As senhas informadas não são iguais.");
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/cadastro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome_estabelecimento, email, senha })
+                });
+
+                if (response.ok) {
+                    alert("Cadastro realizado com sucesso! Faça o login.");
+                    alternarAbas('login-form');
+                } else {
+                    const data = await response.json();
+                    mostrarErro('cadastro-error', data.detail || "Erro ao realizar cadastro.");
+                }
+            } catch (error) {
+                mostrarErro('cadastro-error', "Erro de conexão com o servidor.");
+            }
+        }
+
+        async function recuperarSenha(e) {
+            e.preventDefault();
+            const email = document.getElementById('rec-email').value;
+            
+            // Aqui você pode integrar com uma rota futura de recuperação de senha.
+            // Por enquanto, apenas um alerta visual de confirmação.
+            alert(`Instruções enviadas para ${email}. Verifique sua caixa de entrada.`);
+            alternarAbas('login-form');
+        }
+    </script>
+</body>
+</html>

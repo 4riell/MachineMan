@@ -1,0 +1,703 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastros do ERP{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .erp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .erp-modal.active { display: flex; }
+        .erp-modal-content { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #444; max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .erp-modal-close { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; }
+        .erp-modal-close:hover { color: #ff4757; }
+        .modal-title { margin-top: 0; margin-bottom: 20px; color: #4cd137; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; color: #aaa; cursor: pointer; }
+        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .filters-bar { background: #222; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #333; }
+        .tab-section { margin-top: 15px; padding: 15px; border: 1px dashed #444; border-radius: 6px; }
+        .tab-title { margin-top: 0; color: #f39c12; font-size: 14px; text-transform: uppercase; font-weight: bold; }
+        .input-with-btn { display: flex; align-items: center; }
+        .input-with-btn input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+        .input-with-btn button { border-top-left-radius: 0; border-bottom-left-radius: 0; padding: 0 10px; cursor: pointer; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15">
+    <div>
+        <h1 class="page-title-glow">🗃️ Cadastros do Sistema</h1>
+        <div class="page-subtitle">Gestão Mestre do ERP - Formulários Atualizados</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Cadastros Base</div>
+            <button class="menu-item active" onclick="switchErpView('view_clientes', this)">👥 Clientes</button>
+            <button class="menu-item" onclick="switchErpView('view_fornecedores', this)">🤝 Fornecedores</button>
+            <button class="menu-item" onclick="switchErpView('view_transportadores', this)">🚛 Transportadores</button>
+            <button class="menu-item" onclick="switchErpView('view_convenios', this)">🤝 Convênios</button>
+            <button class="menu-item" onclick="switchErpView('view_funcionarios', this)">🧑‍💼 Funcionários</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Catálogo</div>
+            <button class="menu-item" onclick="switchErpView('view_produtos', this)">📦 Produtos</button>
+            <button class="menu-item" onclick="switchErpView('view_grupos_produtos', this)">📂 Grupos de Produtos</button>
+            <button class="menu-item" onclick="switchErpView('view_marcas', this)">🏷️ Marcas de Produtos</button>
+            <button class="menu-item" onclick="switchErpView('view_cores', this)">🎨 Cores de Produtos</button>
+            <button class="menu-item" onclick="switchErpView('view_tamanhos', this)">📏 Tamanhos de Produtos</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Outros</div>
+            <button class="menu-item" onclick="switchErpView('view_carteiras', this)">💼 Carteiras</button>
+            <button class="menu-item" onclick="switchErpView('view_indicacoes', this)">🔗 Indicações</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- ===================================== PRODUTOS ===================================== -->
+        <div id="view_produtos" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15 flex-wrap gap-10">
+                <h3 class="m-0 text-info">📦 Produtos</h3>
+                <div class="d-flex gap-5">
+                    <button type="button" class="btn-neon btn-neon-info text-xs" onclick="alert('Reajustes em massa aberto')">🔄 Reajustes em massa</button>
+                    <button type="button" class="btn-neon btn-neon-info text-xs" onclick="alert('Exportar etiqueta aberto')">🏷️ Exportar etiqueta</button>
+                    <button type="button" class="btn-neon btn-neon-info text-xs" onclick="alert('Exportação para balança aberta')">⚖️ Exportação p/ Balança</button>
+                    <button type="button" class="btn-neon btn-neon-warning text-xs" onclick="alert('Relatórios abertos')">📄 Relatórios</button>
+                    <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_produtos')">➕ Novo Produto</button>
+                </div>
+            </div>
+
+            <div class="filters-bar form-grid-3 align-end">
+                <div><label class="text-xs text-muted">Tipo:</label><select class="erp-select"><option>Todos</option></select></div>
+                <div><label class="text-xs text-muted">Tipo Especial:</label><select class="erp-select"><option>Todos</option></select></div>
+                <div><label class="text-xs text-muted">Grupos:</label><select class="erp-select ddl-grupos-produto"><option>Todos</option></select></div>
+                <div><label class="text-xs text-muted">Marcas:</label><select class="erp-select ddl-marcas-produto"><option>Todos</option></select></div>
+                <div><label class="text-xs text-muted">Status:</label><select class="erp-select"><option>Todos</option><option>Ativo</option><option>Inativo</option></select></div>
+                <div><label class="text-xs text-muted">Estoque:</label><select class="erp-select"><option>Todos</option><option>Com Estoque</option><option>Sem Estoque</option></select></div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table"><thead><tr><th>ID</th><th>Produto</th><th>UM</th><th>EAN/GTIN</th><th>Referência</th><th>Estoque</th><th>Valor</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_produtos"></tbody></table>
+            </div>
+
+            <div id="form_produtos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 1000px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_produtos')">&times;</span>
+                    
+                    <div class="d-flex justify-between align-center mb-15 border-bottom pb-10">
+                        <h3 class="modal-title m-0 border-0 pb-0">Cadastro de Produto</h3>
+                        <div class="d-flex gap-5">
+                            <button type="button" class="btn-neon btn-neon-info text-xs" onclick="alert('Movimentações de Produto')">🔄 Movimentações</button>
+                            <button type="button" class="btn-neon btn-neon-warning text-xs" onclick="alert('Auditoria')">🔍 Auditoria</button>
+                            <button type="button" class="btn-neon btn-neon-danger text-xs" onclick="alert('Produtos Propostos')">💡 Produtos Propostos</button>
+                        </div>
+                    </div>
+
+                    <form id="form_produtos" onsubmit="salvarGenerico(event, 'produtos', 'form_produtos', loadProdutos)">
+                        <input type="hidden" id="prod_id">
+                        
+                        <div class="tab-section"><h4 class="tab-title">Dados do Produto</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">Tipo Especial:</label><select id="prod_tipo_especial" class="erp-select"><option value="N">Não</option><option value="S">Sim</option></select></div>
+                                <div><label class="text-xs text-muted">Tipo:</label><select id="prod_tipo" class="erp-select"><option value="Mercadoria para Revenda">Mercadoria p/ Revenda</option><option value="Materia Prima">Matéria Prima</option><option value="Servico">Serviço</option></select></div>
+                                <div><label class="text-xs text-muted">Unidade:</label><input type="text" id="prod_unidade" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Referência:</label><input type="text" id="prod_referencia" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Grupo:</label><select id="prod_grupo_id" class="erp-select ddl-grupos-produto"></select></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Nome do Produto:</label><input type="text" id="prod_nome" class="erp-input" required></div>
+                                <div><label class="text-xs text-muted">GTIN / EAN:</label><input type="text" id="prod_gtin" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">N. Original:</label><input type="text" id="prod_n_original" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Marca:</label><select id="prod_marca_id" class="erp-select ddl-marcas-produto"></select></div>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Dados Básicos</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">NCM (Pesquisar):</label>
+                                    <div class="input-with-btn">
+                                        <input type="text" id="prod_ncm" class="erp-input" readonly>
+                                        <button type="button" class="btn-neon btn-neon-info" onclick="openNcmSearch()">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label class="text-xs text-muted">CEST:</label><input type="text" id="prod_cest" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Escala Relevante:</label><select id="prod_escala_relevante" class="erp-select"><option value="S">Sim</option><option value="N">Não</option></select></div>
+                                <div><label class="text-xs text-muted">CNPJ Fabricante:</label><input type="text" id="prod_cnpj_fabricante" class="erp-input text-warning" placeholder="Automático"></div>
+                            </div>
+                            <div class="d-flex gap-15 mt-15 flex-wrap">
+                                <label class="checkbox-label"><input type="checkbox" id="prod_integrar_pdv"> Integrar o produto ao PDV</label>
+                                <label class="checkbox-label"><input type="checkbox" id="prod_composto"> Composto (Ficha Técnica)</label>
+                                <label class="checkbox-label"><input type="checkbox" id="prod_inativo"> Inativo</label>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Integrações Fiscais & Específicos</h4>
+                            <div class="form-grid-4">
+                                <div><label class="text-xs text-muted">NF-e/NFC-e (Dentro UF):</label><select id="prod_nfe_dentro" class="erp-select"><option value="Tributado">Tributado</option><option value="Isento">Isento</option></select></div>
+                                <div><label class="text-xs text-muted">NF-e (Fora UF):</label><select id="prod_nfe_fora" class="erp-select"><option value="Tributado">Tributado</option><option value="Isento">Isento</option></select></div>
+                                <div><label class="text-xs text-muted">NF-e Exportação:</label><select id="prod_nfe_exp" class="erp-select"><option value="Nao">Não</option><option value="Sim">Sim</option></select></div>
+                                <div><label class="text-xs text-muted">Origem:</label><select id="prod_origem" class="erp-select"><option value="0">0 - Nacional</option><option value="1">1 - Estrangeira</option></select></div>
+                                <div><label class="text-xs text-muted">MVA (%):</label><input type="number" id="prod_mva" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">Red BC ICMS (%):</label><input type="number" id="prod_red_bc_icms" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">PIS (%):</label><input type="number" id="prod_pis" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">IPI (%):</label><input type="number" id="prod_ipi" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">Difer ICMS (%):</label><input type="number" id="prod_difer_icms" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">Red BC ICMS ST (%):</label><input type="number" id="prod_red_bc_icms_st" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">COFINS (%):</label><input type="number" id="prod_cofins" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">Cód Indice Part Mun:</label><input type="text" id="prod_cod_indice_part_municipios" class="erp-input"></div>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Custos e Preços (Preço de Venda)</h4>
+                            <div class="form-grid-4 mb-15">
+                                <div><label class="text-xs text-muted">$ Compra:</label><input type="number" id="prod_vlr_compra" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">$ Médio:</label><input type="number" id="prod_vlr_medio" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">% Comissão:</label><input type="number" id="prod_perc_comissao" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">% Max. Desconto:</label><input type="number" id="prod_perc_max_desconto" class="erp-input" step="0.01"></div>
+                            </div>
+                            
+                            <h5 class="text-sm text-info mb-5">Tabelas de Preço (Venda)</h5>
+                            <div class="form-panel-dashed p-10">
+                                <div class="form-grid-6 align-end mb-10">
+                                    <div class="col-span-2"><label class="text-xs text-muted">Tabela:</label><select id="add_preco_tabela" class="erp-select"></select></div>
+                                    <div><label class="text-xs text-muted">Custo Médio ($):</label><input type="number" id="add_preco_custo_medio" class="erp-input" step="0.01"></div>
+                                    <div><label class="text-xs text-muted">Markup (%):</label><input type="number" id="add_preco_markup" class="erp-input" step="0.01"></div>
+                                    <div><label class="text-xs text-muted">Valor ($):</label><input type="number" id="add_preco_valor" class="erp-input" step="0.01"></div>
+                                    <div><label class="text-xs text-muted">Mínimo ($):</label><input type="number" id="add_preco_minimo" class="erp-input" step="0.01"></div>
+                                </div>
+                                <button type="button" class="btn-neon btn-neon-info p-5 text-xs mb-10 w-full" onclick="addProdPreco()">➕ Adicionar Tabela</button>
+                                <table class="erp-table text-xs"><thead><tr><th>Tabela</th><th>Custo Médio</th><th>Markup %</th><th>Valor ($)</th><th>Mínimo ($)</th><th>Ação</th></tr></thead><tbody id="tb_prod_precos"></tbody></table>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Estoque</h4>
+                            <!-- NOTE: O evento oninput chama a função para calcular o saldo previsto! -->
+                            <div class="form-grid-4 mb-15">
+                                <div><label class="text-xs text-muted">Saldo Físico:</label><input type="number" id="prod_saldo_fisico" class="erp-input text-info font-bold" step="0.01" oninput="calcularSaldoPrevisto()"></div>
+                                <div><label class="text-xs text-muted">Reserva:</label><input type="number" id="prod_reserva" class="erp-input text-warning" step="0.01" oninput="calcularSaldoPrevisto()"></div>
+                                <div><label class="text-xs text-muted">Saldo Previsto:</label><input type="number" id="prod_saldo_previsto" class="erp-input text-success font-bold" step="0.01" readonly></div>
+                                <div><label class="text-xs text-muted">SKU:</label><input type="text" id="prod_sku" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Mín (Min):</label><input type="number" id="prod_estoque_min" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">Máx (Max):</label><input type="number" id="prod_estoque_max" class="erp-input" step="0.01"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Localização:</label><input type="text" id="prod_localizacao" class="erp-input"></div>
+                            </div>
+                            
+                            <h5 class="text-sm text-info mb-5">Outros estoques / Disponibilidade</h5>
+                            <table class="erp-table text-xs">
+                                <thead><tr><th>Local / Filial</th><th>Saldo Físico</th><th>Reserva</th><th>Disponível</th></tr></thead>
+                                <tbody id="tb_outros_estoques">
+                                    <tr><td colspan="4" class="text-center text-muted">Dados carregados em tempo real (Sem múltiplas filiais cadastradas).</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">+Info & Medidas</h4>
+                            <div class="form-grid-4">
+                                <div class="col-span-4"><label class="text-xs text-muted">Informações (Editor de Texto):</label><textarea id="prod_info_extra" class="erp-input" rows="3"></textarea></div>
+                                <div><label class="text-xs text-muted">Peso (gr):</label><input type="number" id="prod_peso" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Largura (cm):</label><input type="number" id="prod_largura" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Altura (cm):</label><input type="number" id="prod_altura" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Comprimento (cm):</label><input type="number" id="prod_comprimento" class="erp-input"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar Produto</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== CLIENTES ===================================== -->
+        <div id="view_clientes" class="erp-view active">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">👥 Clientes</h3>
+                <div class="d-flex gap-5">
+                    <button type="button" class="btn-neon btn-neon-warning text-xs" onclick="alert('Gerando Relatórios de Clientes...')">📄 Relatórios</button>
+                    <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_clientes')">➕ Novo Cliente</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th>Município</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_clientes"></tbody></table></div>
+
+            <div id="form_clientes_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_clientes')">&times;</span><h3 class="modal-title">Cadastro de Cliente</h3>
+                    <form id="form_clientes" onsubmit="salvarGenerico(event, 'clientes', 'form_clientes', loadClientes)">
+                        <input type="hidden" id="cli_id">
+                        
+                        <div class="tab-section"><h4 class="tab-title">Dados Iniciais</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CPF / CNPJ:</label><input type="text" id="cli_cpf_cnpj" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Nome / Razão Social:</label><input type="text" id="cli_nome" class="erp-input" required></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Fantasia / Apelido:</label><input type="text" id="cli_fantasia" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">I.E. / R.G.:</label><input type="text" id="cli_ie_rg" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Nascimento:</label><input type="date" id="cli_nascimento" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">E-mail:</label><input type="email" id="cli_email" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Telefone:</label><input type="text" id="cli_telefone" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Celular:</label><input type="text" id="cli_celular" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Tipo Contribuinte:</label><select id="cli_tipo_contribuinte" class="erp-select"><option value="ICMS">Contribuinte ICMS</option><option value="Isento">Isento</option><option value="Nao_Contribuinte">Não Contribuinte</option></select></div>
+                                <div><label class="text-xs text-muted">Tabela de Preço:</label><select id="cli_tabela_preco" class="erp-select"><option value="Geral">Geral</option><option value="Atacado">Atacado</option></select></div>
+                                <div><label class="text-xs text-muted">Limite Crédito:</label><input type="number" id="cli_limite_credito" class="erp-input" step="0.01"></div>
+                                <div><label class="text-xs text-muted">Convênio:</label><select id="cli_convenio_id" class="erp-select ddl-convenios"></select></div>
+                                <div><label class="text-xs text-muted">Carteira:</label><select id="cli_carteira_id" class="erp-select ddl-carteiras"></select></div>
+                                <div class="col-span-full"><label class="text-xs text-muted">Notas:</label><textarea id="cli_notas" class="erp-input" rows="2"></textarea></div>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Endereço Principal</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CEP:</label><input type="text" id="cli_cep" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Logradouro:</label><input type="text" id="cli_logradouro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Número:</label><input type="text" id="cli_numero" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Complemento:</label><input type="text" id="cli_compl" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Bairro:</label><input type="text" id="cli_bairro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">UF:</label><select id="cli_uf" class="erp-select ddl-estados" onchange="carregarMunicipiosIBGEDinamico(this.value, 'cli_municipio')"></select></div>
+                                <div><label class="text-xs text-muted">Município:</label><select id="cli_municipio" class="erp-select"><option value="">-- Selecione UF 1º --</option></select></div>
+                                <div><label class="text-xs text-muted">País:</label><select id="cli_pais" class="erp-select"><option value="Brasil">Brasil</option></select></div>
+                            </div>
+                            <div class="mt-15"><label class="checkbox-label"><input type="checkbox" id="cli_inativo"> Inativo</label></div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Outros</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">Indicação (Pesquisa):</label>
+                                    <div class="input-with-btn">
+                                        <input type="text" id="cli_indicacao_busca" class="erp-input" readonly placeholder="Pesquisar cliente">
+                                        <button type="button" class="btn-neon btn-neon-warning" onclick="openClienteSearch('cli_indicacao_busca')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label class="text-xs text-muted">Desconto Cliente %:</label><input type="number" id="cli_desconto_perc" class="erp-input" step="0.01"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar Cliente</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== FORNECEDORES ===================================== -->
+        <div id="view_fornecedores" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">🤝 Fornecedores</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_fornecedores')">➕ Novo Fornecedor</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th>CNPJ/CPF</th><th>Telefone</th><th>E-mail</th><th>Município</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_fornecedores"></tbody></table></div>
+
+            <div id="form_fornecedores_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_fornecedores')">&times;</span><h3 class="modal-title">Cadastro de Fornecedor</h3>
+                    <form id="form_fornecedores" onsubmit="salvarGenerico(event, 'fornecedores', 'form_fornecedores', loadFornecedores)">
+                        <input type="hidden" id="for_id">
+                        <div class="tab-section"><h4 class="tab-title">Identificação</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CNPJ / CPF:</label><input type="text" id="for_cnpj_cpf" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Nome / Razão Social:</label><input type="text" id="for_nome" class="erp-input" required></div>
+                                <div><label class="text-xs text-muted">Fantasia / Apelido:</label><input type="text" id="for_fantasia" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">I.E. / R.G.:</label><input type="text" id="for_ie_rg" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Tipo Contribuinte:</label><select id="for_tipo_contribuinte" class="erp-select"><option value="ICMS">Contribuinte ICMS</option><option value="Isento">Isento</option></select></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">E-mail:</label><input type="email" id="for_email" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Telefone:</label><input type="text" id="for_telefone" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Contato:</label><input type="text" id="for_contato" class="erp-input"></div>
+                            </div>
+                        </div>
+                        <div class="tab-section"><h4 class="tab-title">Endereço & Outros</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CEP:</label><input type="text" id="for_cep" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Logradouro:</label><input type="text" id="for_logradouro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Número:</label><input type="text" id="for_numero" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Compl.:</label><input type="text" id="for_compl" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Bairro:</label><input type="text" id="for_bairro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">UF:</label><select id="for_uf" class="erp-select ddl-estados" onchange="carregarMunicipiosIBGEDinamico(this.value, 'for_municipio')"></select></div>
+                                <div><label class="text-xs text-muted">Município:</label><select id="for_municipio" class="erp-select"><option value="">-- Selecione UF 1º --</option></select></div>
+                                <div><label class="text-xs text-muted">País:</label><select id="for_pais" class="erp-select"><option value="Brasil">Brasil</option></select></div>
+                                <div class="col-span-full"><label class="text-xs text-muted">Notas:</label><textarea id="for_notas" class="erp-input" rows="2"></textarea></div>
+                            </div>
+                            <div class="mt-15"><label class="checkbox-label"><input type="checkbox" id="for_inativo"> Inativo</label></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar Fornecedor</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== TRANSPORTADORES ===================================== -->
+        <div id="view_transportadores" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🚛 Transportadores</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_transportadores')">➕ Novo Transportador</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th>Município</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_transportadores"></tbody></table></div>
+
+            <div id="form_transportadores_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_transportadores')">&times;</span><h3 class="modal-title">Cadastro de Transportador</h3>
+                    <form id="form_transportadores" onsubmit="salvarGenerico(event, 'transportadores', 'form_transportadores', loadTransportadores)">
+                        <input type="hidden" id="trans_id">
+                        <div class="tab-section"><h4 class="tab-title">Identificação</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CPF / CNPJ:</label><input type="text" id="trans_cpf_cnpj" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Nome / Razão Social:</label><input type="text" id="trans_nome" class="erp-input" required></div>
+                                <div><label class="text-xs text-muted">Fantasia / Apelido:</label><input type="text" id="trans_fantasia" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">I.E. / R.G.:</label><input type="text" id="trans_ie_rg" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">E-mail:</label><input type="email" id="trans_email" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Telefone:</label><input type="text" id="trans_telefone" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Celular:</label><input type="text" id="trans_celular" class="erp-input"></div>
+                            </div>
+                        </div>
+                        <div class="tab-section"><h4 class="tab-title">Endereço & Outros</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CEP:</label><input type="text" id="trans_cep" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Logradouro:</label><input type="text" id="trans_logradouro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Número:</label><input type="text" id="trans_numero" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Compl.:</label><input type="text" id="trans_compl" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Bairro:</label><input type="text" id="trans_bairro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">UF:</label><select id="trans_uf" class="erp-select ddl-estados" onchange="carregarMunicipiosIBGEDinamico(this.value, 'trans_municipio')"></select></div>
+                                <div><label class="text-xs text-muted">Município:</label><select id="trans_municipio" class="erp-select"><option value="">-- Selecione UF 1º --</option></select></div>
+                                <div><label class="text-xs text-muted">País:</label><select id="trans_pais" class="erp-select"><option value="Brasil">Brasil</option></select></div>
+                                <div class="col-span-full"><label class="text-xs text-muted">Notas:</label><textarea id="trans_notas" class="erp-input" rows="2"></textarea></div>
+                            </div>
+                            <div class="mt-15"><label class="checkbox-label"><input type="checkbox" id="trans_inativo"> Inativo</label></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar Transportador</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== CONVÊNIOS ===================================== -->
+        <div id="view_convenios" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🤝 Convênios</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_convenios')">➕ Novo Convênio</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_convenios"></tbody></table></div>
+
+            <div id="form_convenios_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_convenios')">&times;</span><h3 class="modal-title">Cadastro de Convênio</h3>
+                    <form id="form_convenios" onsubmit="salvarGenerico(event, 'convenios', 'form_convenios', loadConvenios)">
+                        <input type="hidden" id="conv_id">
+                        <div class="tab-section"><h4 class="tab-title">Identificação</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CPF / CNPJ:</label><input type="text" id="conv_cpf_cnpj" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Nome / Razão Social:</label><input type="text" id="conv_nome" class="erp-input" required></div>
+                                <div><label class="text-xs text-muted">Fantasia / Apelido:</label><input type="text" id="conv_fantasia" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">I.E. / R.G.:</label><input type="text" id="conv_ie_rg" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Telefone:</label><input type="text" id="conv_telefone" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">E-mail:</label><input type="email" id="conv_email" class="erp-input"></div>
+                            </div>
+                        </div>
+                        <div class="tab-section"><h4 class="tab-title">Endereço & Outros</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CEP:</label><input type="text" id="conv_cep" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Logradouro:</label><input type="text" id="conv_logradouro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Número:</label><input type="text" id="conv_numero" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Compl.:</label><input type="text" id="conv_compl" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Bairro:</label><input type="text" id="conv_bairro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">UF:</label><select id="conv_uf" class="erp-select ddl-estados" onchange="carregarMunicipiosIBGEDinamico(this.value, 'conv_municipio')"></select></div>
+                                <div><label class="text-xs text-muted">Município:</label><select id="conv_municipio" class="erp-select"><option value="">-- Selecione UF 1º --</option></select></div>
+                                <div><label class="text-xs text-muted">País:</label><select id="conv_pais" class="erp-select"><option value="Brasil">Brasil</option></select></div>
+                                <div class="col-span-full"><label class="text-xs text-muted">Notas:</label><textarea id="conv_notas" class="erp-input" rows="2"></textarea></div>
+                            </div>
+                            <div class="mt-15"><label class="checkbox-label"><input type="checkbox" id="conv_inativo"> Inativo</label></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar Convênio</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== FUNCIONÁRIOS ===================================== -->
+        <div id="view_funcionarios" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🧑‍💼 Funcionários</h3>
+                <div class="d-flex gap-5">
+                    <button type="button" class="btn-neon btn-neon-warning text-xs" onclick="alert('Inclusão Coletiva Aberta')">📋 Inclusão Coletiva de Sequencias</button>
+                    <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_funcionarios')">➕ Novo Funcionário</button>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>E-mail</th><th>Funções</th><th>Status</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_funcionarios"></tbody></table></div>
+
+            <div id="form_funcionarios_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_funcionarios')">&times;</span><h3 class="modal-title">Cadastro de Funcionário</h3>
+                    <form id="form_funcionarios" onsubmit="salvarGenerico(event, 'funcionarios', 'form_funcionarios', loadFuncionarios)">
+                        <input type="hidden" id="func_id">
+                        
+                        <div class="tab-section"><h4 class="tab-title">Dados Básicos</h4>
+                            <div class="form-grid">
+                                <div class="col-span-2"><label class="text-xs text-muted">Nome Completo:</label><input type="text" id="func_nome" class="erp-input" required></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Funções (Automático):</label><input type="text" id="func_funcao" class="erp-input text-info font-bold" readonly placeholder="Preencha as Remunerações p/ Gerar"></div>
+                                <div><label class="text-xs text-muted">CPF:</label><input type="text" id="func_cpf" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">RG:</label><input type="text" id="func_rg" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">NIS:</label><input type="text" id="func_nis" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">CTPS:</label><input type="text" id="func_ctps" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Data Nascimento:</label><input type="date" id="func_data_nascimento" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Naturalidade:</label><input type="text" id="func_naturalidade" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Nacionalidade:</label><input type="text" id="func_nacionalidade" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Telefone:</label><input type="text" id="func_telefone" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Celular:</label><input type="text" id="func_celular" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">E-mail:</label><input type="email" id="func_email" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Senha Funcionário:</label><input type="password" id="func_senha" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Data Admissão:</label><input type="date" id="func_data_admissao" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Data Demissão:</label><input type="date" id="func_data_demissao" class="erp-input"></div>
+                            </div>
+                            <div class="d-flex gap-15 mt-15">
+                                <label class="checkbox-label"><input type="checkbox" id="func_inativo"> Inativo</label>
+                                <label class="checkbox-label"><input type="checkbox" id="func_habilitar_usuario"> Habilitar Usuário</label>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Endereço</h4>
+                            <div class="form-grid">
+                                <div><label class="text-xs text-muted">CEP:</label><input type="text" id="func_cep" class="erp-input"></div>
+                                <div class="col-span-2"><label class="text-xs text-muted">Logradouro:</label><input type="text" id="func_logradouro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Número:</label><input type="text" id="func_numero" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Complemento:</label><input type="text" id="func_complemento" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">Bairro:</label><input type="text" id="func_bairro" class="erp-input"></div>
+                                <div><label class="text-xs text-muted">UF:</label><select id="func_uf" class="erp-select ddl-estados" onchange="carregarMunicipiosIBGEDinamico(this.value, 'func_municipio')"></select></div>
+                                <div><label class="text-xs text-muted">Município:</label><select id="func_municipio" class="erp-select"><option value="">-- Selecione UF 1º --</option></select></div>
+                                <div><label class="text-xs text-muted">País:</label><select id="func_pais" class="erp-select"><option value="Brasil">Brasil</option></select></div>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Remuneração Funcionário</h4>
+                            <div class="form-grid align-end mb-10">
+                                <div><label class="text-xs text-muted">Tipo de Comissão:</label><select id="func_tipo_comissao" class="erp-select"><option value="Fixa">Fixa</option><option value="Variavel">Variável</option></select></div>
+                            </div>
+                            <div class="form-panel-dashed p-10 mt-10">
+                                <div class="d-flex gap-10 align-end mb-10">
+                                    <div><label class="text-xs text-muted">Tipo de Remuneração:</label><select id="add_rem_tipo" class="erp-select"><option value="Vendedor">Vendedor</option><option value="Tecnico">Técnico</option><option value="Operador">Operador</option><option value="Administrativo">Administrativo</option></select></div>
+                                    <div><label class="text-xs text-muted">Comissão:</label><select id="add_rem_comissao" class="erp-select"><option value="Padrao">Padrão</option><option value="Especial">Especial</option></select></div>
+                                    <div><label class="text-xs text-muted">Percentual (%):</label><input type="number" id="add_rem_perc" class="erp-input" step="0.01"></div>
+                                    <div class="d-flex align-center"><label class="checkbox-label"><input type="checkbox" id="add_rem_ativo" checked> Ativo</label></div>
+                                    <button type="button" class="btn-neon btn-neon-info p-5 text-xs" onclick="addFuncionarioSubList('remuneracoes')">➕ Add</button>
+                                </div>
+                                <table class="erp-table text-xs"><thead><tr><th>Ativo</th><th>Tipo Remuneração</th><th>Comissão</th><th>Percentual</th><th>Ação</th></tr></thead><tbody id="tb_func_remuneracoes"></tbody></table>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Frequência</h4>
+                            <div class="form-panel-dashed p-10">
+                                <div class="d-flex gap-10 align-end mb-10">
+                                    <div><label class="text-xs text-muted">Ano/Mês:</label><input type="text" id="add_freq_mes" class="erp-input" placeholder="MM/AAAA"></div>
+                                    <div><label class="text-xs text-muted">Qtd Dias Mês:</label><input type="number" id="add_freq_dias" class="erp-input"></div>
+                                    <div><label class="text-xs text-muted">Dias Úteis:</label><input type="number" id="add_freq_uteis" class="erp-input"></div>
+                                    <div><label class="text-xs text-muted">Faltas:</label><input type="number" id="add_freq_faltas" class="erp-input"></div>
+                                    <button type="button" class="btn-neon btn-neon-info p-5 text-xs" onclick="addFuncionarioSubList('frequencias')">➕ Add</button>
+                                </div>
+                                <table class="erp-table text-xs"><thead><tr><th>Ano/Mês</th><th>Dias Mês</th><th>Dias Úteis</th><th>Faltas</th><th>Ação</th></tr></thead><tbody id="tb_func_frequencias"></tbody></table>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Periódicos</h4>
+                            <div class="form-panel-dashed p-10">
+                                <div class="d-flex gap-10 align-end mb-10">
+                                    <div><label class="text-xs text-muted">Período:</label><input type="text" id="add_per_periodo" class="erp-input"></div>
+                                    <div><label class="text-xs text-muted">Módulo:</label><input type="text" id="add_per_modulo" class="erp-input"></div>
+                                    <div class="flex-1"><label class="text-xs text-muted">Informação:</label><input type="text" id="add_per_info" class="erp-input"></div>
+                                    <div><label class="text-xs text-muted">Criação:</label><input type="date" id="add_per_criacao" class="erp-input"></div>
+                                    <button type="button" class="btn-neon btn-neon-info p-5 text-xs" onclick="addFuncionarioSubList('periodicos')">➕ Add</button>
+                                </div>
+                                <table class="erp-table text-xs"><thead><tr><th>Período</th><th>Módulo</th><th>Informação</th><th>Criação</th><th>Ação</th></tr></thead><tbody id="tb_func_periodicos"></tbody></table>
+                            </div>
+                        </div>
+
+                        <div class="tab-section"><h4 class="tab-title">Informações Complementares</h4>
+                            <textarea id="func_notas" class="erp-input" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar Funcionário</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== GRUPO DE PRODUTOS ===================================== -->
+        <div id="view_grupos_produtos" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">📂 Grupos de Produtos</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_grupos_produtos')">➕ Novo Grupo</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th>Nº Produtos</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_grupos_produtos"></tbody></table></div>
+
+            <div id="form_grupos_produtos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_grupos_produtos')">&times;</span><h3 class="modal-title">Cadastro de Grupo</h3>
+                    <form id="form_grupos_produtos" onsubmit="salvarGenerico(event, 'grupos_produtos', 'form_grupos_produtos', loadGruposProdutos)">
+                        <input type="hidden" id="gprod_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label class="text-xs text-muted">Nome do Grupo:</label><input type="text" id="gprod_nome_grupo" class="erp-input" required></div>
+                            <div class="col-span-full"><label class="text-xs text-muted">Grupo Pai:</label><select id="gprod_grupo_pai" class="erp-select ddl-grupos-produto"><option value="">Nenhum</option></select></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== MARCAS DE PRODUTOS ===================================== -->
+        <div id="view_marcas" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🏷️ Marcas de Produtos</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_marcas')">➕ Nova Marca</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Nome</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_marcas"></tbody></table></div>
+
+            <div id="form_marcas_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_marcas')">&times;</span><h3 class="modal-title">Cadastro de Marca</h3>
+                    <form id="form_marcas" onsubmit="salvarGenerico(event, 'marcas', 'form_marcas', loadMarcas)">
+                        <input type="hidden" id="mar_id">
+                        <div><label class="text-xs text-muted">Nome da Marca:</label><input type="text" id="mar_nome" class="erp-input" required></div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== CORES DE PRODUTOS ===================================== -->
+        <div id="view_cores" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🎨 Cores de Produtos</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_cores')">➕ Nova Cor</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>Ordenação</th><th>Nome</th><th>Status</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_cores"></tbody></table></div>
+
+            <div id="form_cores_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_cores')">&times;</span><h3 class="modal-title">Cadastro de Cor</h3>
+                    <form id="form_cores" onsubmit="salvarGenerico(event, 'cores', 'form_cores', loadCores)">
+                        <input type="hidden" id="cor_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label class="text-xs text-muted">Nome da Cor:</label><input type="text" id="cor_nome" class="erp-input" required></div>
+                            <div class="col-span-full"><label class="text-xs text-muted">Ordem:</label><select id="cor_ordem" class="erp-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+                            <div class="col-span-full mt-10"><label class="checkbox-label"><input type="checkbox" id="cor_inativo"> Inativo</label></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== TAMANHOS DE PRODUTOS ===================================== -->
+        <div id="view_tamanhos" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">📏 Tamanhos de Produtos</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_tamanhos')">➕ Novo Tamanho</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>Ordenação</th><th>Nome</th><th>Status</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_tamanhos"></tbody></table></div>
+
+            <div id="form_tamanhos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_tamanhos')">&times;</span><h3 class="modal-title">Cadastro de Tamanho</h3>
+                    <form id="form_tamanhos" onsubmit="salvarGenerico(event, 'tamanhos', 'form_tamanhos', loadTamanhos)">
+                        <input type="hidden" id="tam_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label class="text-xs text-muted">Nome do Tamanho:</label><input type="text" id="tam_nome" class="erp-input" required></div>
+                            <div class="col-span-full"><label class="text-xs text-muted">Ordem:</label><select id="tam_ordem" class="erp-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+                            <div class="col-span-full mt-10"><label class="checkbox-label"><input type="checkbox" id="tam_inativo"> Inativo</label></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== CARTEIRAS ===================================== -->
+        <div id="view_carteiras" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">💼 Carteiras</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_carteiras')">➕ Nova Carteira</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Carteira</th><th>Vendedor</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_carteiras"></tbody></table></div>
+
+            <div id="form_carteiras_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_carteiras')">&times;</span><h3 class="modal-title">Cadastro de Carteira</h3>
+                    <form id="form_carteiras" onsubmit="salvarGenerico(event, 'carteiras', 'form_carteiras', loadCarteiras)">
+                        <input type="hidden" id="cart_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label class="text-xs text-muted">Nome da Carteira:</label><input type="text" id="cart_carteira" class="erp-input" required></div>
+                            <div class="col-span-full"><label class="text-xs text-muted">Vendedor:</label><select id="cart_vendedor" class="erp-select ddl-vendedores"></select></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== INDICAÇÕES ===================================== -->
+        <div id="view_indicacoes" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🔗 Indicações</h3>
+                <button class="btn-neon btn-neon-green text-xs" onclick="novoCadastro('form_indicacoes')">➕ Nova Indicação</button>
+            </div>
+            <div class="table-responsive-wrapper"><table class="erp-table"><thead><tr><th>ID</th><th>Cliente</th><th>% Indicação</th><th class="text-center">Ações</th></tr></thead><tbody id="tb_indicacoes"></tbody></table></div>
+
+            <div id="form_indicacoes_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_indicacoes')">&times;</span><h3 class="modal-title">Cadastro de Indicação</h3>
+                    <form id="form_indicacoes" onsubmit="salvarGenerico(event, 'indicacoes', 'form_indicacoes', loadIndicacoes)">
+                        <input type="hidden" id="ind_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label class="text-xs text-muted">Cliente que realizou a indicação (Pesquisar):</label>
+                                <div class="input-with-btn">
+                                    <input type="text" id="ind_cliente" class="erp-input" required readonly placeholder="Pesquisar cliente...">
+                                    <button type="button" class="btn-neon btn-neon-warning" onclick="openClienteSearch('ind_cliente')">🔍</button>
+                                </div>
+                            </div>
+                            <div class="col-span-full"><label class="text-xs text-muted">Porcentagem da Indicação (%):</label><input type="number" id="ind_porcentagem" class="erp-input" step="0.01" required></div>
+                        </div>
+                        <div class="form-actions justify-end mt-15"><button type="submit" class="btn-neon btn-neon-green">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODAL GENÉRICO DE PESQUISA NCM -->
+<div id="modal_busca_ncm" class="erp-modal">
+    <div class="erp-modal-content" style="max-width: 600px;">
+        <span class="erp-modal-close" onclick="closeModal('modal_busca_ncm')">&times;</span>
+        <h3 class="modal-title">Pesquisa de NCM</h3>
+        <div class="d-flex gap-10 mb-15">
+            <input type="text" id="ncm_busca_input" class="erp-input" placeholder="Digite código ou descrição...">
+            <button class="btn-neon btn-neon-info" onclick="executarBuscaNCM()">Buscar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="erp-table text-xs">
+                <thead><tr><th>Código</th><th>Descrição</th><th>Ação</th></tr></thead>
+                <tbody id="tb_busca_ncm"><tr><td colspan="3" class="text-center">Faça uma busca.</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL GENÉRICO DE PESQUISA CLIENTE -->
+<div id="modal_busca_cliente" class="erp-modal">
+    <div class="erp-modal-content" style="max-width: 600px;">
+        <span class="erp-modal-close" onclick="closeModal('modal_busca_cliente')">&times;</span>
+        <h3 class="modal-title">Pesquisa de Cliente</h3>
+        <div class="d-flex gap-10 mb-15">
+            <input type="text" id="cliente_busca_input" class="erp-input" placeholder="Digite nome ou documento...">
+            <button class="btn-neon btn-neon-info" onclick="executarBuscaCliente()">Buscar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="erp-table text-xs">
+                <thead><tr><th>ID</th><th>Nome</th><th>Documento</th><th>Ação</th></tr></thead>
+                <tbody id="tb_busca_cliente"><tr><td colspan="4" class="text-center">Faça uma busca.</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cadastros.js"></script>
+{% endblock %}

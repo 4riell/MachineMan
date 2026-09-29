@@ -1,0 +1,106 @@
+=== ANÁLISE DO MÓDULO: route_delivery.py ===
+
+>>> TABELAS CRIADAS NESTE ARQUIVO (4) <<<
+Estas tabelas possuem sua estrutura (schema) definida aqui.
+
+[+] Tabela: erp_adicionais_grupos
+    Colunas (8):
+      - id (INTEGER)
+      - nome_grupo (VARCHAR(100))
+      - descricao (VARCHAR(255))
+      - minimo (INTEGER)
+      - maximo (INTEGER)
+      - ativo (VARCHAR(1))
+      - obrigatorio (INTEGER)
+      - disponivel (INTEGER)
+----------------------------------------
+
+[+] Tabela: erp_adicionais_itens
+    Colunas (6):
+      - id (INTEGER)
+      - grupo_id (INTEGER)
+      - produto_id (INTEGER)
+      - nome (VARCHAR(150))
+      - preco_adicional (REAL)
+      - disponivel (INTEGER)
+----------------------------------------
+
+[+] Tabela: erp_menu_grupos
+    Colunas (7):
+      - id (INTEGER)
+      - ordem (TEXT)
+      - nome_grupo (TEXT)
+      - descricao (VARCHAR(255))
+      - ativo (VARCHAR(1))
+      - disponivel (INTEGER)
+      - icone (VARCHAR(50))
+----------------------------------------
+
+[+] Tabela: erp_menu_itens
+    Colunas (12):
+      - id (INTEGER)
+      - grupo_id (TEXT)
+      - produto_nome (TEXT)
+      - preco_venda (TEXT)
+      - ativo (TEXT)
+      - produto_id (INTEGER)
+      - descricao (TEXT)
+      - imagem_url (TEXT)
+      - codigo_pdv (VARCHAR(50))
+      - nome_personalizado (VARCHAR(150))
+      - disponivel (INTEGER)
+      - destaque (INTEGER)
+----------------------------------------
+
+>>> TABELAS APENAS REFERENCIADAS (2) <<<
+Estas tabelas são usadas em consultas (SELECT/INSERT/UPDATE) mas foram criadas em outro módulo.
+
+[-] Tabela: erp_emitentes (Criada em: route_controladoria.py)
+    Colunas (37):
+      - id (INTEGER)
+      - cnpj (TEXT)
+      - razao_social (TEXT)
+      - municipio (TEXT)
+      - uf (TEXT)
+      - fantasia (VARCHAR(150))
+      - atividade (VARCHAR(100))
+      - crt (VARCHAR(50))
+      - ie (VARCHAR(20))
+      - im (VARCHAR(20))
+      - telefone (VARCHAR(20))
+      - email (VARCHAR(100))
+      - logradouro (VARCHAR(150))
+      - numero (VARCHAR(20))
+      - bairro (VARCHAR(100))
+      - cep (VARCHAR(10))
+      - status (VARCHAR(20))
+      - multi_estoque (VARCHAR(1))
+      - cnae (VARCHAR(50))
+      - complemento (VARCHAR(100))
+      - contabilidade (VARCHAR(150))
+      - aliq_cred_simpl (REAL)
+      - base_iss (REAL)
+      - perc_iss (REAL)
+      - base_inss (REAL)
+      - perc_inss (REAL)
+      - base_ir (REAL)
+      - perc_ir (REAL)
+      - base_csll (REAL)
+      - perc_csll (REAL)
+      - base_pis (REAL)
+      - perc_pis (REAL)
+      - base_cofins (REAL)
+      - perc_cofins (REAL)
+      - inativo (VARCHAR(1))
+      - servicos (VARCHAR(1))
+      - impostos_retidos (VARCHAR(1))
+----------------------------------------
+
+[-] Tabela: erp_grupos_produtos (Criada em: route_cadastros.py)
+    Colunas (4):
+      - id (INTEGER)
+      - nome_grupo (VARCHAR(100))
+      - nome (TEXT)
+      - grupo_pai (TEXT)
+----------------------------------------
+

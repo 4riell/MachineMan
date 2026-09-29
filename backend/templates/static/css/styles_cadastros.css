@@ -1,0 +1,104 @@
+/* ==========================================================================
+   STYLES CADASTROS - Correções de Responsividade para Formulários e Tabelas
+   ========================================================================== */
+
+/* 1. GRIDS DE FORMULÁRIOS RESPONSIVOS */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+
+.form-grid-2 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+.form-grid-3 { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-full { grid-column: 1 / -1; }
+
+/* 2. BOTÕES E BARRAS DE AÇÃO */
+.top-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: 20px;
+    border-top: 1px solid #333;
+    padding-top: 15px;
+}
+
+/* 3. TABELAS RESPONSIVAS (Evita quebrar a tela) */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Cria barra de rolagem horizontal se a tabela for larga */
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #111;
+}
+
+.erp-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px; /* Força scroll em telas menores que 800px */
+}
+
+/* 4. SEPARAÇÕES VISUAIS */
+.history-section-title {
+    margin-top: 40px;
+    font-size: 1.1rem;
+    color: #fff;
+    border-bottom: 2px solid #444;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.form-panel {
+    background: rgba(0,0,0,0.2); 
+    padding: 15px; 
+    border-radius: 6px; 
+    border: 1px dashed #444;
+}
+
+/* 5. MEDIA QUERIES (Celulares e Tablets) */
+@media (max-width: 768px) {
+    /* Força inputs e selects a não vazarem */
+    .erp-input, .erp-select, .erp-textarea {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Colunas ocupam linha inteira no celular */
+    .col-span-2, .col-span-3 { grid-column: 1 / -1; }
+    
+    .form-grid, .form-grid-2, .form-grid-3 {
+        grid-template-columns: 1fr; /* 1 coluna no celular */
+    }
+
+    /* Botões empilhados ocupando 100% da largura */
+    .top-actions, .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .top-actions button, .form-actions button {
+        width: 100%;
+        margin-bottom: 5px;
+        justify-content: center;
+    }
+
+    /* Flex containers viram colunas */
+    .d-flex.gap-20 {
+        flex-direction: column;
+        gap: 10px !important;
+    }
+}

@@ -1,0 +1,1019 @@
+{% extends "base.html" %}
+
+{% block title %}Comercial e Faturamento{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .flex-1 { min-width: 0 !important; max-width: 100%; } 
+        .section-box { border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.15); max-width: 100%; overflow-x: hidden; }
+        .table-responsive-wrapper { width: 100%; overflow-x: auto; max-width: 100%; }
+        .inner-grid-table { width: 100%; min-width: 650px; border-collapse: collapse; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .inner-grid-table th, .inner-grid-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: left; font-size: 0.85rem; }
+        .inner-grid-table th { background: rgba(0,255,255,0.1); color: #0ff; font-weight: bold; white-space: nowrap; }
+        .inner-grid-table input, .inner-grid-table select { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 100%; padding: 4px; border-radius: 4px;}
+        .inner-grid-table select { background: #1a1a1a; cursor: pointer; }
+        .int-opt { margin: 0; transform: scale(1.2); cursor: pointer; flex-shrink: 0; }
+        .check-item { display: inline-flex; align-items: center; gap: 8px; white-space: normal; cursor: pointer; }
+        .filter-bar { background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 6px; border-left: 3px solid #00ffcc; display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: flex-end; }
+        
+        .erp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .erp-modal.active { display: flex; }
+        .erp-modal-content { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #444; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .erp-modal-close { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; }
+        
+        .filter-item { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+        .filter-item label { font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-item input, .filter-item select { background: #000; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
+        
+        select[multiple] { height: 60px; padding: 5px; }
+        select[multiple] option { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .erp-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: #00ffcc; cursor: pointer; }
+        .staging-form { background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px dashed #555; padding: 15px; margin-bottom: 15px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">💼 Gestão Comercial</h1>
+        <div class="page-subtitle">Faturamento, Pedidos, Metas e E-commerce.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Faturamento Fiscal</div>
+            <button class="menu-item active" onclick="switchComercialView('view_nfe', this)">📄 Emissão NF-e</button>
+            <button class="menu-item" onclick="switchComercialView('view_nfce', this)">🧾 Cupons NFC-e</button>
+            <button class="menu-item" onclick="switchComercialView('view_nfse', this)">🛠️ Serviços NFS-e</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Vendas e Orçamentos</div>
+            <button class="menu-item" onclick="switchComercialView('view_pedidos', this)">🛒 Pedidos de Venda</button>
+            <button class="menu-item" onclick="switchComercialView('view_relatorios', this)">📊 Relatórios</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">E-commerce e Canais</div>
+            <button class="menu-item" onclick="switchComercialView('view_integracoes', this)">🔄 Integrações</button>
+            <button class="menu-item" onclick="switchComercialView('view_canais', this)">🏢 Canais de Venda</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Gestão e Estratégia</div>
+            <button class="menu-item" onclick="switchComercialView('view_promocoes', this)">🏷️ Promoções</button>
+            <button class="menu-item" onclick="switchComercialView('view_metas', this)">🎯 Metas</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- ======================= NF-E ======================= -->
+        <div id="view_nfe" class="erp-view active">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">📄 NF-e</h3>
+                <div class="d-flex gap-5 flex-wrap">
+                    <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Consultar NF-e')">🔎 Consultar</button>
+                    <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Status NF-e')">📌 Status</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Importar DAVs')">📥 Importar DAVs</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Importar Marketplace')">🛒 Importar Marketplace</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Importar E-commerce')">🌐 Importar E-commerce</button>
+
+                    <button class="btn-neon btn-neon-info text-xs p-5 ml-10" onclick="executarAcaoExterna('Relatórios NF-e')">📊 Relatórios</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Enviar E-mail NF-e')">📧 E-mail</button>
+                    <button class="btn-neon btn-neon-warning text-xs p-5" onclick="executarAcaoExterna('XML vs Cupom NF-e')">⚖️ XML vs Cupom</button>
+                    <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Inutilizar NF-e')">🚫 Inutilizar</button>
+                    <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Transmitir NF-e')">📡 Transmitir</button>
+                    <button class="btn-neon btn-neon-success ml-10" onclick="novoCadastro('form_nfe')">➕ Nova</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="flt_nfe_data"></div>
+                <div class="filter-item"><label>Cliente</label><select id="flt_nfe_cliente" class="ddl-clientes"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="flt_nfe_status"><option value="">-- Todos --</option><option>Emitida</option><option>Cancelada</option></select></div>
+                <div class="filter-item" style="justify-content: flex-end;"><button type="button" class="btn-neon btn-neon-primary p-5" onclick="loadNfe()">Filtrar</button></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar NF-e..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form_nfe_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_nfe')">&times;</span>
+                    <h3 class="modal-title">Nova NF-e</h3>
+                    <form id="form_nfe" class="form-panel section-box" onsubmit="salvarNfe(event)">
+                        <input type="hidden" id="nfe_id">
+                        
+                        <div class="form-grid">
+                            <div><label>Finalidade:</label><select id="nfe_finalidade" class="erp-select"><option>Normal</option><option>Devolução</option><option>Ajuste</option></select></div>
+                            <div><label>Operação:</label><input type="text" id="nfe_operacao" class="erp-input"></div>
+                            <div><label>Série:</label><select id="nfe_serie" class="erp-select"><option>1</option><option>2</option></select></div>
+                            <div><label>Data de Emissão:</label><input type="date" id="nfe_data_emissao" class="erp-input"></div>
+                            <div><label>Data de Saída:</label><input type="date" id="nfe_data_saida" class="erp-input"></div>
+                            
+                            <!-- Status Automático (Apenas Leitura) -->
+                            <div><label>Status:</label><input type="text" id="nfe_status" class="erp-input text-warning" readonly placeholder="Automático"></div>
+                            
+                            <div class="col-span-2">
+                                <label>Cliente (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="nfe_cliente_id"><input type="text" id="nfe_cliente_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('clientes', 'nfe_cliente_id', 'nfe_cliente_nome')">🔍</button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <label>Vendedor (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="nfe_vendedor_id"><input type="text" id="nfe_vendedor_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-info" onclick="abrirPesquisa('vendedores', 'nfe_vendedor_id', 'nfe_vendedor_nome')">🔍</button>
+                                </div>
+                            </div>
+                            
+                            <div><label>Tabela de Preço:</label><select id="nfe_tabela_preco" class="erp-select ddl-tabelas"></select></div>
+                            <div><label>Consumidor Final:</label><select id="nfe_consumidor_final" class="erp-select"><option>Sim</option><option>Não</option></select></div>
+                            <div><label>Indicador Presença:</label><select id="nfe_ind_presenca" class="erp-select"><option>Presencial</option><option>Internet</option></select></div>
+                            <div><label>Indicador Intermediador:</label><select id="nfe_ind_intermediador" class="erp-select"><option>Sem Intermediador</option><option>Site Terceiros</option></select></div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="text-success font-bold">Listagem de Produtos</span>
+                            </div>
+                            
+                            <div class="form-grid-4 staging-form">
+                                <div class="col-span-2">
+                                    <label>Add Produto (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="stg_nfe_id"><input type="text" id="stg_nfe_nome" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('produtos', 'stg_nfe_id', 'stg_nfe_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <label>Integração (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="stg_nfe_int_id"><input type="text" id="stg_nfe_int_nome" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-info" onclick="abrirPesquisa('integracoes', 'stg_nfe_int_id', 'stg_nfe_int_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Qtd:</label><input type="number" id="stg_nfe_qtd" class="erp-input" value="1" onchange="calcStaging('nfe')"></div>
+                                <div><label>Valor Uni:</label><input type="number" id="stg_nfe_vlr" class="erp-input" step="0.01" onchange="calcStaging('nfe')"></div>
+                                <div><label>Desconto %:</label><input type="number" id="stg_nfe_desc_perc" class="erp-input" step="0.01" onchange="calcStaging('nfe')"></div>
+                                <div><label>Desconto $:</label><input type="number" id="stg_nfe_desc_vlr" class="erp-input" step="0.01" onchange="calcStaging('nfe')"></div>
+                                <div class="col-span-2"><label>Subtotal (Auto):</label><input type="number" id="stg_nfe_sub" class="erp-input text-info font-bold" step="0.01" readonly></div>
+                                <div class="d-flex align-end col-span-2"><button type="button" class="btn-neon btn-neon-success w-full" onclick="addFromStaging('nfe')">➕ Inserir na Tabela</button></div>
+                            </div>
+                            
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table">
+                                    <thead><tr><th>Seq</th><th>Cod</th><th>Produto</th><th>CFOP</th><th>Uni</th><th>Qtd</th><th>Valor Uni</th><th>Descontos</th><th>Subtotal</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_itens_nfe" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <span class="text-warning font-bold d-block mb-10">Dados de Transporte</span>
+                            <div class="form-grid">
+                                <div><label>M. Frete:</label><select id="nfe_mod_frete" class="erp-select"><option>Emitente</option><option>Destinatário</option><option>Sem Frete</option></select></div>
+                                
+                                <div class="col-span-2">
+                                    <label>Transportador (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="nfe_transp_id"><input type="text" id="nfe_transp_nome" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-warning" onclick="abrirPesquisa('transportadoras', 'nfe_transp_id', 'nfe_transp_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                
+                                <div><label>Placa Veículo:</label><input type="text" id="nfe_placa" class="erp-input"></div>
+                                
+                                <div>
+                                    <label>UF Veículo:</label>
+                                    <select id="nfe_veiculo_uf" class="erp-select">
+                                        <option value="">-- UF --</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                    </select>
+                                </div>
+                                
+                                <div><label>RNTC Veículo:</label><input type="text" id="nfe_rntrc" class="erp-input"></div>
+                                
+                                <div class="col-span-full border-top pt-10 mt-10"><span class="font-bold text-info">➕ Adicionar Reboque</span></div>
+                                <div><label>Placa Reboque:</label><input type="text" id="nfe_reboque_placa" class="erp-input"></div>
+                                
+                                <div>
+                                    <label>UF Reboque:</label>
+                                    <select id="nfe_reboque_uf" class="erp-select">
+                                        <option value="">-- UF --</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                    </select>
+                                </div>
+                                
+                                <div><label>RNTC Reboque:</label><input type="text" id="nfe_reboque_rntrc" class="erp-input"></div>
+
+                                <div class="col-span-full border-top pt-10 mt-10"><span class="font-bold text-muted">Outras Informações de Volumes</span></div>
+                                <div><label>Numeração Volumes:</label><input type="text" id="nfe_numeracao_vol" class="erp-input"></div>
+                                <div><label>Peso Bruto:</label><input type="number" id="nfe_peso_b" class="erp-input" step="0.01"></div>
+                                <div><label>Peso Líquido:</label><input type="number" id="nfe_peso_l" class="erp-input" step="0.01"></div>
+                                <div><label>Qtd Volumes:</label><input type="number" id="nfe_qtd_vol" class="erp-input"></div>
+                                <div><label>Marcas:</label><input type="text" id="nfe_marca_vol" class="erp-input"></div>
+                                <div><label>Espécie:</label><input type="text" id="nfe_especie_vol" class="erp-input"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-15 d-flex gap-15" style="flex-direction: column;">
+                            <div class="section-box m-0">
+                                <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Financeiro</span><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRow(this)">+ Linha</button></div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table">
+                                        <thead><tr><th>Seq</th><th>Forma Pgto</th><th>Condição</th><th>Valor</th><th>T. Parcelas</th><th></th></tr></thead>
+                                        <tbody id="tb_financeiro_nfe" class="dynamic-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="section-box m-0">
+                                <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Cobrança</span><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRow(this)">+ Linha</button></div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table">
+                                        <thead><tr><th>Seq</th><th>Banco</th><th>Vencimento</th><th>Valor</th><th></th></tr></thead>
+                                        <tbody id="tb_cobranca_nfe" class="dynamic-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <span class="text-danger font-bold d-block mb-10">Totalizadores</span>
+                            <div class="form-grid-4">
+                                <div><label>Base ICMS:</label><input type="number" id="nfe_base_icms" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Valor ICMS:</label><input type="number" id="nfe_valor_icms" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Base ICMS ST:</label><input type="number" id="nfe_base_icms_st" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Valor ICMS ST:</label><input type="number" id="nfe_valor_icms_st" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Valor IPI:</label><input type="number" id="nfe_valor_ipi" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Valor Frete:</label><input type="number" id="nfe_valor_frete" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Valor Seguro:</label><input type="number" id="nfe_valor_seguro" class="erp-input" step="0.01" onchange="calcTotalNfe()"></div>
+                                <div><label>Despesas:</label><input type="number" id="nfe_despesas" class="erp-input" step="0.01" onchange="calcTotalNfe()"></div>
+                                <div><label>Desconto em Percentual:</label><input type="number" id="nfe_desconto_percent" class="erp-input" step="0.01" onchange="calcTotalNfe()"></div>
+                                <div><label>Desconto em Valor:</label><input type="number" id="nfe_desconto_valor" class="erp-input" step="0.01" onchange="calcTotalNfe()"></div>
+                                <div><label class="text-info font-bold">Total Produtos:</label><input type="number" id="nfe_total_produtos" class="erp-input text-info" step="0.01" readonly></div>
+                                <div><label class="text-success font-bold">Total da Nota:</label><input type="number" id="nfe_total_nota" class="erp-input text-success font-bold" step="0.01" readonly></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-15 col-span-full">
+                            <label>Informações Complementares / Inserir Portaria:</label>
+                            <div class="d-flex gap-10 mb-5">
+                                <select class="erp-select ddl-portarias" onchange="document.getElementById('nfe_info_comp').value += (document.getElementById('nfe_info_comp').value ? '\n' : '') + this.value; this.value = '';">
+                                    <option value="">-- Selecione uma Portaria ou Nota Padrão --</option>
+                                </select>
+                            </div>
+                            <textarea id="nfe_info_comp" class="erp-input" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;">
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Número</th><th>Data</th><th>Cliente</th><th>Valor</th><th>Finalidade</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_nfe"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= NFC-E ======================= -->
+        <div id="view_nfce" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🧾 Cupons NFC-e</h3>
+                <div class="d-flex gap-5 flex-wrap">
+                    <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Relatórios NFC-e')">📊 Relatórios</button>
+                    <button class="btn-neon btn-neon-warning text-xs p-5" onclick="executarAcaoExterna('XML vs Cupom NFC-e')">⚖️ XML vs Cupom</button>
+                    <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Inutilizáveis NFC-e')">🚫 Inutilizáveis</button>
+                    <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Cancelar NFC-e')">❌ Cancelar</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Reenviar NFC-e')">🔄 Reenviar</button>
+                    <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Inutilizar NFC-e')">🗑️ Inutilizar</button>
+                </div>
+            </div>
+            
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="flt_nfce_data"></div>
+                <div class="filter-item"><label>Cliente</label><select id="flt_nfce_cliente" class="ddl-clientes"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="flt_nfce_status"><option value="">-- Todos --</option><option>Emitido</option><option>Cancelado</option></select></div>
+                <div class="filter-item"><label>Convênio</label><select id="flt_nfce_convenio"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Operador</label><select id="flt_nfce_operador"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item" style="justify-content: flex-end;"><button type="button" class="btn-neon btn-neon-primary p-5" onclick="loadNfce()">Filtrar</button></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar Cupom..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Número</th><th>Data</th><th>Valor</th><th>Cliente</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_nfce"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= NFS-E ======================= -->
+        <div id="view_nfse" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🛠️ Serviços NFS-e</h3>
+                <div class="d-flex gap-5 flex-wrap">
+                    <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Importar Itens de OS')">📥 Importar Itens de OS</button>
+                    
+                    <button class="btn-neon btn-neon-info text-xs p-5 ml-10" onclick="executarAcaoExterna('Relatórios NFS-e')">📊 Relatórios</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Enviar E-mail NFS-e')">📧 E-mail</button>
+                    <button class="btn-neon btn-neon-warning text-xs p-5" onclick="executarAcaoExterna('XML vs Cupom NFS-e')">⚖️ XML vs Cupom</button>
+                    <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Inutilizar NFS-e')">🚫 Inutilizáveis</button>
+                    <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Transmitir NFS-e')">📡 Transmitir</button>
+                    <button class="btn-neon btn-neon-success ml-10" onclick="novoCadastro('form_nfse')">➕ Nova</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="flt_nfse_data"></div>
+                <div class="filter-item"><label>Tipo Data</label><select id="flt_nfse_tipo_data"><option value="">-- Todos --</option><option value="emissao">Emissão</option></select></div>
+                <div class="filter-item">
+                    <label>Cliente</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="flt_nfse_cliente" class="erp-input" placeholder="Cliente...">
+                        <button type="button" class="btn-neon btn-neon-primary" style="padding:4px;" onclick="abrirPesquisa('clientes', '', 'flt_nfse_cliente')">🔍</button>
+                    </div>
+                </div>
+                <div class="filter-item"><label>Status</label><select id="flt_nfse_status"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item" style="justify-content: flex-end;"><button type="button" class="btn-neon btn-neon-primary p-5" onclick="loadNfse()">Filtrar</button></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar Serviço..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form_nfse_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_nfse')">&times;</span>
+                    <h3 class="modal-title">Nova NFS-e</h3>
+                    <form id="form_nfse" class="form-panel section-box" onsubmit="salvarNfse(event)">
+                        <input type="hidden" id="nfse_id">
+                        <div class="form-grid">
+                            <div class="col-span-2">
+                                <label>Cliente (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="nfse_cliente_id"><input type="text" id="nfse_cliente_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('clientes', 'nfse_cliente_id', 'nfse_cliente_nome')">🔍</button>
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <label>Vendedor (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="nfse_vendedor_id"><input type="text" id="nfse_vendedor_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-info" onclick="abrirPesquisa('vendedores', 'nfse_vendedor_id', 'nfse_vendedor_nome')">🔍</button>
+                                </div>
+                            </div>
+                            <div><label>Tabela de Preço:</label><select id="nfse_tabela_preco" class="erp-select ddl-tabelas"></select></div>
+                            <div><label>Status:</label><select id="nfse_status" class="erp-select"><option>Digitação</option><option>Autorizada</option></select></div>
+                            <div><label>Data de Emissão:</label><input type="date" id="nfse_data_emissao" class="erp-input"></div>
+                            <div><label>Data de Início:</label><input type="date" id="nfse_data_inicio" class="erp-input"></div>
+                            <div><label>Data de Término:</label><input type="date" id="nfse_data_termino" class="erp-input"></div>
+                            
+                            <div class="d-flex align-center gap-10 mt-15 pt-5"><input type="checkbox" id="nfse_reter_impostos" class="int-opt" value="S"><label class="font-bold text-warning">Reter Impostos?</label></div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Itens do Serviço</span></div>
+                            
+                            <div class="form-grid-4 staging-form">
+                                <div class="col-span-2">
+                                    <label>Add Serviço (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="stg_nfse_id"><input type="text" id="stg_nfse_nome" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('servicos', 'stg_nfse_id', 'stg_nfse_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Unid:</label><input type="text" id="stg_nfse_unid" class="erp-input" value="" onchange="calcStaging('nfse')"></div>
+                                <div><label>Valor Uni:</label><input type="number" id="stg_nfse_vlr" class="erp-input" step="0.01" onchange="calcStaging('nfse')"></div>
+                                <div><label>Desconto $:</label><input type="number" id="stg_nfse_desc_vlr" class="erp-input" step="0.01" onchange="calcStaging('nfse')"></div>
+                                <div><label>ISS %:</label><input type="number" id="stg_nfse_iss_perc" class="erp-input" step="0.01" onchange="calcStaging('nfse')"></div>
+                                <div><label>ISS $ (Auto):</label><input type="number" id="stg_nfse_iss_vlr" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div class="col-span-2"><label>Subtotal (Auto):</label><input type="number" id="stg_nfse_sub" class="erp-input text-info font-bold" step="0.01" readonly></div>
+                                <div class="d-flex align-end col-span-2"><button type="button" class="btn-neon btn-neon-success w-full" onclick="addFromStaging('nfse')">➕ Inserir na Tabela</button></div>
+                            </div>
+
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table">
+                                    <thead><tr><th>Serviço</th><th>Ref</th><th>Unid</th><th>Valor Uni</th><th>V. Desc</th><th>V. ISS</th><th>Subtotal</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_itens_nfse" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-15 d-flex gap-15" style="flex-direction: column;">
+                            <div class="section-box m-0">
+                                <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Financeiro</span><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRow(this)">+ Linha</button></div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table">
+                                        <thead><tr><th>Seq</th><th>Forma Pgto</th><th>Condição</th><th>Valor</th><th>T. Parcelas</th><th></th></tr></thead>
+                                        <tbody id="tb_financeiro_nfse" class="dynamic-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="section-box m-0">
+                                <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Cobrança</span><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRow(this)">+ Linha</button></div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table">
+                                        <thead><tr><th>Seq</th><th>Banco</th><th>Vencimento</th><th>Valor</th><th></th></tr></thead>
+                                        <tbody id="tb_cobranca_nfse" class="dynamic-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <span class="text-danger font-bold d-block mb-10">Totalizadores</span>
+                            <div class="form-grid-4">
+                                <div><label>ISS:</label><input type="number" id="nfse_vlr_iss" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>INSS:</label><input type="number" id="nfse_inss" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>IR:</label><input type="number" id="nfse_ir" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>CSLL:</label><input type="number" id="nfse_csll" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>PIS:</label><input type="number" id="nfse_pis" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>COFINS:</label><input type="number" id="nfse_cofins" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>Acréscimos:</label><input type="number" id="nfse_acrescimos" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>% Desconto:</label><input type="number" id="nfse_desconto_percent" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label>$ Desconto:</label><input type="number" id="nfse_desconto_valor" class="erp-input" step="0.01" onchange="calcTotalNfse()"></div>
+                                <div><label class="text-info font-bold">Total Serviços:</label><input type="number" id="nfse_total_servicos" class="erp-input text-info" step="0.01" readonly></div>
+                                <div><label class="text-success font-bold">Total Automático:</label><input type="number" id="nfse_total" class="erp-input text-success font-bold" step="0.01" readonly></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-15 col-span-full">
+                            <label>Adicionar Portarias / Informações ao Corpo da Nota:</label>
+                            <div class="d-flex gap-10 mb-5">
+                                <select class="erp-select ddl-portarias" onchange="document.getElementById('nfse_notas').value += (document.getElementById('nfse_notas').value ? '\n' : '') + this.value; this.value = '';">
+                                    <option value="">-- Selecionar Portaria / Lei --</option>
+                                </select>
+                            </div>
+                            <textarea id="nfse_notas" class="erp-input" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;">
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Número</th><th>Emissão</th><th>Início</th><th>Término</th><th>Cliente</th><th>Vendedor</th><th>Status</th><th>Valor</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_nfse"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= PEDIDOS DE VENDA ======================= -->
+        <div id="view_pedidos" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">🛒 Pedidos de Venda</h3>
+                <div class="d-flex gap-5 flex-wrap">
+                    <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Relatórios Pedidos')">📊 Relatórios</button>
+                    <button class="btn-neon btn-neon-primary text-xs p-5" onclick="executarAcaoExterna('Enviar E-mail Pedidos')">📧 E-mail</button>
+                    <button class="btn-neon btn-neon-success ml-10" onclick="novoCadastro('form_pedidos')">➕ Novo</button>
+                </div>
+            </div>
+            
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="flt_ped_data"></div>
+                <div class="filter-item"><label>Data Faturamento</label><select id="flt_ped_faturamento"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Cliente</label><select id="flt_ped_cliente" class="ddl-clientes"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="flt_ped_status"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Vendedor</label><select id="flt_ped_vendedor"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item" style="justify-content: flex-end;"><button type="button" class="btn-neon btn-neon-primary p-5" onclick="loadPedidos()">Filtrar</button></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar Pedido..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form_pedidos_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_pedidos')">&times;</span>
+                    <h3 class="modal-title">Novo Pedido</h3>
+                    <form id="form_pedidos" class="form-panel section-box" onsubmit="salvarPedido(event)">
+                        <input type="hidden" id="ped_id">
+                        
+                        <div class="form-grid">
+                            <div><label>Data:</label><input type="date" id="ped_data_pedido" class="erp-input"></div>
+                            <div><label>Data Finalização:</label><input type="date" id="ped_data_finalizacao" class="erp-input text-muted" readonly></div>
+                            
+                            <div class="col-span-2">
+                                <label>Cliente (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="ped_cliente_id"><input type="text" id="ped_cliente_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('clientes', 'ped_cliente_id', 'ped_cliente_nome')">🔍</button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <label>Vendedor (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="ped_vendedor_id"><input type="text" id="ped_vendedor_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-info" onclick="abrirPesquisa('vendedores', 'ped_vendedor_id', 'ped_vendedor_nome')">🔍</button>
+                                </div>
+                            </div>
+                            
+                            <div><label>Tabela de Preço:</label><select id="ped_tabela_preco" class="erp-select ddl-tabelas"></select></div>
+                            <div><label>Status:</label><select id="ped_status" class="erp-select"><option>Aberto</option><option>Fechado</option></select></div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Itens do Pedido</span></div>
+                            
+                            <div class="form-grid-4 staging-form">
+                                <div class="col-span-2">
+                                    <label>Produto (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="stg_ped_id"><input type="text" id="stg_ped_nome" class="erp-input flex-1" readonly placeholder="Procurar produto...">
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('produtos', 'stg_ped_id', 'stg_ped_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Qtd:</label><input type="number" id="stg_ped_qtd" class="erp-input" value="1" onchange="calcStaging('ped')"></div>
+                                <div><label>Valor Uni:</label><input type="number" id="stg_ped_vlr" class="erp-input" step="0.01" onchange="calcStaging('ped')"></div>
+                                <div><label>Acréscimos $:</label><input type="number" id="stg_ped_acresc" class="erp-input" step="0.01" onchange="calcStaging('ped')"></div>
+                                <div><label>Desconto $:</label><input type="number" id="stg_ped_desc_vlr" class="erp-input" step="0.01" onchange="calcStaging('ped')"></div>
+                                <div><label>Subtotal (Auto):</label><input type="number" id="stg_ped_sub" class="erp-input text-info font-bold" step="0.01" readonly></div>
+                                <div class="d-flex align-end col-span-3"><button type="button" class="btn-neon btn-neon-success w-full" onclick="addFromStaging('ped')">➕ Inserir na Tabela</button></div>
+                            </div>
+                            
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table">
+                                    <thead><tr><th>Produto</th><th>Ref</th><th>Qtd</th><th>Valor Uni</th><th>Acréscimos $</th><th>Descontos</th><th>Subtotal</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_itens_ped" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-15 d-flex gap-15" style="flex-direction: column;">
+                            <div class="section-box m-0">
+                                <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Financeiro</span><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRow(this)">+ Linha</button></div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table">
+                                        <thead><tr><th>Seq</th><th>Forma Pgto</th><th>Condição</th><th>Valor</th><th>T. Parcelas</th><th></th></tr></thead>
+                                        <tbody id="tb_financeiro_ped" class="dynamic-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="section-box m-0">
+                                <div class="d-flex justify-between align-center mb-10"><span class="font-bold">Cobrança</span><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRow(this)">+ Linha</button></div>
+                                <div class="table-responsive-wrapper">
+                                    <table class="inner-grid-table">
+                                        <thead><tr><th>Seq</th><th>Banco</th><th>Vencimento</th><th>Valor</th><th></th></tr></thead>
+                                        <tbody id="tb_cobranca_ped" class="dynamic-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <span class="text-warning font-bold d-block mb-10">Dados de Transporte (Vendas)</span>
+                            <div class="form-grid">
+                                <div class="col-span-2">
+                                    <label>Transportadora (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="ped_transp_id"><input type="text" id="ped_transportadora" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-warning" onclick="abrirPesquisa('transportadoras', 'ped_transp_id', 'ped_transportadora')">🔍</button>
+                                    </div>
+                                </div>
+                                <div><label>Placa Veículo:</label><input type="text" id="ped_veiculo_placa" class="erp-input"></div>
+                                
+                                <div>
+                                    <label>UF Veículo:</label>
+                                    <select id="ped_veiculo_uf" class="erp-select">
+                                        <option value="">-- UF --</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                    </select>
+                                </div>
+
+                                <div><label>RNTC Veículo:</label><input type="text" id="ped_rntrc" class="erp-input"></div>
+                                
+                                <div class="col-span-full border-top pt-10 mt-10"><span class="font-bold text-info">➕ Adicionar Reboque</span></div>
+                                <div><label>Placa Reboque:</label><input type="text" id="ped_reboque_placa" class="erp-input"></div>
+                                
+                                <div>
+                                    <label>UF Reboque:</label>
+                                    <select id="ped_reboque_uf" class="erp-select">
+                                        <option value="">-- UF --</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                    </select>
+                                </div>
+
+                                <div><label>RNTC Reboque:</label><input type="text" id="ped_reboque_rntrc" class="erp-input"></div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <span class="text-danger font-bold d-block mb-10">Totalizadores</span>
+                            <div class="form-grid-4">
+                                <div><label>Frete:</label><input type="number" id="ped_frete" class="erp-input" step="0.01" onchange="calcTotalPedido()"></div>
+                                <div><label>Acréscimos:</label><input type="number" id="ped_acrescimos" class="erp-input" step="0.01" onchange="calcTotalPedido()"></div>
+                                <div><label>Desconto %:</label><input type="number" id="ped_desconto_percent" class="erp-input" step="0.01" onchange="calcTotalPedido()"></div>
+                                <div><label>Desconto $:</label><input type="number" id="ped_desconto_valor" class="erp-input" step="0.01" onchange="calcTotalPedido()"></div>
+                                <div><label class="text-info font-bold">Total Produtos:</label><input type="number" id="ped_total_produtos" class="erp-input text-info" step="0.01" readonly></div>
+                                <div><label class="text-success font-bold">Total Automático:</label><input type="number" id="ped_vlr_total" class="erp-input text-success font-bold" step="0.01" readonly></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-15 col-span-full">
+                            <label>Adicionar Portarias / Notas Internas do Pedido:</label>
+                            <div class="d-flex gap-10 mb-5">
+                                <select class="erp-select ddl-portarias" onchange="document.getElementById('ped_notas_internas').value += (document.getElementById('ped_notas_internas').value ? '\n' : '') + this.value; this.value = '';">
+                                    <option value="">-- Selecionar Condição / Portaria Padrão --</option>
+                                </select>
+                            </div>
+                            <textarea id="ped_notas_internas" class="erp-input" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;">
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Número</th><th>Emissão</th><th>Faturamento</th><th>Cliente</th><th>Vendedor</th><th>Valor</th><th>Comissão</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_pedidos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= CANAIS DE VENDA / MARKETPLACES ======================= -->
+        <div id="view_canais" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🏢 Canais de Venda e Marketplaces</h3>
+                <button class="btn-neon btn-neon-success" onclick="novoCadastro('form_canais')">➕ Novo Canal</button>
+            </div>
+            
+            <div class="filter-bar" style="justify-content: flex-end;">
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar Canais..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="form_canais_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_canais')">&times;</span>
+                    <h3 class="modal-title">Configurar Canal / Marketplace</h3>
+                    <form id="form_canais" class="form-panel section-box" onsubmit="salvarComercial(event, 'canais_venda')">
+                        <input type="hidden" id="cnl_id">
+                        <div class="form-grid-1">
+                            <div><label>Data de Criação (Automático):</label><input type="date" id="cnl_data_criacao" class="erp-input text-muted" readonly></div>
+                            <div>
+                                <label>Integração de Marketing (Hub):</label>
+                                <select id="cnl_mkt_integracao" class="erp-select">
+                                    <option>iFood</option><option>Mercado Livre</option><option>Shopee</option><option>Amazon</option><option>Magalu</option><option>Loja Virtual / Web</option><option>Balcão Físico</option>
+                                </select>
+                            </div>
+                            <div><label>Tabela de Preços do Canal:</label><select id="cnl_mkt_tabela_preco" class="erp-select ddl-tabelas"></select></div>
+                        </div>
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Integração (Canal)</th><th>Tabela de Preço</th><th>Data de Criação</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_canais"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= INTEGRAÇÕES HUB ======================= -->
+        <div id="view_integracoes" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🔄 Integrações e APIs</h3>
+                <div class="d-flex gap-5">
+                    <button class="btn-neon btn-neon-primary" onclick="novoCadastro('form_conexao')">🔌 Nova Conexão</button>
+                    <button class="btn-neon btn-neon-success" onclick="novoCadastro('form_integracoes')">➕ Nova Config. API</button>
+                </div>
+            </div>
+
+            <div class="filter-bar" style="justify-content: flex-end;">
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar Config..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Plataforma (API)</th><th>Tipo de Registro</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_integracoes"></tbody>
+                </table>
+            </div>
+            
+            <!-- MODAL NOVA API (CONFIGURAÇÃO) -->
+            <div id="form_integracoes_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_integracoes')">&times;</span>
+                    <h3 class="modal-title">Nova Sincronização / API Hub</h3>
+                    <form id="form_integracoes" class="form-panel section-box" onsubmit="salvarIntegracao(event)">
+                        <input type="hidden" id="int_id">
+                        <div class="form-grid">
+                            <div><label>Plataforma (Ex: iFood, Shopee):</label><input type="text" id="int_plataforma" class="erp-input"></div>
+                            <div><label>Opções de API:</label><select id="int_opcoes" class="erp-select"><option>Produtos</option><option>Clientes</option><option>Vendas</option><option>Vendas em Aberto</option></select></div>
+                            <div><label>Tabela de Preços (Padrão):</label><select id="int_tabela_preco" class="erp-select ddl-tabelas"></select></div>
+                            <div><label>Canal de Vendas (Vínculo):</label><select id="int_canal_venda" class="erp-select ddl-canais"></select></div>
+                        </div>
+                        <div class="mt-15 section-box">
+                            <label class="font-bold d-block mb-10 text-info">Configuração de Disparos API:</label>
+                            <div class="flex-wrap gap-15 d-flex">
+                                <label class="check-item"><input type="checkbox" value="Estoque" class="int-opt"> Atualizar Estoque</label>
+                                <label class="check-item"><input type="checkbox" value="Marcas" class="int-opt"> Atualizar Marcas</label>
+                                <label class="check-item"><input type="checkbox" value="Categorias" class="int-opt"> Atualizar Categorias</label>
+                                <label class="check-item"><input type="checkbox" value="Dados Basicos" class="int-opt"> Atualizar Dados Básicos</label>
+                                <label class="check-item"><input type="checkbox" value="Preco" class="int-opt"> Atualizar Preço</label>
+                            </div>
+                            <label class="font-bold d-block mb-10 mt-15 text-warning">Produto Variação:</label>
+                            <div class="flex-wrap gap-15 d-flex">
+                                <label class="check-item"><input type="checkbox" value="Var Cor" class="int-opt"> Atualizar Variação Cor</label>
+                                <label class="check-item"><input type="checkbox" value="Var Tam" class="int-opt"> Atualizar Variação Tamanho</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar Conexão</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL CONEXÃO (TOKENS) -->
+            <div id="form_conexao_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 500px;">
+                    <span class="erp-modal-close" onclick="closeModal('form_conexao')">&times;</span>
+                    <h3 class="modal-title">Conexão com Integrações (Tokens)</h3>
+                    <form id="form_conexao" class="form-panel section-box" onsubmit="salvarConexao(event)">
+                        <input type="hidden" id="cnx_id">
+                        <div class="form-grid-1">
+                            <div><label>Plataforma / Integração:</label><input type="text" id="cnx_plataforma" class="erp-input" required></div>
+                            <div><label>Token de Acesso:</label><textarea id="cnx_token_acesso" class="erp-input" rows="3" required></textarea></div>
+                            <div><label>Token de Reconexão:</label><textarea id="cnx_token_reconexao" class="erp-input" rows="3"></textarea></div>
+                            <div><label>Válido até (Automático):</label><input type="datetime-local" id="cnx_token_validade" class="erp-input text-info" readonly></div>
+                        </div>
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: space-between;">
+                            <button type="button" class="btn-neon btn-neon-info" onclick="gerarTokenAutomatico()">🔄 Autenticar / Gerar Token</button>
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar Conexão</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================= PROMOÇÕES ======================= -->
+        <div id="view_promocoes" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">🏷️ Promoções</h3>
+                <div class="d-flex gap-5 flex-wrap">
+                    <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Relatórios Promoções')">📊 Relatórios</button>
+                    <button class="btn-neon btn-neon-success" onclick="novoCadastro('form_promocoes')">➕ Nova</button>
+                </div>
+            </div>
+            
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data Limite</label><input type="date" id="flt_prm_data"></div>
+                <div class="filter-item"><label>Tipo de Data</label><select id="flt_prm_tipo_data"><option value="">-- Todos --</option><option value="vencimento">Emissão</option></select></div>
+                <div class="filter-item" style="justify-content: flex-end;"><button type="button" class="btn-neon btn-neon-primary p-5" onclick="loadPromocoes()">Filtrar</button></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa Rápida</label><input type="text" placeholder="Pesquisar Promo..."></div>
+                    <div class="d-flex gap-5" style="margin-top: 20px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="executarAcaoExterna('Exportar Excel')">Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="executarAcaoExterna('Exportar PDF')">PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="executarAcaoExterna('Imprimir Lista')">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form_promocoes_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_promocoes')">&times;</span>
+                    <h3 class="modal-title">Nova Promoção</h3>
+                    <form id="form_promocoes" class="form-panel section-box" onsubmit="salvarComercial(event, 'promocoes')">
+                        <input type="hidden" id="prm_id">
+                        
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Descrição da Promoção:</label><input type="text" id="prm_descricao" class="erp-input" required></div>
+                            <div class="col-span-2">
+                                <label>Emitentes (Pesquisar Vários):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="prm_emitente_id" class="ignore-serialize">
+                                    <input type="text" id="prm_emitentes" class="erp-input flex-1" readonly placeholder="Pesquisar emitentes...">
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('empresas', 'prm_emitente_id', 'prm_emitentes')">🔍</button>
+                                    <button type="button" class="btn-neon btn-neon-danger" style="padding:4px;" title="Limpar" onclick="document.getElementById('prm_emitentes').value=''">X</button>
+                                </div>
+                            </div>
+                            <div><label>Tabela de Preço:</label><select id="prm_tabela_preco" class="erp-select ddl-tabelas"></select></div>
+                            <div><label>Data Inicial:</label><input type="date" id="prm_data_inicial" class="erp-input"></div>
+                            <div><label>Data Final:</label><input type="date" id="prm_data_final" class="erp-input"></div>
+                            <div><label>% Desconto Master:</label><input type="number" id="prm_desconto_percentual" class="erp-input" step="0.01"></div>
+                            <div><label>Casas Decimais:</label><input type="number" id="prm_casas_decimais" class="erp-input"></div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <span class="font-bold d-block mb-10 text-warning">Filtros Avançados dos Produtos</span>
+                            <div class="form-grid">
+                                <div><label>Referência:</label><input type="text" id="prm_referencia" class="erp-input"></div>
+                                <div><label>Grupos:</label><select id="prm_grupos" class="erp-select ddl-grupos"></select></div>
+                                <div><label>Marcas:</label><select id="prm_marcas" class="erp-select ddl-marcas"></select></div>
+                                <div><label>Dias Sem Movimento:</label><input type="number" id="prm_dias_sem_movimento" class="erp-input"></div>
+                                <div class="d-flex align-center gap-10 mt-15"><input type="checkbox" id="prm_apenas_estoque" value="S" class="int-opt"><label class="font-bold">Apenas Produtos em Estoque</label></div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-info">Lista de Produtos da Promoção</span>
+                                <button type="button" class="btn-neon-primary bg-transparent text-xs p-5" onclick="abrirPesquisaGrid('produtos', this)">Add Produto (Pesquisar)</button>
+                            </div>
+                            <div class="table-responsive-wrapper">
+                                <table class="inner-grid-table">
+                                    <thead><tr><th>Produto</th><th>Valor Normal</th><th>Valor Promoção</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_produtos_promo" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar Campanha</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Nome</th><th>Início</th><th>Fim</th><th>Tabela Preço</th><th>Ativo</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_promocoes"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= METAS ======================= -->
+        <div id="view_metas" class="erp-view">
+            <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-danger">🎯 Metas</h3>
+                <button class="btn-neon btn-neon-success" onclick="novoCadastro('form_metas')">➕ Nova</button>
+            </div>
+            
+            <div class="filter-bar">
+                <div class="filter-item">
+                    <label>Nível</label>
+                    <select id="flt_met_nivel" class="erp-select">
+                        <option value="">-- Todos --</option><option value="Operacional">Operacional</option><option value="Tático">Tático</option><option value="Estratégico">Estratégico</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Status</label>
+                    <select id="flt_met_status" class="erp-select">
+                        <option value="">-- Todos --</option><option value="Aberto">Aberto</option><option value="Atingida">Atingida</option><option value="Cancelada">Cancelada</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item" style="min-width: 250px;">
+                    <label>Funcionários (Pesquisa)</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="flt_met_func" class="erp-input flex-1" placeholder="Vários...">
+                        <button type="button" class="btn-neon btn-neon-primary" style="padding:4px;" onclick="abrirPesquisa('funcionarios', '', 'flt_met_func')">🔍</button>
+                        <button type="button" class="btn-neon btn-neon-danger" style="padding:4px;" title="Limpar" onclick="document.getElementById('flt_met_func').value=''">X</button>
+                    </div>
+                </div>
+                <div class="filter-item" style="justify-content: flex-end;"><button type="button" class="btn-neon btn-neon-primary p-5" onclick="loadMetas()">Filtrar</button></div>
+            </div>
+
+            <div id="form_metas_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModal('form_metas')">&times;</span>
+                    <h3 class="modal-title">Nova Meta</h3>
+                    <form id="form_metas" class="form-panel section-box" onsubmit="salvarComercial(event, 'metas')">
+                        <input type="hidden" id="met_id">
+                        <div class="form-grid">
+                            <div><label>Período:</label><select id="met_periodo" class="erp-select"><option>Mensal</option><option>Anual</option></select></div>
+                            <div><label>Data Início:</label><input type="date" id="met_data_inicio" class="erp-input"></div>
+                            <div><label>Data de Fim:</label><input type="date" id="met_data_fim" class="erp-input"></div>
+                            <div><label>Tipo de Meta:</label><select id="met_tipo_meta" class="erp-select"><option>Faturamento</option></select></div>
+                            <div><label>Valor da Meta:</label><input type="number" id="met_valor_meta" class="erp-input" step="0.01"></div>
+                            <div><label>Tipo de Pagamento:</label><select id="met_tipo_pagamento" class="erp-select"><option>Percentual</option><option>Fixo</option></select></div>
+                            <div><label>Comissão por Meta:</label><input type="number" id="met_comissao" class="erp-input" step="0.01"></div>
+                            
+                            <div class="col-span-2">
+                                <label>Funcionários (Pesquisar Vários):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="met_funcionario_id" class="ignore-serialize">
+                                    <input type="text" id="met_funcionarios" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-warning" onclick="abrirPesquisa('funcionarios', 'met_funcionario_id', 'met_funcionarios')">🔍</button>
+                                    <button type="button" class="btn-neon btn-neon-danger" style="padding:4px;" title="Limpar" onclick="document.getElementById('met_funcionarios').value=''">X</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-15 col-span-full"><label>Notas e Justificativas:</label><textarea id="met_notas" class="erp-input" rows="2"></textarea></div>
+                        <div class="form-actions mt-15 flex-wrap gap-10" style="justify-content: flex-end;"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Status</th><th>Nível</th><th>Data Inicio</th><th>Data Final</th><th>Meta</th><th>Valor Vendido</th><th>Tipo</th><th>Comissao</th><th>Funcionario</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_metas"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= RELATÓRIOS ======================= -->
+        <div id="view_relatorios" class="erp-view">
+            <h3 class="m-0 text-warning border-bottom pb-10 mb-15">📊 Relatórios Geração Personalizada</h3>
+            
+            <div class="filter-bar section-box d-flex gap-10 flex-wrap mb-15 align-center border-left">
+                <span class="text-xs text-muted font-bold w-full d-block mb-5" style="flex-basis: 100%;">USE O MENU DE FILTROS PARA ESCOLHER O RELATÓRIO:</span>
+                
+                <div class="filter-item"><label>Modelo</label><select id="rel_modelo" class="erp-select"><option>Vendas Analítico</option><option>Comissões</option><option>NFS-e Emitidas</option></select></div>
+                <div class="filter-item"><label>Período Base</label><select id="rel_periodo" class="erp-select"><option>Últimos 30 Dias</option><option>Mês Atual</option><option>Personalizado</option></select></div>
+                
+                <div class="filter-item" style="min-width: 150px;">
+                    <label>Empresa</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="rel_empresa" class="erp-input flex-1" placeholder="Buscar...">
+                        <button type="button" class="btn-neon btn-neon-primary" style="padding:4px;" onclick="abrirPesquisa('empresas', '', 'rel_empresa')">🔍</button>
+                    </div>
+                </div>
+
+                <div class="filter-item d-flex gap-5 flex-row" style="margin-top: 18px; flex: none;">
+                    <button type="button" class="btn-neon btn-neon-success p-5" onclick="gerarRelatorioSistema()">Gerar e Salvar</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Modelo do Relatório</th><th>Data de Geração</th><th>Período Base</th><th>Usuário</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_relatorios"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Genérico Estilizado e Limitado a não esticar na tela inteira -->
+<div id="modal_pesquisa_generica" class="erp-modal">
+    <div class="erp-modal-content" style="max-width: 600px; width: 95vw; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+        <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+            <h3 class="m-0 text-info" id="mpesq_titulo">Pesquisar Registro</h3>
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="fecharPesquisa()">X</button>
+        </div>
+        <div class="d-flex gap-10 mb-15 flex-wrap">
+            <input type="text" id="mpesq_input" class="erp-input flex-1" style="min-width: 200px;" placeholder="Digite para buscar...">
+            <button type="button" class="btn-neon btn-neon-primary" onclick="executarPesquisa()">🔍 Procurar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 400px; overflow-y: auto;">
+            <table class="erp-table" style="width: 100%;">
+                <thead><tr><th>ID</th><th>Nome / Descrição</th><th>Ação</th></tr></thead>
+                <tbody id="mpesq_tb"><tr><td colspan="3" class="text-center text-muted">Aguardando busca...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/comercial.js"></script>
+{% endblock %}

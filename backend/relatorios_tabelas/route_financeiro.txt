@@ -1,0 +1,322 @@
+=== ANÁLISE DO MÓDULO: route_financeiro.py ===
+
+>>> TABELAS CRIADAS NESTE ARQUIVO (11) <<<
+Estas tabelas possuem sua estrutura (schema) definida aqui.
+
+[+] Tabela: erp_bancos
+    Colunas (5):
+      - id (INTEGER)
+      - nome (TEXT)
+      - codigo (TEXT)
+      - codigo_banco (VARCHAR(10))
+      - descricao (VARCHAR(100))
+----------------------------------------
+
+[+] Tabela: erp_bandeiras_cartao
+    Colunas (8):
+      - id (INTEGER)
+      - nome (VARCHAR(100))
+      - bandeira_nfe (VARCHAR(50))
+      - f_pgto (VARCHAR(50))
+      - prazo_rcto (INTEGER)
+      - inativo (VARCHAR(1))
+      - operadora (VARCHAR(100))
+      - faixas_json (TEXT)
+----------------------------------------
+
+[+] Tabela: erp_cheques
+    Colunas (19):
+      - id (INTEGER)
+      - banco (VARCHAR(50))
+      - agencia (VARCHAR(20))
+      - conta (VARCHAR(20))
+      - numero (VARCHAR(50))
+      - valor (REAL)
+      - cmc7 (VARCHAR(100))
+      - vencimento (DATE)
+      - portador (VARCHAR(150))
+      - emissor (VARCHAR(150))
+      - cnpj_cpf (VARCHAR(20))
+      - telefone (VARCHAR(20))
+      - notas (TEXT)
+      - status (VARCHAR(50))
+      - data_status (DATE)
+      - n_numero (VARCHAR(50))
+      - data_vencimento (DATE)
+      - referencias_json (TEXT)
+      - historico_json (TEXT)
+----------------------------------------
+
+[+] Tabela: erp_condicoes_pagamento
+    Colunas (11):
+      - id (INTEGER)
+      - nome (TEXT)
+      - forma_pgto (TEXT)
+      - no_parcelas (INTEGER)
+      - dia_1a_parcela (INTEGER)
+      - dias_entre_parcelas (INTEGER)
+      - inativo (VARCHAR(1))
+      - descricao (VARCHAR(100))
+      - parcelas (INTEGER)
+      - dias_intervalo (INTEGER)
+      - forma_de_pgto (VARCHAR(100))
+----------------------------------------
+
+[+] Tabela: erp_contas_bancarias
+    Colunas (23):
+      - id (INTEGER)
+      - nome (TEXT)
+      - banco (TEXT)
+      - agencia (TEXT)
+      - conta_corrente (TEXT)
+      - saldo_inicial (TEXT)
+      - fluxo_caixa (TEXT)
+      - boleto (TEXT)
+      - inativo (TEXT)
+      - digito_ag (VARCHAR(5))
+      - digito_cc (VARCHAR(5))
+      - juros_mes (REAL)
+      - multa (REAL)
+      - dias_de_carencia (INTEGER)
+      - data_saldo (DATE)
+      - ultimo_fechamento (DATE)
+      - banco_id (INTEGER)
+      - agencia_id (INTEGER)
+      - numero_conta (VARCHAR(50))
+      - tipo_conta_id (INTEGER)
+      - descricao (VARCHAR(100))
+      - conta (VARCHAR(50))
+      - saldo (REAL)
+----------------------------------------
+
+[+] Tabela: erp_pagamentos
+    Colunas (22):
+      - id (INTEGER)
+      - vencimento (TEXT)
+      - fornecedor (TEXT)
+      - valor (TEXT)
+      - data_vencimento (DATE)
+      - num_documento (VARCHAR(50))
+      - conta_banco (VARCHAR(100))
+      - centro_custo (VARCHAR(100))
+      - forma_pagamento (VARCHAR(100))
+      - pagamento (DATE)
+      - desconto (REAL)
+      - juros (REAL)
+      - encargos (REAL)
+      - amortizado (REAL)
+      - notas (TEXT)
+      - valor_pago (REAL)
+      - baixas (TEXT)
+      - saldo_aberto (REAL)
+      - fornecedor_id (INTEGER)
+      - data_emissao (DATE)
+      - data_criacao (DATE)
+      - vlr_pgto (REAL)
+----------------------------------------
+
+[+] Tabela: erp_plano_contas
+    Colunas (12):
+      - id (INTEGER)
+      - tipo (VARCHAR(20))
+      - nome (VARCHAR(150))
+      - natureza (VARCHAR(50))
+      - codigo_cta (VARCHAR(20))
+      - nivel (VARCHAR(20))
+      - classificacao (VARCHAR(50))
+      - ocorrencia (VARCHAR(50))
+      - codigo_referencia (VARCHAR(50))
+      - inativo (VARCHAR(1))
+      - plan_naturezas_json (TEXT)
+      - codigo (VARCHAR(20))
+----------------------------------------
+
+[+] Tabela: erp_recebimentos
+    Colunas (23):
+      - id (INTEGER)
+      - vencimento (TEXT)
+      - cliente (TEXT)
+      - valor (TEXT)
+      - status (TEXT)
+      - data_vencimento (DATE)
+      - num_documento (VARCHAR(50))
+      - conta_banco (VARCHAR(100))
+      - centro_custo (VARCHAR(100))
+      - forma_pagamento (VARCHAR(100))
+      - pagamento (DATE)
+      - tarifa (REAL)
+      - desconto (REAL)
+      - juros (REAL)
+      - encargos (REAL)
+      - amortizado (REAL)
+      - valor_recebido (REAL)
+      - notas (TEXT)
+      - itens_baixas_json (TEXT)
+      - saldo_aberto (REAL)
+      - cliente_id (INTEGER)
+      - data_emissao (DATE)
+      - data_criacao (DATE)
+----------------------------------------
+
+[+] Tabela: erp_renegociacoes
+    Colunas (4):
+      - id (INTEGER)
+      - tipo (VARCHAR(50))
+      - para_quem (VARCHAR(150))
+      - conferencia_status (VARCHAR(50))
+----------------------------------------
+
+[+] Tabela: erp_status_financeiro
+    Colunas (2):
+      - id (INTEGER)
+      - nome (VARCHAR(100))
+----------------------------------------
+
+[+] Tabela: erp_transferencias
+    Colunas (10):
+      - id (INTEGER)
+      - origem (TEXT)
+      - destino (TEXT)
+      - status (TEXT)
+      - data (DATE)
+      - valor (REAL)
+      - notas (TEXT)
+      - itens_json (TEXT)
+      - responsavel (VARCHAR(150))
+      - numero (VARCHAR(50))
+----------------------------------------
+
+>>> TABELAS APENAS REFERENCIADAS (7) <<<
+Estas tabelas são usadas em consultas (SELECT/INSERT/UPDATE) mas foram criadas em outro módulo.
+
+[-] Tabela: erp_centros_custo (Criada em: Desconhecido/Banco Externo)
+    Colunas (4):
+      - id (INTEGER)
+      - conta_titulo (VARCHAR(1))
+      - imprime_dre (VARCHAR(1))
+      - nome (VARCHAR(100))
+----------------------------------------
+
+[-] Tabela: erp_clientes (Criada em: route_cadastros.py)
+    Colunas (28):
+      - id (INTEGER)
+      - nome (TEXT)
+      - cpf_cnpj (TEXT)
+      - telefone (TEXT)
+      - email (TEXT)
+      - uf (TEXT)
+      - tipo_cliente (VARCHAR(1))
+      - situacao (VARCHAR(20))
+      - limite_credito (REAL)
+      - fantasia (TEXT)
+      - ie_rg (TEXT)
+      - celular (TEXT)
+      - tipo_contribuinte (TEXT)
+      - tabela_preco (TEXT)
+      - convenio_id (TEXT)
+      - carteira_id (TEXT)
+      - notas (TEXT)
+      - cep (TEXT)
+      - logradouro (TEXT)
+      - numero (TEXT)
+      - compl (TEXT)
+      - bairro (TEXT)
+      - municipio (TEXT)
+      - pais (TEXT)
+      - inativo (TEXT)
+      - indicacao_busca (TEXT)
+      - desconto_perc (TEXT)
+      - nascimento (DATE)
+----------------------------------------
+
+[-] Tabela: erp_fechamento_caixa (Criada em: Desconhecido/Banco Externo)
+    Colunas (6):
+      - id (INTEGER)
+      - data_fechamento (DATE)
+      - pdc (VARCHAR(100))
+      - operador (VARCHAR(100))
+      - final (REAL)
+      - caixa (VARCHAR(100))
+----------------------------------------
+
+[-] Tabela: erp_formas_pagamento (Criada em: route_cadastros.py)
+    Colunas (11):
+      - id (INTEGER)
+      - descricao (TEXT)
+      - codigo_fiscal (TEXT)
+      - conta_banco (TEXT)
+      - parcela_minima (REAL)
+      - inativo (VARCHAR(1))
+      - gera_financeiro (VARCHAR(1))
+      - baixa_automatica (VARCHAR(1))
+      - nome (VARCHAR(100))
+      - taxa_percentual (REAL)
+      - dias_recebimento (INTEGER)
+----------------------------------------
+
+[-] Tabela: erp_fornecedores (Criada em: route_cadastros.py)
+    Colunas (20):
+      - id (INTEGER)
+      - telefone (TEXT)
+      - uf (TEXT)
+      - tipo_fornecedor (VARCHAR(1))
+      - numero (VARCHAR(20))
+      - bairro (VARCHAR(100))
+      - cep (VARCHAR(20))
+      - email (VARCHAR(100))
+      - contato (VARCHAR(100))
+      - cnpj_cpf (TEXT)
+      - nome (TEXT)
+      - fantasia (TEXT)
+      - ie_rg (TEXT)
+      - tipo_contribuinte (TEXT)
+      - logradouro (TEXT)
+      - compl (TEXT)
+      - municipio (TEXT)
+      - pais (TEXT)
+      - notas (TEXT)
+      - inativo (TEXT)
+----------------------------------------
+
+[-] Tabela: erp_funcionarios (Criada em: route_cadastros.py)
+    Colunas (30):
+      - id (INTEGER)
+      - nome (TEXT)
+      - telefone (TEXT)
+      - email (TEXT)
+      - rg (VARCHAR(20))
+      - cpf (VARCHAR(20))
+      - ctps (VARCHAR(50))
+      - celular (VARCHAR(20))
+      - numero (VARCHAR(20))
+      - bairro (VARCHAR(100))
+      - senha (VARCHAR(100))
+      - nis (TEXT)
+      - data_nascimento (TEXT)
+      - naturalidade (TEXT)
+      - nacionalidade (TEXT)
+      - data_admissao (TEXT)
+      - data_demissao (TEXT)
+      - inativo (TEXT)
+      - habilitar_usuario (TEXT)
+      - cep (TEXT)
+      - logradouro (TEXT)
+      - complemento (TEXT)
+      - uf (TEXT)
+      - municipio (TEXT)
+      - pais (TEXT)
+      - tipo_comissao (TEXT)
+      - notas (TEXT)
+      - remuneracoes_json (TEXT)
+      - frequencias_json (TEXT)
+      - periodicos_json (TEXT)
+----------------------------------------
+
+[-] Tabela: erp_natureza_operacao (Criada em: Desconhecido/Banco Externo)
+    Colunas (4):
+      - id (INTEGER)
+      - descricao (VARCHAR(150))
+      - sku (VARCHAR(50))
+      - inativo (VARCHAR(1))
+----------------------------------------
+

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Cardápio - Cook Degustto{% endblock %}
+
+{% block head %}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles_cardapio.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="page-header page-header-glow">
+        <div>
+            <h1 class="page-title-glow">🍔 Gerenciar Cardápio</h1>
+            <div class="page-subtitle">Configure categorias, produtos, variações e adicionais</div>
+        </div>
+        
+        <div class="header-controls">
+            <input type="text" id="searchCategory" class="input-std search-box" placeholder="🔍 Buscar Categoria (Ex: Pizza, Lanches)..." onkeyup="filtrarCategoriasGlobais()">
+            <div class="header-divider"></div>
+            <button class="btn-neon btn-neon-primary" onclick="abrirModalAdicionar()">
+                <span>➕</span> Novo Produto
+            </button>
+        </div>
+    </div>
+
+    <div class="tabs d-flex gap-10 mb-25 p-0" style="border-bottom: 1px solid #333; overflow-x: auto;">
+        <button id="btn-tab-produtos" class="tab-btn active" onclick="openTab('tab-produtos')" style="--tab-color: #2979ff;">🍔 Produtos</button>
+        <button id="btn-tab-config" class="tab-btn" onclick="openTab('tab-config')" style="--tab-color: #00e5ff;">⚙️ Variações & Adicionais</button>
+    </div>
+
+    <div id="tab-produtos" class="tab-content active">
+        <div class="filter-highlight-blue">
+            <span class="filter-title-blue">Filtro Rápido:</span>
+            <div class="cat-filters m-0 p-0" id="prodFilters">
+                <button class="cat-chip active" onclick="filtrarCategoria('all', this)">Todas</button>
+                {% for cat in categorias_db %}
+                <button class="cat-chip" data-cat-id="{{ cat.id }}" onclick="filtrarCategoria('{{ cat.id }}', this)">
+                    {{ cat.emoji or '📦' }} {{ cat.nome }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mb-25">
+            <input type="text" id="searchProd" class="input-std w-100" placeholder="🔍 Buscar produto ou ingrediente específico dentro da categoria selecionada..." onkeyup="aplicarFiltrosProdutos()">
+        </div>
+
+        <div id="lista-produtos">
+            {% for cat in categorias_db %}
+                {% if dados[cat.id] %}
+                <div class="config-card card-neon-blue category-section card-section-wrapper" data-cat="{{ cat.id }}">
+                    <div class="card-section-header">
+                        <h2 class="card-section-title title-glow-blue">{{ cat.emoji }} {{ cat.nome }}</h2>
+                        <span class="text-muted text-sm">{{ dados[cat.id]|length }} itens</span>
+                    </div>
+                    <div class="table-container table-reset">
+                        <table class="sortable-table" id="table-{{ cat.id }}">
+                            <thead>
+                                <tr>
+                                    <th class="table-col-60 sortable" onclick="ordenarTabela('table-{{ cat.id }}', 0, 'text')">Nome / Detalhes <span class="sort-icon">⬆⬇</span></th>
+                                    <th class="table-col-25 sortable" onclick="ordenarTabela('table-{{ cat.id }}', 1, 'price')">Preço <span class="sort-icon">⬆⬇</span></th>
+                                    <th class="table-col-15 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="prod-tbody">
+                                {% for item in dados[cat.id] %}
+                                <tr class="prod-row">
+                                    <td>
+                                        <div class="prod-nome font-bold text-lg text-white mb-4">{{ item.nome }}</div>
+                                        <div class="text-muted text-sm line-height-base">
+                                            {% if cat.id == 'pizza' %}{{ item.ingredientes or 'Sem ingredientes cadastrados' }}{% else %}{{ item.descricao or 'Sem descrição' }}{% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="prod-preco font-bold text-success" data-preco="{{ item.preco }}">
+                                        {% if item.preco > 0 %}R$ {{ "%.2f"|format(item.preco) }}{% else %}-{% endif %}
+                                    </td>
+                                    <td class="text-right">
+                                        <button class="btn-neon btn-neon-info btn-sm-padding" data-cat="{{ cat.id }}" data-item='{{ item|tojson }}' onclick="editProd(this)">✏️ Editar</button>
+                                        <button class="btn-neon btn-neon-danger btn-sm-padding ml-5" onclick="delProd('{{ cat.id }}', '{{ item.id }}')">🗑️</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="tab-config" class="tab-content">
+        <div class="filter-highlight-cyan">
+            <span class="filter-title-cyan">Filtro Rápido:</span>
+            <div class="cat-filters m-0 p-0" id="configFilters">
+                <button class="cat-chip active" onclick="filtrarConfig('all', this)">Todas</button>
+                {% for cat in categorias_db %}
+                <button class="cat-chip" data-cat-id="{{ cat.id }}" onclick="filtrarConfig('{{ cat.id }}', this)">{{ cat.emoji }} {{ cat.nome }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mb-25">
+            <input type="text" id="searchConfig" class="input-std w-100" placeholder="🔍 Buscar nome do tamanho, adicional, pergunta ou regra..." onkeyup="aplicarFiltrosConfig()">
+        </div>
+
+        <div class="config-card card-neon-teal card-section-wrapper">
+            <div class="card-section-header">
+                <h2 class="card-section-title title-glow-teal">📏 Tamanhos e Variações de Preço</h2>
+                <button class="btn-neon btn-neon-teal btn-sm-padding" onclick="modalVariacao()">+ Nova Variação</button>
+            </div>
+            <div class="table-container table-reset">
+                <table>
+                    <thead><tr><th class="table-col-20">Categoria</th><th class="table-col-40">Nome / Detalhes</th><th class="table-col-20">Preço</th><th class="table-col-20 text-right">Ações</th></tr></thead>
+                    <tbody id="tbody-variacoes">
+                        {% for v in dados['variacoes'] %}
+                        <tr class="config-row" data-cat="{{ v.categoria }}">
+                            <td><span class="scope-badge scope-cat">{{ v.categoria|upper }}</span></td>
+                            <td><strong class="text-white text-lg">{{ v.nome }}</strong>{% if v.sigla %} <span class="scope-badge scope-var ml-5">{{ v.sigla }}</span> {% endif %}</td>
+                            <td class="font-bold text-success">R$ {{ "%.2f"|format(v.preco) }}</td>
+                            <td class="text-right">
+                                <button class="btn-neon btn-neon-info btn-sm-padding" data-var='{{ v|tojson }}' onclick="editVariacao(this)">✏️</button>
+                                <button class="btn-neon btn-neon-danger btn-sm-padding ml-5" onclick="delVariacao('{{ v.id }}')">🗑️</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="config-card card-neon-orange card-section-wrapper">
+            <div class="card-section-header">
+                <h2 class="card-section-title title-glow-orange">🛠️ Grupos de Adicionais & Perguntas</h2>
+                <button class="btn-neon btn-neon-orange btn-sm-padding" onclick="modalGrupo()">+ Novo Grupo</button>
+            </div>
+            <div class="table-container table-reset">
+                <table>
+                    <thead><tr><th class="table-col-10">Ord</th><th>Categoria</th><th>Título / Pergunta</th><th>Aplicação</th><th>Regras</th><th class="text-right">Ações</th></tr></thead>
+                    <tbody id="tbody-grupos">
+                        {% for g in dados['adicionais_config']|sort(attribute='ordem') %}
+                        <tr class="config-row draggable-row" draggable="true" data-cat="{{ g.categoria_alvo }}" data-id="{{ g.id }}">
+                            <td style="color:#666; font-family:monospace; cursor: grab;"><span class="drag-handle">☰</span></td>
+                            <td><span class="scope-badge scope-cat">{{ g.categoria_alvo|upper }}</span></td>
+                            <td><strong class="text-white text-lg">{{ g.titulo }}</strong><div class="text-muted text-xs mt-5">{{ g.descricao or '' }}</div></td>
+                            <td>
+                                {% if g.produto_alvo_id %}<span class="scope-badge scope-prod">Produto Específico</span><div class="text-muted text-xs mt-5">{{ g.alvo_desc }}</div>
+                                {% elif g.variacao_alvo_id %}<span class="scope-badge scope-var">Variação</span><div class="text-muted text-xs mt-5">{{ g.alvo_desc }}</div>
+                                {% else %}<span class="scope-badge scope-cat">Toda Categoria</span>{% endif %}
+                            </td>
+                            <td><div class="text-white text-sm">Tipo: <strong>{{ g.tipo|upper }}</strong></div><div class="text-muted text-xs">Mín: {{ g.minimo_escolha }} | Máx: {{ g.maximo_escolha }}</div></td>
+                            <td class="text-right">
+                                <button class="btn-neon btn-neon-info btn-sm-padding" data-group='{{ g|tojson }}' onclick="editarGrupo(this)">✏️</button>
+                                <button class="btn-neon btn-neon-danger btn-sm-padding ml-5" onclick="delGrupo('{{ g.id }}')">🗑️</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalProd" class="modal-overlay">
+        <div class="modal modal-border-blue">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <h3 class="modal-h3-blue" style="margin: 0; border: none;">Gerenciar Produto</h3>
+                <button type="button" onclick="closeModal('modalProd')" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;">×</button>
+            </div>
+            <form id="formProd" onsubmit="salvarProduto(event)">
+                <input type="hidden" id="prodId">
+                <label>Categoria</label><select id="prodCat" class="input-std">{% for cat in categorias_db %}<option value="{{ cat.id }}">{{ cat.emoji }} {{ cat.nome }}</option>{% endfor %}</select>
+                <label>Nome do Produto</label><input type="text" id="prodNome" class="input-std" required placeholder="Ex: X-Salada">
+                <label>Preço (R$)</label><input type="number" id="prodPreco" class="input-std" step="0.01" placeholder="0.00">
+                <label>Descrição / Ingredientes</label><textarea id="prodDesc" class="input-std" rows="3" placeholder="Ex: Pão, carne, queijo..."></textarea>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('modalProd')" class="btn-neon btn-neon-danger">Cancelar</button>
+                    <button type="submit" class="btn-neon btn-neon-blue">Salvar Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="modalVar" class="modal-overlay">
+        <div class="modal modal-border-teal">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <h3 class="modal-h3-blue" style="margin: 0; border: none;">Configurar Variação/Tamanho</h3>
+                <button type="button" onclick="closeModal('modalVar')" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;">×</button>
+            </div>
+            <form id="formVar" onsubmit="salvarVariacao(event)">
+                <input type="hidden" id="varId">
+                <label>Categoria</label><select id="varCat" class="input-std" onchange="togglePizzaFields()">{% for cat in categorias_db %}<option value="{{ cat.id }}">{{ cat.emoji }} {{ cat.nome }}</option>{% endfor %}</select>
+                <div class="d-flex gap-15">
+                    <div class="flex-2"><label>Nome</label><input type="text" id="varNome" class="input-std" required></div>
+                    <div class="flex-1"><label>Sigla</label><input type="text" id="varSigla" class="input-std"></div>
+                </div>
+                <label>Preço</label><input type="number" id="varPreco" class="input-std" step="0.01" required>
+                
+                <div id="areaPizzaConfig" class="pizza-config-box">
+                    <label class="pizza-config-title">🍕 Configuração Exclusiva de Pizza</label>
+                    <div class="d-flex gap-15 flex-wrap" style="align-items: flex-end;">
+                        <div class="flex-1 min-w-100"><label class="mb-5">Tamanho (cm)</label><input type="text" id="varTamanho" class="input-std m-0"></div>
+                        <div class="flex-1 min-w-100"><label class="mb-5">Fatias</label><input type="number" id="varFatias" class="input-std m-0" value="8"></div>
+                        <div class="flex-1 min-w-100"><label class="mb-5">Máx. Sabores</label><input type="number" id="varSabores" class="input-std m-0" value="2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('modalVar')" class="btn-neon btn-neon-danger">Cancelar</button>
+                    <button type="submit" class="btn-neon btn-neon-teal">Salvar Variação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalGrp" class="modal-overlay">
+        <div class="modal modal-border-orange">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <h3 class="modal-h3-blue" style="margin: 0; border: none;">Configurar Grupo de Adicionais</h3>
+                <button type="button" onclick="closeModal('modalGrp')" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;">×</button>
+            </div>
+            <form id="formGrp" onsubmit="salvarGrupo(event)">
+                <input type="hidden" id="grpId">
+                <div class="d-flex gap-15">
+                    <div class="flex-1"><label>Categoria Base</label><select id="grpCat" class="input-std" onchange="atualizarEscopo()">{% for cat in categorias_db %}<option value="{{ cat.id }}">{{ cat.emoji }} {{ cat.nome }}</option>{% endfor %}</select></div>
+                    <div class="flex-1"><label>Onde aplicar?</label><select id="grpEscopoTipo" class="input-std" onchange="atualizarEscopo()"><option value="todos">Toda a Categoria</option> <option value="produto">Apenas um Produto</option><option value="variacao">Apenas um Tamanho/Variação</option></select></div>
+                </div>
+                <div id="divEscopoValor" class="escopo-valor-box">
+                    <label id="lblEscopoValor" class="escopo-valor-label">Selecione o Item Específico:</label>
+                    <select id="grpEscopoValor" class="input-std mb-0"></select>
+                </div>
+                <div class="d-flex gap-15 mb-15 flex-wrap" style="align-items: flex-end;">
+                        <div class="flex-3 w-100"><label class="mb-5">Título / Pergunta</label><input type="text" id="grpTitulo" class="input-std m-0" required></div>
+                        <div class="flex-1 w-100"><label class="mb-5">Ordem (Auto)</label><input type="number" id="grpOrdem" class="input-std m-0 opacity-50" placeholder="1" disabled></div>
+                    </div>
+                <label>Descrição (Opcional)</label><input type="text" id="grpDesc" class="input-std">
+                <div class="d-flex gap-15 mb-15 flex-wrap" style="align-items: flex-end;">
+                    <div class="flex-1 w-100"><label class="mb-5">Tipo de Resposta</label><select id="grpTipo" class="input-std m-0" onchange="toggleOpcoes(this.value)"><option value="unica">Única</option><option value="multipla">Múltipla</option><option value="texto">Texto</option><option value="quantidade">Quantidade</option></select></div>
+                    <div class="flex-1 w-100" id="divMinMax"><div class="d-flex gap-10" style="align-items: flex-end;"><div class="flex-1"><label class="mb-5">Mínimo</label><input type="number" id="grpMin" class="input-std m-0" value="0" min="0"></div><div class="flex-1"><label class="mb-5">Máximo</label><input type="number" id="grpMax" class="input-std m-0" value="1" min="1"></div></div></div>
+                    <div class="flex-1 w-100" id="divLimiteGratis"><label class="mb-5">Qtd Grátis</label><input type="number" id="grpGratis" class="input-std m-0" value="0"></div>
+                </div>
+                <div id="areaOpcoes" class="opcoes-list-wrapper">
+                    <label class="opcoes-list-title">Lista de Opções (Arraste para organizar):</label>
+                    <div id="listaOpcoes" class="opcoes-list-container"></div>
+                    <button type="button" onclick="addOpcaoLinha()" class="btn-neon btn-neon-orange mt-10 w-100">+ Adicionar Nova Opção</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('modalGrp')" class="btn-neon btn-neon-danger">Cancelar</button>
+                    <button type="submit" class="btn-neon btn-neon-orange">Salvar Grupo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script id="dados-produtos-json" type="application/json">
+    {{ todos_produtos_js | default([]) | tojson | safe }}
+</script>
+<script id="dados-variacoes-json" type="application/json">
+    {{ todas_variacoes | default([]) | tojson | safe }}
+</script>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cardapio.js?v=4"></script>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Frente de Caixa (PDV){% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        /* Removido o overflow: hidden global para permitir a barra de rolagem (scroll) voltar! */
+        body, html {
+            box-sizing: border-box;
+        }
+
+        .pdv-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            /* Define a altura, mas permite crescer se necessário (min-height) */
+            height: calc(100vh - 140px); 
+            min-height: 600px; 
+            box-sizing: border-box;
+            margin-bottom: 30px; /* Espaço extra no final da página para o scroll */
+        }
+        
+        /* Área de Produtos */
+        .pdv-produtos-area {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            box-sizing: border-box;
+        }
+        .pdv-search-bar { margin-bottom: 15px; flex-shrink: 0; }
+        
+        .produtos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-auto-rows: max-content; 
+            align-content: start; 
+            gap: 15px;
+            overflow-y: auto; /* Mantém o scroll interno dos produtos */
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+        
+        .produto-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .produto-card:hover {
+            border-color: #00ffcc;
+            background: rgba(0, 255, 204, 0.1);
+            transform: translateY(-2px);
+        }
+        .produto-preco { color: #00ffcc; font-weight: bold; margin-top: 5px; }
+
+        /* Área do Carrinho */
+        .pdv-carrinho-area {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            height: 100%; 
+            box-sizing: border-box;
+        }
+        
+        .carrinho-itens {
+            flex: 1 1 0; 
+            min-height: 150px; /* Garante um tamanho mínimo para ver o carrinho */
+            overflow-y: auto; 
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+        }
+        
+        .carrinho-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+        .carrinho-item-acoes button {
+            background: none; border: none; color: #ff4444; cursor: pointer; font-size: 1.2rem;
+        }
+        
+        .pdv-totais { margin-bottom: 15px; flex-shrink: 0; }
+        .pdv-totais div { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; }
+        .pdv-total-final { font-size: 1.5rem !important; color: #00ffcc; font-weight: bold; }
+        
+        .btn-pagamento { width: 100%; padding: 15px; font-size: 1.2rem; }
+        .pdv-acoes-bottom { flex-shrink: 0; }
+
+        /* ==========================================
+           RESPONSIVIDADE (MOBILE & TABLET)
+           ========================================== */
+        @media (max-width: 992px) {
+            .pdv-layout {
+                grid-template-columns: 1fr;
+                height: auto; 
+            }
+            .pdv-produtos-area {
+                height: 55vh; 
+            }
+            .pdv-carrinho-area {
+                height: auto;
+                min-height: 60vh;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15">
+    <div>
+        <h1 class="page-title-glow">🛒 Frente de Caixa</h1>
+        <div class="page-subtitle">
+            Operador: <span id="lbl_operador" class="text-danger">Indefinido</span> | 
+            Caixa: <span id="lbl_caixa_numero" class="text-danger">Indefinido</span> | 
+            Status: <span id="lbl_status_caixa" class="text-danger font-bold">FECHADO</span>
+        </div>
+    </div>
+    <div class="top-actions">
+        <button class="btn-neon text-xs" onclick="document.documentElement.requestFullscreen().catch((e) => console.log(e));">🖥️ Tela Cheia</button>
+        <button class="btn-neon btn-neon-warning" onclick="abrirModalCaixa()">💰 Funções do Caixa</button>
+    </div>
+</div>
+
+<div class="pdv-layout">
+    <!-- Lista de Produtos -->
+    <div class="pdv-produtos-area">
+        <div class="pdv-search-bar d-flex gap-10">
+            <input type="text" id="pdv_busca" class="erp-input flex-grow" placeholder="Buscar por nome ou código de barras..." onkeyup="filtrarProdutos()">
+            <select id="pdv_categoria" class="erp-input w-auto" onchange="filtrarProdutos()">
+                <option value="">Carregando categorias...</option>
+            </select>
+        </div>
+        
+        <div class="produtos-grid" id="grid_produtos">
+            <div class="text-center w-full mt-20">Carregando produtos...</div>
+        </div>
+    </div>
+
+    <!-- Carrinho -->
+    <div class="pdv-carrinho-area">
+        <h3 class="m-0 mb-10 text-center border-bottom pb-10 flex-shrink-0">Cupom Atual</h3>
+        
+        <div class="carrinho-itens" id="lista_carrinho">
+            <div class="text-center text-muted mt-20">Carrinho vazio</div>
+        </div>
+        
+        <div class="pdv-totais">
+            <div><span>Subtotal:</span> <span id="lbl_subtotal">R$ 0,00</span></div>
+            <div><span>Desconto:</span> <span id="lbl_desconto" class="text-warning">R$ 0,00</span></div>
+            <div class="pdv-total-final mt-10"><span>TOTAL:</span> <span id="lbl_total">R$ 0,00</span></div>
+        </div>
+        
+        <div class="d-flex flex-column gap-10 pdv-acoes-bottom">
+            <button class="btn-neon btn-neon-warning w-full" onclick="aplicarDesconto()">🎟️ Aplicar Desconto</button>
+            
+            <select id="forma_pagamento" class="erp-input">
+                <option value="">Carregando formas de pgto...</option>
+            </select>
+            
+            <button class="btn-neon btn-neon-success btn-pagamento" onclick="finalizarVenda()">FINALIZAR VENDA (F2)</button>
+            <button class="btn-neon btn-neon-danger w-full" onclick="limparCarrinho()">Cancelar Venda</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL DE FUNÇÕES DO CAIXA
+     ========================================== -->
+<div id="modal_caixa" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="form-panel" style="width: 90%; max-width: 500px; background: #111827; border: 1px solid #00ffcc; border-radius: 8px; padding: 20px; box-shadow: 0 0 20px rgba(0,255,204,0.2);">
+        <h2 class="text-center text-warning mb-20">💰 Gestão do Caixa</h2>
+        
+        <div class="form-grid">
+            <div class="col-span-2">
+                <label>Operação Desejada:</label>
+                <select id="modal_caixa_operacao" class="erp-input text-lg font-bold text-center" style="height: 50px;">
+                    <option value="ABERTURA">🔓 Abrir Caixa</option>
+                    <option value="FECHAMENTO">🔒 Fechar Caixa</option>
+                    <option value="SANGRIA">💸 Sangria (Retirada de Dinheiro)</option>
+                    <option value="SUPRIMENTO">📥 Suprimento (Entrada de Troco)</option>
+                </select>
+            </div>
+            
+            <div>
+                <label>Operador:</label>
+                <select id="modal_caixa_operador" class="erp-input"><option value="">Carregando...</option></select>
+            </div>
+            
+            <div>
+                <label>Nº do Caixa:</label>
+                <select id="modal_caixa_numero" class="erp-input"><option value="">Carregando...</option></select>
+            </div>
+            
+            <div class="col-span-2">
+                <label>Turno:</label>
+                <select id="modal_caixa_turno" class="erp-input"><option value="">Carregando...</option></select>
+            </div>
+            
+            <div class="col-span-2 mt-10">
+                <label>Valor (R$): <small class="text-muted">(Necessário para Saldo Inicial, Sangria ou Suprimento)</small></label>
+                <input type="number" id="modal_caixa_valor" class="erp-input text-success font-bold text-lg" value="0.00" step="0.01">
+            </div>
+        </div>
+
+        <div class="d-flex justify-end gap-10 mt-20 pt-15 border-top border-muted">
+            <button type="button" class="btn-neon btn-neon-danger" onclick="fecharModalCaixa()">Cancelar</button>
+            <button type="button" class="btn-neon btn-neon-success" onclick="salvarFuncaoCaixa()">✔️ Confirmar Operação</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/pdv.js"></script>
+{% endblock %}

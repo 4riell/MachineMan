@@ -1,0 +1,933 @@
+{% extends "base.html" %}
+
+{% block title %}Controladoria e Fiscal{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .inner-grid-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .inner-grid-table th, .inner-grid-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: left; font-size: 0.85rem; }
+        .inner-grid-table th { background: rgba(0,255,255,0.1); color: #0ff; font-weight: bold; }
+        .grid-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 4px; border-radius: 4px; font-size: 0.8rem; }
+        .top-actions button { margin-left: 5px; }
+        .modal-content { scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff; font-size: 0.9rem;}
+        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #00ffcc; }
+        
+        .filter-bar { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        
+        .filter-item { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+        .filter-item label { font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-item input, .filter-item select { background: #000; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
+        
+        .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; align-items: flex-end; }
+        .action-bar .btn-action { background: #222; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; display:flex; align-items:center; gap:5px; transition: all 0.3s ease; height: 35px; }
+        .action-bar .btn-action:hover { background: #333; border-color: #00ffcc; color: #00ffcc; }
+        
+        select[multiple] { height: auto; min-height: 80px; padding: 5px; }
+        select[multiple] option { padding: 4px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .erp-workspace, .erp-workspace * { visibility: visible; }
+            .erp-sidebar, .filter-bar, .action-bar, .page-header, .btn-neon, button, .erp-modal, .modal-overlay { display: none !important; }
+            .erp-workspace { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0; }
+            .erp-table { border-collapse: collapse; width: 100%; border: 1px solid #000; }
+            .erp-table th, .erp-table td { border: 1px solid #aaa; color: #000; padding: 5px; font-size: 12px; }
+            .text-success, .text-danger, .text-warning, .text-info, .text-primary { color: #000 !important; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">⚖️ Controladoria e Fiscal</h1>
+        <div class="page-subtitle">Gestão de Emitentes, Impostos, CFOPs, Integrações e Segurança.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Empresa & Contabilidade</div>
+            <button class="menu-item" onclick="switchControladoriaView('view_emitentes', this)">🏢 Emitentes (Matriz/Filial)</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_contadores', this)">👨‍💼 Contadores</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Fiscal e Tributos</div>
+            <button class="menu-item" onclick="switchControladoriaView('view_integracao', this)">🔗 Integração Fiscal</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_cfop', this)">📑 CFOPs / Operações</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_tributacoes', this)">🧾 Matriz de Tributações</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_plano_contas', this)">🗂️ Plano de Contas</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Sistema e Operação</div>
+            <button class="menu-item" onclick="switchControladoriaView('view_usuarios', this)">👤 Usuários</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_precos', this)">💲 Tabela de Preços</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_portarias', this)">📖 Portarias / Textos</button>
+            <button class="menu-item" onclick="switchControladoriaView('view_importar', this)">⬇️ Importar Dados</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- NOVA VIEW: PLANO DE CONTAS -->
+        <div id="view_plano_contas" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🗂️ Plano de Contas</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_plano_contas')">➕ Novo Plano</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_plano" placeholder="🔍 Pesquisar planos..." onkeyup="filterTable('search_plano', 'tb_plano_contas')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_plano_contas', 'PlanoDeContas')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nível</th><th>Código CTA</th><th>Nome</th><th>Tipo</th><th>Natureza</th><th>Classificação</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_plano_contas"></tbody>
+                </table>
+            </div>
+
+            <div id="form_plano_contas_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 700px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Cadastro de Plano de Contas</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_plano_contas')">X</button>
+                    </div>
+                    <form id="form_plano_contas" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'plano_contas')">
+                        <input type="hidden" id="pla_id">
+                        <div class="form-grid">
+                            <div><label>Código Interno</label><input type="text" id="pla_codigo" class="erp-input"></div>
+                            <div><label>Código CTA</label><input type="text" id="pla_codigo_cta" class="erp-input"></div>
+                            <div class="col-span-2"><label>Nome da Conta *</label><input type="text" id="pla_nome" class="erp-input" required></div>
+                            
+                            <div><label>Tipo *</label>
+                                <select id="pla_tipo" class="erp-select" required>
+                                    <option value="Receita">Receita</option>
+                                    <option value="Despesa">Despesa</option>
+                                    <option value="Ativo">Ativo</option>
+                                    <option value="Passivo">Passivo</option>
+                                    <option value="Patrimônio Líquido">Patrimônio Líquido</option>
+                                </select>
+                            </div>
+                            <div><label>Natureza *</label>
+                                <select id="pla_natureza" class="erp-select" required>
+                                    <option value="Credora">Credora</option>
+                                    <option value="Devedora">Devedora</option>
+                                </select>
+                            </div>
+                            
+                            <div><label>Nível</label><input type="text" id="pla_nivel" class="erp-input" placeholder="Ex: 1.1.01"></div>
+                            <div><label>Classificação</label>
+                                <select id="pla_classificacao" class="erp-select">
+                                    <option value="Sintética">Sintética</option>
+                                    <option value="Analítica">Analítica</option>
+                                </select>
+                            </div>
+                            
+                            <div><label>Ocorrência</label>
+                                <select id="pla_ocorrencia" class="erp-select">
+                                    <option value="Variável">Variável</option>
+                                    <option value="Fixa">Fixa</option>
+                                </select>
+                            </div>
+                            <div><label>Cód. Referência</label><input type="text" id="pla_codigo_referencia" class="erp-input"></div>
+
+                            <div class="col-span-full pt-10">
+                                <label class="checkbox-label"><input type="checkbox" id="pla_inativo" value="S"> Conta Inativa</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-info">💾 Salvar Plano de Conta</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW CFOPS ATUALIZADA -->
+        <div id="view_cfop" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">📑 Cadastro de CFOPs e Operações</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_cfops')">➕ Nova Operação</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_cfops" placeholder="🔍 Pesquisar cfops..." onkeyup="filterTable('search_cfops', 'tb_cfops')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_cfops', 'CFOPs')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>CFOP</th><th>Nome</th><th>Plano Conta</th><th>Tipo</th><th>Natureza Créd.</th><th>Mov. Estoque</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_cfops"></tbody>
+                </table>
+            </div>
+
+            <div id="form_cfops_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 700px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Operação / CFOP</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_cfops')">X</button>
+                    </div>
+                    <form id="form_cfops" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'cfops')">
+                        <input type="hidden" id="cfo_id">
+                        <div class="form-grid">
+                            <div><label>CFOP *</label><input type="text" id="cfo_codigo_cfop" class="erp-input font-bold" required></div>
+                            <div class="col-span-2"><label>Nome *</label><input type="text" id="cfo_nome" class="erp-input" required></div>
+                            <div class="col-span-full"><label>Descrição</label><textarea id="cfo_descricao" class="erp-input" rows="2"></textarea></div>
+                            
+                            <!-- Relacionamento Inteligente com Plano de Contas -->
+                            <div class="col-span-full border-top pt-10 mt-5"><label class="text-warning">Vínculo Financeiro</label></div>
+                            
+                            <div class="col-span-full"><label>Plano de Contas *</label>
+                                <select id="cfo_plano_conta" class="erp-select" required onchange="vincularPlanoContaCFOP(this.value)"></select>
+                            </div>
+                            
+                            <div><label>Tipo (Automático)</label>
+                                <input type="text" id="cfo_tipo" class="erp-input text-muted" readonly placeholder="Definido pelo Plano" tabindex="-1">
+                            </div>
+                            <div><label>Nat. Crédito (Automático)</label>
+                                <input type="text" id="cfo_nat_credito" class="erp-input text-muted" readonly placeholder="Definido pelo Plano" tabindex="-1">
+                            </div>
+
+                            <div class="col-span-full pt-10">
+                                <label class="checkbox-label"><input type="checkbox" id="cfo_movimenta_estoque" value="S"> Operação Movimenta Estoque</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-primary">💾 Salvar Operação</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- AS DEMAIS VIEWS PERMANECEM INTACTAS (TRIBUTACOES, PORTARIAS, IMPORTAR, USUARIOS, PRECOS, INTEGRACAO, CONTADORES, EMITENTES) -->
+        
+        <div id="view_tributacoes" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-danger">🧾 Matriz de Tributações</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_tributacoes')">➕ Nova Matriz</button>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_tributacoes" placeholder="🔍 Pesquisar tributações..." onkeyup="filterTable('search_tributacoes', 'tb_tributacoes')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_tributacoes', 'Matriz_Tributacoes')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="form-grid-4 align-start">
+                    <div class="filter-item"><label>Data de Registro</label><input type="date" id="filtro_data" onchange="filtrarTributacoes()"></div>
+                    
+                    <div class="filter-item" style="grid-row: span 2;"><label>Finalidade (CTRL para múltiplos)</label>
+                        <select id="filtro_finalidade" multiple onchange="filtrarTributacoes()">
+                            <option value="Normal">Normal</option>
+                            <option value="Complementar">Complementar</option>
+                            <option value="Ajuste">Ajuste</option>
+                            <option value="Devolução">Devolução</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item"><label>Tipo de Pessoa</label>
+                        <select id="filtro_pessoa" onchange="filtrarTributacoes()">
+                            <option value="">Todos</option>
+                            <option value="Física">Física</option>
+                            <option value="Jurídica">Jurídica</option>
+                        </select>
+                    </div>
+                    <div class="filter-item"><label>Tipo de Consumidor</label>
+                        <select id="filtro_consumidor" onchange="filtrarTributacoes()">
+                            <option value="">Todos</option>
+                            <option value="Final">Consumidor Final</option>
+                            <option value="Revenda">Revenda</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="grid-row: span 2;"><label>Integração Fiscal (CTRL para múltiplos)</label>
+                        <select id="filtro_integracao" multiple onchange="filtrarTributacoes()"></select>
+                    </div>
+                    <div class="filter-item"><label>Tipo de Tributação</label>
+                        <select id="filtro_tipo_trib" onchange="filtrarTributacoes()">
+                            <option value="">Todos</option>
+                            <option value="Federal">Federal</option>
+                            <option value="Estadual">Estadual</option>
+                            <option value="Municipal">Municipal</option>
+                        </select>
+                    </div>
+                    <div class="filter-item"><label>Inativo</label>
+                        <select id="filtro_inativo" onchange="filtrarTributacoes()">
+                            <option value="">Todos</option>
+                            <option value="S">Sim</option>
+                            <option value="N">Não</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-end pb-5">
+                        <button type="button" class="btn-neon btn-neon-warning w-full" onclick="limparFiltrosTributacao()" style="padding: 6px;">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Data Registro</th><th>Finalidade</th><th>Tipo de Pessoa</th><th>Consumidor Final</th><th>NCM</th><th>UF</th><th>Integração Fiscal</th><th>Tipo</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_tributacoes"></tbody>
+                </table>
+            </div>
+
+            <div id="form_tributacoes_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-danger">Cadastro de Matriz Tributária</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_tributacoes')">X</button>
+                    </div>
+                    <form id="form_tributacoes" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'tributacoes')">
+                        <input type="hidden" id="tri_id">
+                        <div class="form-grid">
+                            
+                            <div style="grid-row: span 2;"><label>Finalidade * (CTRL p/ múltiplos)</label>
+                                <select id="tri_finalidade" class="erp-select" multiple required>
+                                    <option value="Normal">Normal</option>
+                                    <option value="Complementar">Complementar</option>
+                                    <option value="Ajuste">Ajuste</option>
+                                    <option value="Devolução">Devolução</option>
+                                </select>
+                            </div>
+
+                            <div><label>Tipo de Pessoa *</label>
+                                <select id="tri_tipo_pessoa" class="erp-select" required>
+                                    <option value="Física">Física</option>
+                                    <option value="Jurídica">Jurídica</option>
+                                </select>
+                            </div>
+                            <div><label>Consumidor Final *</label>
+                                <select id="tri_consumidor_final" class="erp-select" required>
+                                    <option value="Final">Consumidor Final</option>
+                                    <option value="Revenda">Revenda</option>
+                                </select>
+                            </div>
+                            <div><label>NCM *</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="text" id="tri_ncm" class="erp-input flex-1" readonly required placeholder="Pesquisar NCM...">
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisa('ncms', 'tri_ncm', 'tri_ncm')">🔍</button>
+                                </div>
+                            </div>
+                            <div class="col-span-2"><label>Integração Fiscal *</label><select id="tri_integracao_fiscal" class="erp-select" required></select></div>
+                            <div><label>Tipo de Tributação *</label>
+                                <select id="tri_tipo_tributacao" class="erp-select" required>
+                                    <option value="Federal">Federal</option>
+                                    <option value="Estadual">Estadual</option>
+                                    <option value="Municipal">Municipal</option>
+                                </select>
+                            </div>
+                            <div><label>UF *</label>
+                                <select id="tri_uf" class="erp-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                                    <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                                    <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                                    <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                                    <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                                    <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                                    <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                                    <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                                    <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                </select>
+                            </div>
+                            <div class="col-span-full pt-10">
+                                <label class="checkbox-label"><input type="checkbox" id="tri_inativo" value="S"> Inativo</label>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-danger">💾 Salvar Tributação</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_portarias" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">📖 Portarias</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_portarias')">➕ Nova Portaria</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_portarias" placeholder="🔍 Pesquisar portarias..." onkeyup="filterTable('search_portarias', 'tb_portarias')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_portarias', 'Portarias')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Nome</th><th>Mensagem</th><th>Tipo</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_portarias"></tbody>
+                </table>
+            </div>
+
+            <div id="form_portarias_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Cadastro de Portaria</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_portarias')">X</button>
+                    </div>
+                    <form id="form_portarias" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'portarias')">
+                        <input type="hidden" id="prt_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label>Nome *</label><input type="text" id="prt_nome" class="erp-input" required></div>
+                            <div class="col-span-full"><label>Mensagem *</label><textarea id="prt_mensagem" class="erp-input" rows="4" required></textarea></div>
+                            <div class="col-span-full"><label>Tipo *</label>
+                                <select id="prt_tipo" class="erp-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="NFe">NFe</option>
+                                    <option value="NFCe">NFCe</option>
+                                    <option value="Pedido">Pedido</option>
+                                    <option value="Condiconal">Condiconal</option>
+                                    <option value="OS">OS</option>
+                                    <option value="NFSe">NFSe</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-primary">💾 Salvar Portaria</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_importar" class="erp-view">
+            <h3 class="m-0 text-warning border-bottom pb-10 mb-20">⬇️ Importar Dados</h3>
+            <form class="form-panel" id="form_importacao" onsubmit="event.preventDefault(); showMsg('Iniciando carregamento do arquivo...');">
+                <div class="form-grid">
+                    <div class="col-span-full"><label>Tabela Destino</label>
+                        <select class="erp-select ignore-serialize"><option>Produtos</option><option>Clientes</option><option>Fornecedores</option></select>
+                    </div>
+                    <div class="col-span-full"><label>Arquivo Anexo (.csv, .xlsx, .xml)</label><input type="file" class="erp-input" style="padding: 3px;" required></div>
+                    <div class="col-span-full pt-10 d-flex gap-20">
+                        <label class="checkbox-label"><input type="checkbox" value="S"> Importação via referência</label>
+                        <label class="checkbox-label"><input type="checkbox" id="imp_atualizar_estoque" value="S"> Atualizar estoque</label>
+                    </div>
+                </div>
+                <div class="form-actions mt-20 d-flex gap-10 justify-end">
+                    <button type="submit" class="btn-neon btn-neon-info">📁 Carregar arquivo</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="showMsg('Importação confirmada com sucesso!')">✅ Confirmar importação</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="view_usuarios" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">👤 Cadastro de Usuário</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_usuarios')">➕ Novo Usuário</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_usuarios" placeholder="🔍 Pesquisar usuários..." onkeyup="filterTable('search_usuarios', 'tb_usuarios')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_usuarios', 'Usuarios')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th>Nome Usuário</th><th>Telefone</th><th>Email</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_usuarios"></tbody>
+                </table>
+            </div>
+
+            <div id="form_usuarios_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Usuário</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_usuarios')">X</button>
+                    </div>
+                    <form id="form_usuarios" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'usuarios')">
+                        <input type="hidden" id="usr_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label>Nome</label><input type="text" id="usr_nome" class="erp-input" required></div>
+                            <div class="col-span-full"><label>Usuário</label><input type="text" id="usr_usuario" class="erp-input" required></div>
+                            <div class="col-span-full"><label>Telefone</label><input type="text" id="usr_telefone" class="erp-input"></div>
+                            <div class="col-span-full"><label>Email</label><input type="email" id="usr_email" class="erp-input"></div>
+                            <div><label>Senha</label><input type="password" id="usr_senha" class="erp-input" required></div>
+                            <div><label>Repetir Senha</label><input type="password" id="usr_repetir_senha" class="erp-input ignore-serialize" required></div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-info">💾 Salvar Usuário</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_precos" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">💲 Tabelas de Preço</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_tabelas_preco')">➕ Nova Tabela</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_precos" placeholder="🔍 Pesquisar tabelas..." onkeyup="filterTable('search_precos', 'tb_tabelas_preco')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_tabelas_preco', 'Tabelas_Preco')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome do grupo</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_tabelas_preco"></tbody>
+                </table>
+            </div>
+
+            <div id="form_tabelas_preco_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 500px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-success">Tabela de Preço</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_tabelas_preco')">X</button>
+                    </div>
+                    <form id="form_tabelas_preco" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'tabelas_preco')">
+                        <input type="hidden" id="prc_id">
+                        <div class="form-grid">
+                            <div class="col-span-full"><label>Nome *</label><input type="text" id="prc_nome" class="erp-input" required></div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar Tabela</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_integracao" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">🔗 Integração Fiscal</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_integracao_fiscal')">➕ Nova Integração</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_integracao" placeholder="🔍 Pesquisar integração..." onkeyup="filterTable('search_integracao', 'tb_integracao_fiscal')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_integracao_fiscal', 'Integracao_Fiscal')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <h4 class="m-0 mb-10 text-success">Empresa Referência</h4>
+                <div class="d-flex gap-10 flex-wrap">
+                    <div class="filter-item flex-1"><label>Nome</label><select id="int_empresa_nome"></select></div>
+                    <div class="filter-item flex-1"><label>CNPJ</label><input type="text" id="int_empresa_cnpj" class="text-warning font-bold" readonly></div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Descrição</th><th>CFOP</th><th>Tipo</th><th>CST ICMS</th><th>PIS</th><th>COFINS</th><th>IPI</th><th>Nat. Receita</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_integracao_fiscal"></tbody>
+                </table>
+            </div>
+
+            <div id="form_integracao_fiscal_modal" class="modal-overlay" style="display:none; z-index: 1000;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-warning">Integração</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_integracao_fiscal')">X</button>
+                    </div>
+                    <form id="form_integracao_fiscal" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'integracao_fiscal')">
+                        <input type="hidden" id="int_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Descrição</label><input type="text" id="int_descricao" class="erp-input" required></div>
+                            <div><label>Tipo</label><select id="int_tipo" class="erp-select"><option value="SAÍDA">Saída</option><option value="ENTRADA">Entrada</option></select></div>
+                            <div><label>CFOP Padrão</label><select id="int_cfop" class="erp-select" required></select></div>
+                            <div class="col-span-full pt-10"><label class="checkbox-label"><input type="checkbox" id="int_estoque" value="S"> Movimenta Estoque</label></div>
+                        </div>
+
+                        <div class="section-title text-warning mt-15">CSTs e Regras Tributárias Padrão</div>
+                        <div class="form-grid-4">
+                            <div><label>CST ICMS</label>
+                                <select id="int_cst_icms" class="erp-select">
+                                    <option value="00">00 - Tributada integralmente</option>
+                                    <option value="10">10 - Tributada e com cobrança do ICMS por substituição tributária</option>
+                                    <option value="20">20 - Com redução de Base de Cálculo</option>
+                                    <option value="30">30 - Isenta ou não tributada e com cobrança do ICMS por substituição tributária</option>
+                                    <option value="40">40 - Isenta</option>
+                                    <option value="41">41 - Não tributada</option>
+                                    <option value="50">50 - Com suspensão</option>
+                                    <option value="51">51 - Com diferimento</option>
+                                    <option value="53">53 - Tributação monofásica sobre combustíveis com recolhimento diferido</option>
+                                    <option value="60">60 - ICMS cobrado anteriormente por substituição tributária</option>
+                                    <option value="61">61 - Tributação monofásica sobre combustíveis cobrada anteriormente</option>
+                                    <option value="70">70 - Com redução da Base de Cálculo e cobrança do ICMS por substituição tributária</option>
+                                    <option value="90">90 - Outras</option>
+                                </select>
+                            </div>
+                            <div><label>CST PIS</label>
+                                <select id="int_cst_pis" class="erp-select" onchange="autoFillNatReceita()">
+                                    <option value="01">01 - Operação Tributável com Alíquota Básica</option>
+                                    <option value="02">02 - Operação Tributável com Alíquota Diferenciada</option>
+                                    <option value="04">04 - Operação Tributável Monofásica - Revenda a Alíquota Zero</option>
+                                    <option value="06">06 - Operação Tributável a Alíquota Zero</option>
+                                    <option value="07">07 - Operação Isenta da Contribuição</option>
+                                    <option value="08">08 - Operação sem Incidência da Contribuição</option>
+                                    <option value="09">09 - Operação com Suspensão da Contribuição</option>
+                                    <option value="49">49 - Outras Operações de Saída</option>
+                                    <option value="50">50 - Operação com Direito a Crédito</option>
+                                    <option value="70">70 - Operação de Aquisição sem Direito a Crédito</option>
+                                    <option value="99">99 - Outras Operações</option>
+                                </select>
+                            </div>
+                            <div><label>CST IPI</label>
+                                <select id="int_cst_ipi" class="erp-select">
+                                    <option value="00">00 - Entrada com Recuperação de Crédito</option>
+                                    <option value="50">50 - Saída Tributada</option>
+                                    <option value="53">53 - Saída Não-tributada</option>
+                                    <option value="99">99 - Outras Saídas</option>
+                                </select>
+                            </div>
+                            <div><label>CSOSN</label>
+                                <select id="int_csosn" class="erp-select">
+                                    <option value="101">101 - Tributada Simples Nacional com permissão de crédito</option>
+                                    <option value="102">102 - Tributada Simples Nacional sem permissão de crédito</option>
+                                    <option value="103">103 - Isenção do ICMS no Simples Nacional</option>
+                                    <option value="201">201 - Tributada Simples Nac. com crédito e cobr. ICMS ST</option>
+                                    <option value="400">400 - Não tributada pelo Simples Nacional</option>
+                                    <option value="500">500 - ICMS cobrado anteriormente por ST</option>
+                                    <option value="900">900 - Outros</option>
+                                </select>
+                            </div>
+                            <div><label>CST COFINS</label>
+                                <select id="int_cst_cofins" class="erp-select" onchange="autoFillNatReceita()">
+                                    <option value="01">01 - Operação Tributável com Alíquota Básica</option>
+                                    <option value="04">04 - Operação Tributável Monofásica</option>
+                                    <option value="06">06 - Operação Tributável a Alíquota Zero</option>
+                                    <option value="07">07 - Operação Isenta da Contribuição</option>
+                                    <option value="08">08 - Operação sem Incidência da Contribuição</option>
+                                    <option value="09">09 - Operação com Suspensão da Contribuição</option>
+                                    <option value="49">49 - Outras Operações de Saída</option>
+                                    <option value="70">70 - Operação de Aquisição sem Direito a Crédito</option>
+                                    <option value="99">99 - Outras Operações</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2"><label>Natureza da Receita M400/M800</label><input type="text" id="int_nat_receita" class="erp-input" readonly placeholder="Preenchimento automático"></div>
+                            <div class="col-span-full pt-10"><label class="checkbox-label"><input type="checkbox" id="int_inativo" value="S"> Inativo</label></div>
+                        </div>
+
+                        <div class="section-box mt-15" style="background: rgba(0,0,0,0.2);">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-info">Regras Específicas por UF</span>
+                                <button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="abrirModalUF()">➕ Adicionar Regra UF</button>
+                            </div>
+                            <table class="inner-grid-table mb-0">
+                                <thead><tr><th>UF</th><th>% Base ICMS</th><th>% Base ICMS ST</th><th>Alíq ICMS ST</th><th style="width:70px;" class="text-center">Ações</th></tr></thead>
+                                <tbody id="tb_tabelas_uf" class="dynamic-list"><tr><td colspan="5" class="text-center text-muted">Aguardando UFs.</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-warning">💾 Salvar Integração</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="form_integracao_uf_modal" class="modal-overlay" style="display:none; z-index: 1050;">
+                <div class="modal-content" style="max-width: 850px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Cadastro de Integração Fiscal por UF</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="document.getElementById('form_integracao_uf_modal').style.display='none'">X</button>
+                    </div>
+                    <form id="form_integracao_uf" class="form-panel mb-0 border-0 p-0" onsubmit="salvarModalUF(event)">
+                        
+                        <div class="form-grid-4">
+                            <div><label>UF *</label>
+                                <select id="uf_uf" class="erp-select" required>
+                                    <option value="">--Selecione--</option>
+                                    <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                                    <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                                    <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                                    <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                                    <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                                    <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                                    <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                                    <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                                    <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2"><label>cBenef</label><input type="text" id="uf_cbenef" class="erp-input" placeholder="Cód. Benefício Fiscal"></div>
+                            <div><label>Tipo Mensagem</label>
+                                <select id="uf_tipo_mensagem" class="erp-select">
+                                    <option value="">Nenhuma</option>
+                                    <option value="Observacao do Fisco">Observação do Fisco</option>
+                                    <option value="Informacoes Complementares">Informações Complementares</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="section-title text-info mt-15">ICMS e FCP</div>
+                        <div class="form-grid-4">
+                            <div><label>% Base ICMS</label><input type="number" step="0.01" id="uf_p_base_icms" class="erp-input"></div>
+                            <div><label>% Alíq ICMS UF Dest.</label><input type="number" step="0.01" id="uf_aliq_icms_uf_dest" class="erp-input"></div>
+                            <div><label>% Alíq ICMS Inter.</label><input type="number" step="0.01" id="uf_aliq_icms_inter" class="erp-input"></div>
+                            <div><label>% Alíq ICMS Exp.</label><input type="number" step="0.01" id="uf_aliq_icms_exp" class="erp-input"></div>
+                            
+                            <div><label>% Partilha</label><input type="number" step="0.01" id="uf_partilha" class="erp-input"></div>
+                            <div><label>% Base ICMS FCP</label><input type="number" step="0.01" id="uf_p_base_icms_fcp" class="erp-input"></div>
+                            <div><label>% Alíq ICMS FCP</label><input type="number" step="0.01" id="uf_aliq_icms_fcp" class="erp-input"></div>
+                            <div></div>
+                        </div>
+
+                        <div class="section-title text-danger mt-15">Substituição Tributária & Monofásico</div>
+                        <div class="form-grid-4">
+                            <div><label>% Base ICMS ST</label><input type="number" step="0.01" id="uf_p_base_icms_st" class="erp-input"></div>
+                            <div><label>% Alíq ICMS ST</label><input type="number" step="0.01" id="uf_aliq_icms_st" class="erp-input"></div>
+                            <div><label>% Base ICMS ST FCP</label><input type="number" step="0.01" id="uf_p_base_icms_st_fcp" class="erp-input"></div>
+                            <div><label>% Alíq ICMS ST FCP</label><input type="number" step="0.01" id="uf_aliq_icms_st_fcp" class="erp-input"></div>
+
+                            <div><label>% Base Monofásico</label><input type="number" step="0.01" id="uf_p_base_monofasico" class="erp-input"></div>
+                            <div><label>% Alíq ad rem Monofásico</label><input type="number" step="0.01" id="uf_aliq_ad_rem_monofasico" class="erp-input"></div>
+                        </div>
+
+                        <div class="section-title text-success mt-15">PIS, COFINS e IPI</div>
+                        <div class="form-grid-4">
+                            <div><label>% Base PIS</label><input type="number" step="0.01" id="uf_p_base_pis" class="erp-input"></div>
+                            <div><label>% Alíq PIS</label><input type="number" step="0.01" id="uf_aliq_pis" class="erp-input"></div>
+                            <div><label>% Base COFINS</label><input type="number" step="0.01" id="uf_p_base_cofins" class="erp-input"></div>
+                            <div><label>% Alíq COFINS</label><input type="number" step="0.01" id="uf_aliq_cofins" class="erp-input"></div>
+
+                            <div><label>% Base IPI</label><input type="number" step="0.01" id="uf_p_base_ipi" class="erp-input"></div>
+                            <div><label>% Alíq IPI</label><input type="number" step="0.01" id="uf_aliq_ipi" class="erp-input"></div>
+                        </div>
+
+                        <div class="section-title text-warning mt-15">Incidências e Notas</div>
+                        <div class="form-grid-4">
+                            <div class="col-span-full d-flex gap-20 flex-wrap pb-10">
+                                <label class="checkbox-label"><input type="checkbox" id="uf_incidir_ipi_icms" value="S"> Incidir IPI sobre ICMS</label>
+                                <label class="checkbox-label"><input type="checkbox" id="uf_incidir_ipi_icms_st" value="S"> Incidir IPI sobre ICMS ST</label>
+                                <label class="checkbox-label"><input type="checkbox" id="uf_incidir_outras_icms" value="S"> Incidir Outras Despesas sobre ICMS</label>
+                            </div>
+                            <div class="col-span-full"><label>Notas (Variáveis dinâmicas permitidas)</label><textarea id="uf_notas" class="erp-input" rows="3"></textarea></div>
+                        </div>
+
+                        <div class="form-actions mt-15 text-right">
+                            <button type="submit" class="btn-neon btn-neon-primary">✔️ Confirmar Dados UF</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_contadores" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">👨‍💼 Cadastro de Contador</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_contadores')">➕ Novo Contador</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_contadores" placeholder="🔍 Pesquisar contadores..." onkeyup="filterTable('search_contadores', 'tb_contadores')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_contadores', 'Contadores')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th>CRC</th><th>Telefone</th><th>Email</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_contadores"></tbody>
+                </table>
+            </div>
+
+            <div id="form_contadores_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Contador</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_contadores')">X</button>
+                    </div>
+                    <form id="form_contadores" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'contadores')">
+                        <input type="hidden" id="cnt_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome</label><input type="text" id="cnt_nome" class="erp-input" required></div>
+                            <div><label>CPF/CNPJ</label><input type="text" id="cnt_cpf_cnpj" class="erp-input"></div>
+                            <div><label>CRC</label><input type="text" id="cnt_crc" class="erp-input"></div>
+                            <div class="col-span-2"><label>CPF Responsável Contábil</label><input type="text" id="cnt_cpf_resp_contabil" class="erp-input"></div>
+                            <div class="col-span-2"><label>Email</label><input type="email" id="cnt_email" class="erp-input"></div>
+                            <div><label>Telefone</label><input type="text" id="cnt_telefone" class="erp-input"></div>
+                            <div><label>Celular</label><input type="text" id="cnt_celular" class="erp-input"></div>
+                            
+                            <div><label>CEP</label><input type="text" id="cnt_cep" class="erp-input" onblur="buscarCep(this.value, 'cnt_')" placeholder="Automático..."></div>
+                            <div class="col-span-2"><label>Logradouro</label><input type="text" id="cnt_logradouro" class="erp-input"></div>
+                            <div><label>Numero</label><input type="text" id="cnt_numero" class="erp-input"></div>
+                            <div><label>Complemento</label><input type="text" id="cnt_complemento" class="erp-input"></div>
+                            <div><label>Bairro</label><input type="text" id="cnt_bairro" class="erp-input"></div>
+                            <div><label>UF</label><select id="cnt_uf" class="erp-select ddl-ufs" onchange="carregarMunicipios(this.value, 'cnt_municipio')"><option value="">Selecione</option></select></div>
+                            <div><label>Município</label><select id="cnt_municipio" class="erp-select"><option value="">Selecione a UF primeiro</option></select></div>
+                            
+                            <div class="col-span-full pt-10"><label class="checkbox-label"><input type="checkbox" id="cnt_inativo" value="S"> Inativo</label></div>
+                        </div>
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-info">💾 Salvar Contador</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view_emitentes" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🏢 Cadastro de Emitente</h3>
+                <div class="top-actions m-0"><button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroControladoria('form_emitentes')">➕ Novo Emitente</button></div>
+            </div>
+            
+            <div class="action-bar">
+                <div class="filter-item flex-1" style="max-width: 400px;">
+                    <label>Pesquisa Rápida</label>
+                    <input type="text" id="search_emitentes" placeholder="🔍 Pesquisar emitentes..." onkeyup="filterTable('search_emitentes', 'tb_emitentes')">
+                </div>
+                <div class="d-flex gap-5">
+                    <button class="btn-action" onclick="exportToCSV('tb_emitentes', 'Emitentes')">📊 Excel/CSV</button>
+                    <button class="btn-action" onclick="printView()">🖨️ PDF/Imprimir</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px; text-align:center;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Nome</th><th>CNPJ</th><th>CRT</th><th>Localidade</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_emitentes"></tbody>
+                </table>
+            </div>
+
+            <div id="form_emitentes_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 900px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Emitente</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalCtrl('form_emitentes')">X</button>
+                    </div>
+                    <form id="form_emitentes" class="form-panel mb-0 border-0 p-0" onsubmit="salvarControladoria(event, 'emitentes')">
+                        <input type="hidden" id="emi_id">
+                        <div class="form-grid">
+                            <div><label>CNPJ *</label><input type="text" id="emi_cnpj" class="erp-input text-warning" required></div>
+                            <div class="col-span-2"><label>Razão Social *</label><input type="text" id="emi_razao_social" class="erp-input" required></div>
+                            <div class="col-span-2"><label>Fantasia *</label><input type="text" id="emi_fantasia" class="erp-input" required></div>
+                            <div><label>Atividade *</label>
+                                <select id="emi_atividade" class="erp-select" required>
+                                    <option value="Auto Peças">Auto Peças</option>
+                                    <option value="Comércio Geral">Comércio Geral</option>
+                                    <option value="Bar / Restaurante">Bar / Restaurante</option>
+                                    <option value="Vestuario">Vestuario</option>
+                                    <option value="Oficina">Oficina</option>
+                                    <option value="Indústria">Indústria</option>
+                                    <option value="Supermercado">Supermercado</option>
+                                </select>
+                            </div>
+                            <div><label>IE</label><input type="text" id="emi_ie" class="erp-input"></div>
+                            <div><label>IM</label><input type="text" id="emi_im" class="erp-input"></div>
+                            <div><label>CNAE</label><input type="text" id="emi_cnae" class="erp-input"></div>
+                            <div class="col-span-2"><label>Email *</label><input type="email" id="emi_email" class="erp-input" required></div>
+                            <div><label>Telefone *</label><input type="text" id="emi_telefone" class="erp-input" required></div>
+                            
+                            <div><label>CEP *</label><input type="text" id="emi_cep" class="erp-input" required onblur="buscarCep(this.value, 'emi_')" placeholder="Automático..."></div>
+                            <div class="col-span-2"><label>Logradouro *</label><input type="text" id="emi_logradouro" class="erp-input" required></div>
+                            <div><label>Numero *</label><input type="text" id="emi_numero" class="erp-input" required></div>
+                            <div><label>Complemento</label><input type="text" id="emi_complemento" class="erp-input"></div>
+                            <div><label>Bairro *</label><input type="text" id="emi_bairro" class="erp-input" required></div>
+                            <div><label>UF *</label><select id="emi_uf" class="erp-select ddl-ufs" required onchange="carregarMunicipios(this.value, 'emi_municipio')"><option value="">Selecione</option></select></div>
+                            <div><label>Município *</label><select id="emi_municipio" class="erp-select" required><option value="">Selecione a UF primeiro</option></select></div>
+                            
+                            <div class="col-span-full pt-10 d-flex gap-20">
+                                <label class="checkbox-label"><input type="checkbox" id="emi_multi_estoque" value="S"> Multi estoque</label>
+                                <label class="checkbox-label"><input type="checkbox" id="emi_inativo" value="S"> Inativo</label>
+                            </div>
+                        </div>
+
+                        <div class="section-title text-danger mt-15">Base</div>
+                        <div class="form-grid">
+                            <div><label>CRT *</label>
+                                <select id="emi_crt" class="erp-select" required>
+                                    <option value="1 - Simples Nacional">1 - Simples Nacional</option>
+                                    <option value="2 - Simples Nacional Excesso Rec">2 - Simples Nacional (Excesso Receita)</option>
+                                    <option value="3 - Regime Normal">3 - Regime Normal</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2"><label>Contabilidade</label><select id="emi_contabilidade" class="erp-select"></select></div>
+                            <div><label>Aliq Cred Simpl %</label><input type="number" step="0.01" id="emi_aliq_cred_simpl" class="erp-input"></div>
+                        </div>
+
+                        <div class="section-title text-info mt-15">Serviços</div>
+                        <div class="form-grid-4">
+                            <div><label>Base ISS:</label><input type="number" step="0.01" id="emi_base_iss" class="erp-input"></div>
+                            <div><label>% ISS:</label><input type="number" step="0.01" id="emi_perc_iss" class="erp-input"></div>
+                            <div><label>Base INSS:</label><input type="number" step="0.01" id="emi_base_inss" class="erp-input"></div>
+                            <div><label>% INSS:</label><input type="number" step="0.01" id="emi_perc_inss" class="erp-input"></div>
+                            
+                            <div><label>Base IR:</label><input type="number" step="0.01" id="emi_base_ir" class="erp-input"></div>
+                            <div><label>% IR:</label><input type="number" step="0.01" id="emi_perc_ir" class="erp-input"></div>
+                            <div><label>Base CSLL:</label><input type="number" step="0.01" id="emi_base_csll" class="erp-input"></div>
+                            <div><label>% CSLL:</label><input type="number" step="0.01" id="emi_perc_csll" class="erp-input"></div>
+                            
+                            <div><label>Base PIS:</label><input type="number" step="0.01" id="emi_base_pis" class="erp-input"></div>
+                            <div><label>% PIS:</label><input type="number" step="0.01" id="emi_perc_pis" class="erp-input"></div>
+                            <div><label>Base COFINS:</label><input type="number" step="0.01" id="emi_base_cofins" class="erp-input"></div>
+                            <div><label>% COFINS:</label><input type="number" step="0.01" id="emi_perc_cofins" class="erp-input"></div>
+                            <div class="col-span-full pt-10">
+                                <label class="checkbox-label"><input type="checkbox" id="emi_impostos_retidos" value="S"> Impostos retidos na fonte</label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-15 text-right"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar Emitente</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="modal_pesquisa_generica" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 90vw; width: 500px;">
+        <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+            <h3 class="m-0 text-info" id="mpesq_titulo">Pesquisar Registro</h3>
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="fecharPesquisa()">X</button>
+        </div>
+        <div class="d-flex gap-10 mb-15 flex-wrap">
+            <input type="text" id="mpesq_input" class="erp-input flex-1" style="min-width: 200px;" placeholder="Digite para buscar...">
+            <button type="button" class="btn-neon btn-neon-primary" onclick="executarPesquisa()">🔍 Procurar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="erp-table">
+                <thead><tr><th>Código/ID</th><th>Nome / Descrição</th><th>Ação</th></tr></thead>
+                <tbody id="mpesq_tb"><tr><td colspan="3" class="text-center text-muted">Aguardando busca...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/controladoria.js"></script>
+{% endblock %}

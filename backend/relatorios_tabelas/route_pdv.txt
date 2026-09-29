@@ -1,0 +1,42 @@
+=== ANÁLISE DO MÓDULO: route_pdv.py ===
+
+>>> NENHUMA TABELA É CRIADA NESTE ARQUIVO <<<
+
+>>> TABELAS APENAS REFERENCIADAS (3) <<<
+Estas tabelas são usadas em consultas (SELECT/INSERT/UPDATE) mas foram criadas em outro módulo.
+
+[-] Tabela: erp_pdv_caixa (Criada em: Desconhecido/Banco Externo)
+    Colunas (7):
+      - id (INTEGER)
+      - operador (VARCHAR(100))
+      - data_abertura (DATETIME)
+      - data_fechamento (DATETIME)
+      - saldo_inicial (REAL)
+      - saldo_final (REAL)
+      - status (VARCHAR(20))
+----------------------------------------
+
+[-] Tabela: erp_pdv_itens (Criada em: Desconhecido/Banco Externo)
+    Colunas (7):
+      - id (INTEGER)
+      - venda_id (INTEGER)
+      - produto_id (INTEGER)
+      - nome_produto (VARCHAR(150))
+      - quantidade (REAL)
+      - preco_unitario (REAL)
+      - subtotal (REAL)
+----------------------------------------
+
+[-] Tabela: erp_pdv_vendas (Criada em: Desconhecido/Banco Externo)
+    Colunas (9):
+      - id (INTEGER)
+      - caixa_id (INTEGER)
+      - cliente_id (INTEGER)
+      - data_venda (DATETIME)
+      - subtotal (REAL)
+      - desconto (REAL)
+      - total (REAL)
+      - forma_pagamento (VARCHAR(50))
+      - status (VARCHAR(20))
+----------------------------------------
+

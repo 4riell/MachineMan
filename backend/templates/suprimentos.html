@@ -1,0 +1,660 @@
+{% extends "base.html" %}
+
+{% block title %}Suprimentos e Estoque{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .flex-1 { min-width: 0 !important; max-width: 100%; } 
+        .inner-grid-table { width: 100%; min-width: 650px; border-collapse: collapse; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .inner-grid-table th, .inner-grid-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: left; font-size: 0.85rem; }
+        .inner-grid-table th { background: rgba(0,255,255,0.1); color: #0ff; font-weight: bold; white-space: nowrap; }
+        .inner-grid-table input, .inner-grid-table select { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 100%; padding: 4px; border-radius: 4px;}
+        .inner-grid-table select { background: #1a1a1a; cursor: pointer; }
+        .section-box { border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.15); max-width: 100%; overflow-x: hidden; }
+        .top-actions button { margin-left: 5px; }
+        .modal-content { scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+
+        /* Estilos do Sistema de Modais */
+        .erp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .erp-modal.active { display: flex; }
+        .erp-modal-content { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #444; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .erp-modal-close { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; cursor: pointer; font-weight: bold; }
+        
+        .filter-bar { background: rgba(0,0,0,0.2); padding: 10px 15px; border-radius: 6px; border-left: 3px solid #00ffcc; display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: flex-end; }
+        .filter-item { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+        .filter-item label { font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-item input, .filter-item select { background: #000; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
+        
+        .erp-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: #00ffcc; cursor: pointer; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">📦 Suprimentos, Logística e Estoque</h1>
+        <div class="page-subtitle">Compras, transferências, balanços e controlo em tempo real.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Entradas e Recebimentos</div>
+            <button class="menu-item" onclick="switchSupView('view_compras', this)">🛒 Compras (Entradas)</button>
+            <button class="menu-item" onclick="switchSupView('view_import_xml', this)">📥 Importar XML (NFe)</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Movimentações Internas</div>
+            <button class="menu-item" onclick="switchSupView('view_transferencias', this)">🚚 Transferências</button>
+            <button class="menu-item" onclick="switchSupView('view_balancos', this)">⚖️ Balanço / Ajuste</button>
+            <button class="menu-item" onclick="switchSupView('view_descartes', this)">🗑️ Descartes / Baixas</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Rastreabilidade e Controlo</div>
+            <button class="menu-item" onclick="switchSupView('view_lotes', this)">🏷️ Séries / Lotes</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- ======================= COMPRAS ======================= -->
+        <div id="view_compras" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-success">🛒 Compras e Entradas</h3>
+                <div class="top-actions m-0 d-flex gap-5">
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="alert('Exportando Relatórios...')">📊 Relatórios</button>
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroSup('form_compras')">➕ Nova Compra</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="executarAcaoExternaSup('Importar XML')">📥 Importar XML</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data</label><input type="date" id="flt_comp_data" onchange="loadCompras()"></div>
+                <div class="filter-item"><label>Tipo de Data</label><select id="flt_comp_tipo_data" onchange="loadCompras()"><option value="emissao">Data Emissão</option><option value="entrada">Data Entrada</option></select></div>
+                <div class="filter-item"><label>Fornecedor</label><select id="flt_comp_fornecedor" class="ddl-fornecedores" onchange="loadCompras()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Comprador</label><select id="flt_comp_comprador" class="ddl-funcionarios" onchange="loadCompras()"><option value="">-- Todos --</option></select></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa</label><input type="text" placeholder="Buscar..." onkeyup="filterTableSup('tb_compras', this.value)"></div>
+                    <div class="d-flex gap-5" style="margin-top: 18px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="alert('Exportando Excel...')">📊 Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="alert('Exportando PDF...')">📄 PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="window.print()">🖨️ Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Número</th><th>Data</th><th>Fornecedor</th><th>Valor</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_compras"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL COMPRAS -->
+            <div id="form_compras_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <span class="erp-modal-close" onclick="closeModalSup('form_compras')">&times;</span>
+                    <h3 class="modal-title text-success">Lançamento de Compra / NF-e</h3>
+                    
+                    <form id="form_compras" class="form-panel mb-0 border-0 p-0" onsubmit="salvarSup(event, 'compras')">
+                        <input type="hidden" id="comp_id">
+                        
+                        <div class="section-box mt-0">
+                            <div class="d-flex justify-between align-center flex-wrap gap-10 mb-10 border-bottom pb-10" style="border-color: rgba(255,255,255,0.1);">
+                                <div class="section-title m-0 border-0 text-white font-bold">Dados do Documento (NF-e de Entrada)</div>
+                                <div class="top-actions m-0 d-flex align-center gap-5">
+                                    <label class="text-xs text-info m-0 font-bold">🔗 Link NF-e:</label>
+                                    <input type="url" id="comp_chave_nfe_link" class="erp-input text-xs" placeholder="Cole o link web da nota aqui..." style="width: 250px; padding: 4px;">
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div><label>Operação:</label><input type="text" id="comp_operacao" class="erp-input" required></div>
+                                <div><label>Número Documento:</label><input type="text" id="comp_numero" class="erp-input" required></div>
+                                <div><label>Série:</label><input type="text" id="comp_serie" class="erp-input"></div>
+                                <div><label>Modelo:</label>
+                                    <select id="comp_modelo" class="erp-select">
+                                        <option value="55">55 - NF-e</option><option value="65">65 - NFC-e</option><option value="99">Outros</option>
+                                    </select>
+                                </div>
+                                
+                                <div><label>Data de Emissão:</label><input type="date" id="comp_data_emissao" class="erp-input" required></div>
+                                <div><label>Data de Entrada:</label><input type="date" id="comp_data_entrada" class="erp-input" required></div>
+                                
+                                <div class="col-span-2">
+                                    <label>Fornecedor (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="comp_fornecedor_id"><input type="text" id="comp_fornecedor_nome" class="erp-input flex-1" readonly required>
+                                        <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisaSup('fornecedores', 'comp_fornecedor_id', 'comp_fornecedor_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <label>Comprador (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="comp_comprador_id" class="ignore-serialize"><input type="text" id="comp_comprador_nome" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-info" onclick="abrirPesquisaSup('funcionarios', 'comp_comprador_id', 'comp_comprador_nome')">🔍</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-info">Itens</span>
+                                <div class="d-flex gap-10">
+                                    <button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="abrirPesquisaGridSup('produtos', this, 'compras_itens')">+ Produto (Pesquisar)</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive-wrapper mb-0">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Produto</th><th>Unidade</th><th>Ref</th><th>CFOP</th><th>Qtd</th><th>Valor Uni</th><th>Subtotal</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_itens_compra" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="section-title text-warning mb-10 m-0 font-bold">Transporte</div>
+                            <div class="form-grid mt-10">
+                                <div><label>Frete:</label>
+                                    <select id="comp_frete" class="erp-select">
+                                        <option value="Emitente">Por conta do Emitente</option><option value="Destinatario">Por conta do Destinatário</option><option value="Sem Frete">Sem Frete</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <label>Transportador (Pesquisar):</label>
+                                    <div class="search-group d-flex gap-5">
+                                        <input type="hidden" id="comp_transp_id" class="ignore-serialize"><input type="text" id="comp_transp_nome" class="erp-input flex-1" readonly>
+                                        <button type="button" class="btn-neon btn-neon-warning" onclick="abrirPesquisaSup('transportadoras', 'comp_transp_id', 'comp_transp_nome')">🔍</button>
+                                    </div>
+                                </div>
+                                
+                                <div><label>Qtd:</label><input type="number" id="comp_qtd_vol" class="erp-input ignore-serialize"></div>
+                                <div><label>Volume:</label><input type="text" id="comp_volume" class="erp-input ignore-serialize"></div>
+                                <div><label>Marca:</label><input type="text" id="comp_marca_vol" class="erp-input ignore-serialize"></div>
+                                <div><label>Espécie:</label><input type="text" id="comp_especie_vol" class="erp-input ignore-serialize"></div>
+                                <div><label>Peso Bruto:</label><input type="number" id="comp_peso_b" class="erp-input ignore-serialize" step="0.01"></div>
+                                <div><label>Peso Líquido:</label><input type="number" id="comp_peso_l" class="erp-input ignore-serialize" step="0.01"></div>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-success">Financeiro</span>
+                                <button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRowSup(this, 'compras_financeiro')">Adicionar</button>
+                            </div>
+                            <div class="table-responsive-wrapper mb-0">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Banco</th><th>Número</th><th>Vencimento</th><th>Valor</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_financeiro_compra" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="section-title text-danger mb-10 m-0 font-bold">Totalizadores</div>
+                            <div class="form-grid-4 mt-10">
+                                <div><label>Valor Frete:</label><input type="number" id="comp_vlr_frete" class="erp-input" step="0.01"></div>
+                                <div><label>Valor Seguro:</label><input type="number" id="comp_vlr_seg" class="erp-input" step="0.01"></div>
+                                <div><label>Despesas:</label><input type="number" id="comp_despesas" class="erp-input" step="0.01"></div>
+                                <div><label>Desconto $ (Automático):</label><input type="number" id="comp_descontos" class="erp-input text-danger font-bold" step="0.01" readonly></div>
+                                <div><label>Encargos Avulsos:</label><input type="number" id="comp_encargos" class="erp-input ignore-serialize" step="0.01"></div>
+                                
+                                <div><label>Guia ICMS ST (Automático):</label><input type="number" id="comp_guia_st" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Base ICMS (Automático):</label><input type="number" id="comp_base_icms" class="erp-input text-muted" step="0.01" readonly></div>
+                                <div><label>Valor ICMS (Automático):</label><input type="number" id="comp_vlr_icms" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Valor ICMS Deson (Automático):</label><input type="number" id="comp_vlr_icms_deson" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Base ICMS ST (Automático):</label><input type="number" id="comp_base_icms_st" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Valor ICMS ST (Automático):</label><input type="number" id="comp_vlr_icms_st" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Valor IPI (Automático):</label><input type="number" id="comp_vlr_ipi" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                
+                                <div><label>Base ISS (Automático):</label><input type="number" id="comp_base_iss" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Valor ISS (Automático):</label><input type="number" id="comp_vlr_iss" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                <div><label>Valor ISS Ret (Automático):</label><input type="number" id="comp_vlr_iss_ret" class="erp-input text-muted ignore-serialize" step="0.01" readonly></div>
+                                
+                                <div><label class="text-info">Total Serviços (Automático):</label><input type="number" id="comp_total_servicos" class="erp-input text-info font-bold ignore-serialize" step="0.01" readonly></div>
+                                <div><label class="text-info">Total Produtos (Automático):</label><input type="number" id="comp_total_produtos" class="erp-input text-info font-bold" step="0.01" readonly></div>
+                                <div class="col-span-2"><label class="text-success font-bold">Total da Nota (Automático):</label><input type="number" id="comp_total_nota" class="erp-input text-success font-bold ignore-serialize" step="0.01" readonly></div>
+                                
+                                <input type="hidden" id="comp_valor_total">
+                            </div>
+                            
+                            <div class="form-grid mt-10">
+                                <div class="col-span-full"><label>Informações Complementares:</label><textarea id="comp_info_comp" class="erp-input ignore-serialize" rows="2"></textarea></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions text-right mt-15">
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar Compra</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= BALANÇOS ======================= -->
+        <div id="view_balancos" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-warning">⚖️ Balanço / Ajuste de Estoque</h3>
+                <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroSup('form_balancos')">➕ Novo Ajuste</button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data</label><input type="date" id="flt_bal_data" onchange="loadBalancos()"></div>
+                <div class="filter-item"><label>Responsável</label><select id="flt_bal_responsavel" class="ddl-funcionarios" onchange="loadBalancos()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Status</label><select id="flt_bal_status" onchange="loadBalancos()"><option value="">-- Todos --</option><option value="EM ANDAMENTO">Andamento</option><option value="CONCLUIDO">Concluído</option></select></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa</label><input type="text" placeholder="Buscar..." onkeyup="filterTableSup('tb_balancos', this.value)"></div>
+                    <div class="d-flex gap-5" style="margin-top: 18px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="alert('Exportando Excel...')">📊 Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="alert('Exportando PDF...')">📄 PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="window.print()">🖨️ Imprimir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Data</th><th>Responsável</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_balancos"></tbody>
+                </table>
+            </div>
+
+            <div id="form_balancos_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 600px;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-warning">Ajuste de Balanço</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalSup('form_balancos')">X</button>
+                    </div>
+                    <form id="form_balancos" class="form-panel mb-0 border-0 p-0" onsubmit="salvarSup(event, 'balancos')">
+                        <input type="hidden" id="bal_id">
+                        <div class="form-grid">
+                            <div><label>Data (Automática):</label><input type="date" id="bal_data" class="erp-input text-muted" readonly required></div>
+                            <div><label>Status:</label>
+                                <select id="bal_status" class="erp-select">
+                                    <option value="EM ANDAMENTO">Em Andamento</option>
+                                    <option value="CONCLUIDO">Concluído</option>
+                                    <option value="CANCELADO">Cancelado</option>
+                                </select>
+                            </div>
+                            <div><label>Responsável:</label><select id="bal_responsavel" class="erp-select ddl-funcionarios"></select></div>
+                            <div><label>Grupo:</label><select id="bal_grupo" class="erp-select ddl-grupos"></select></div>
+                            <div><label>Marca:</label><select id="bal_marca" class="erp-select ddl-marcas"></select></div>
+                            <div class="col-span-full"><label>Notas / Descrição:</label><textarea id="bal_notas" class="erp-input" rows="3"></textarea></div>
+                        </div>
+                        <div class="form-actions text-right mt-15"><button type="submit" class="btn-neon btn-neon-warning">💾 Salvar Apontamento</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= TRANSFERÊNCIAS ======================= -->
+        <div id="view_transferencias" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-info">🚚 Transferências</h3>
+                <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroSup('form_transferencias')">➕ Nova Transferência</button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data</label><input type="date" id="flt_trf_data" onchange="loadTransferencias()"></div>
+                <div class="filter-item"><label>Destino</label><select id="flt_trf_destino" class="ddl-empresas" onchange="loadTransferencias()"><option value="">-- Todos --</option></select></div>
+                <div class="filter-item"><label>Responsável</label><select id="flt_trf_responsavel" class="ddl-transportadoras" onchange="loadTransferencias()"><option value="">-- Todos --</option></select></div>                <div class="filter-item"><label>Status</label><select id="flt_trf_status" onchange="loadTransferencias()"><option value="">-- Todos --</option><option value="EM TRANSITO">Em Trânsito</option><option value="CONCLUIDO">Concluído</option></select></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa</label><input type="text" placeholder="Buscar..." onkeyup="filterTableSup('tb_transferencias', this.value)"></div>
+                    <div class="d-flex gap-5" style="margin-top: 18px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="alert('Exportando Excel...')">📊 Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="alert('Exportando PDF...')">📄 PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="window.print()">🖨️ Imprimir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>Número</th><th>Data</th><th>Destino</th><th>Responsável</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_transferencias"></tbody>
+                </table>
+            </div>
+
+            <div id="form_transferencias_modal" class="erp-modal">
+                <div class="erp-modal-content">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-info">Guia de Transferência</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalSup('form_transferencias')">X</button>
+                    </div>
+                    <form id="form_transferencias" class="form-panel mb-0 border-0 p-0" onsubmit="salvarSup(event, 'transferencias')">
+                        <input type="hidden" id="trf_id">
+                        <div class="section-box mt-0 form-grid">
+                            <div><label>Número (Automático):</label><input type="text" id="trf_numero" class="erp-input text-warning font-bold" readonly></div>
+                            <div><label>Data:</label><input type="date" id="trf_data" class="erp-input" required></div>
+                            <div><label>Origem (Automático):</label><input type="text" id="trf_origem" class="erp-input text-muted" readonly required></div>
+                            <div><label>Destino:</label><select id="trf_destino" class="erp-select ddl-empresas" required></select></div>
+                            <div><label>Status:</label>
+                                <select id="trf_status" class="erp-select">
+                                    <option value="EM SEPARACAO">Em Separação</option>
+                                    <option value="EM TRANSITO">Em Trânsito</option>
+                                    <option value="CONCLUIDO">Concluído</option>
+                                </select>
+                            </div>
+                            <div><label>Responsável:</label><select id="trf_responsavel" class="erp-select ddl-transportadoras"></select></div>
+                            <div class="col-span-full"><label>Notas:</label><textarea id="trf_notas" class="erp-input" rows="2"></textarea></div>
+                        </div>
+                        
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-info">Lista de Itens</span>
+                                <button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="abrirPesquisaGridSup('produtos', this, 'transferencia_itens')">+ Produto (Pesquisar)</button>
+                            </div>
+                            <div class="table-responsive-wrapper mb-0">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Sq</th><th>Produto</th><th>Ref</th><th>Qtd</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_itens_transf" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-actions text-right mt-15"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar Guia</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= DESCARTES ======================= -->
+        <div id="view_descartes" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-danger">🗑️ Baixas e Descartes</h3>
+                <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroSup('form_descartes')">➕ Novo Descarte</button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Data</label><input type="date" id="flt_dsc_data" onchange="loadDescartes()"></div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="filter-item"><label>Pesquisa</label><input type="text" placeholder="Buscar..." onkeyup="filterTableSup('tb_descartes', this.value)"></div>
+                    <div class="d-flex gap-5" style="margin-top: 18px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="alert('Exportando Excel...')">📊 Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="alert('Exportando PDF...')">📄 PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="window.print()">🖨️ Imprimir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Data</th><th>Usuário</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_descartes"></tbody>
+                </table>
+            </div>
+
+            <div id="form_descartes_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 800px;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-danger">Lançamento de Baixa/Quebra</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalSup('form_descartes')">X</button>
+                    </div>
+                    <form id="form_descartes" class="form-panel mb-0 border-0 p-0" onsubmit="salvarSup(event, 'descartes')">
+                        <input type="hidden" id="dsc_id">
+                        <div class="section-box mt-0 form-grid">
+                            <div><label>Data (Automático):</label><input type="date" id="dsc_data" class="erp-input text-muted" readonly required></div>
+                            <div><label>Usuário (Automático):</label><input type="text" id="dsc_usuario" class="erp-input text-muted" readonly required></div>
+                            <div class="col-span-full"><label>Notas / Motivo Geral:</label><textarea id="dsc_notas" class="erp-input" rows="2"></textarea></div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-danger">Lista Itens</span>
+                                <div class="d-flex gap-10">
+                                    <button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="abrirPesquisaGridSup('produtos', this, 'descarte_itens')">+ Produto (Pesquisar)</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive-wrapper mb-0">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Produto</th><th>Referencia</th><th>Qtd</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_itens_descarte" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-actions text-right mt-15"><button type="submit" class="btn-neon btn-neon-danger">💾 Efetuar Descarte</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= SÉRIE / LOTE ======================= -->
+        <div id="view_lotes" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-15">
+                <h3 class="m-0 text-primary">🏷️ Séries / Lotes</h3>
+                <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroSup('form_serie_lote')">➕ Novo Lote/Série</button>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-item"><label>Tipo</label><select id="flt_lot_tipo" onchange="loadLotes()"><option value="">-- Todos --</option><option value="Entrada">Entrada</option><option value="Saída">Saída</option></select></div>
+                <div class="filter-item"><label>Data</label><input type="date" id="flt_lot_data" onchange="loadLotes()"></div>
+                <div class="filter-item"><label>Tipo Data</label><select id="flt_lot_tipo_data" onchange="loadLotes()"><option value="fabricacao">Fabricação</option><option value="validade">Validade</option></select></div>
+                
+                <div class="filter-item">
+                    <label>Produtos</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="flt_lot_produto" class="erp-input flex-1" placeholder="Pesquisar...">
+                        <button type="button" class="btn-neon btn-neon-primary" style="padding:4px;" onclick="abrirPesquisaSup('produtos', '', 'flt_lot_produto')">🔍</button>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Fornecedores</label>
+                    <div class="search-group d-flex gap-5">
+                        <input type="text" id="flt_lot_fornecedor" class="erp-input flex-1" placeholder="Pesquisar...">
+                        <button type="button" class="btn-neon btn-neon-primary" style="padding:4px;" onclick="abrirPesquisaSup('fornecedores', '', 'flt_lot_fornecedor')">🔍</button>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-5 flex-wrap align-center border-left pl-10" style="margin-left:auto;">
+                    <div class="d-flex gap-5" style="margin-top: 18px;">
+                        <button class="btn-neon btn-neon-success text-xs p-5" onclick="alert('Exportando Excel...')">📊 Excel</button>
+                        <button class="btn-neon btn-neon-danger text-xs p-5" onclick="alert('Exportando PDF...')">📄 PDF</button>
+                        <button class="btn-neon btn-neon-info text-xs p-5" onclick="window.print()">🖨️ Imprimir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table class="erp-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox" onchange="toggleAll(this)"></th><th>ID</th><th>Tipo</th><th>ID Produto</th><th>Produto</th><th>Número</th><th>Fabricação</th><th>Validade</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_serie_lote"></tbody>
+                </table>
+            </div>
+
+            <div id="form_serie_lote_modal" class="erp-modal">
+                <div class="erp-modal-content" style="max-width: 900px;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Cadastro de Série / Lote</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalSup('form_serie_lote')">X</button>
+                    </div>
+                    <form id="form_serie_lote" class="form-panel mb-0 border-0 p-0" onsubmit="salvarSup(event, 'serie_lote')">
+                        <input type="hidden" id="lot_id">
+                        <div class="section-box mt-0 form-grid">
+                            <div><label>Número:</label><input type="text" id="lot_numero" class="erp-input text-warning" required></div>
+                            
+                            <div class="col-span-2">
+                                <label>Fornecedor (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="lot_fornecedor_id"><input type="text" id="lot_fornecedor_nome" class="erp-input flex-1" readonly>
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesquisaSup('fornecedores', 'lot_fornecedor_id', 'lot_fornecedor_nome')">🔍</button>
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <label>Produto (Pesquisar):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <!-- AQUI ESTAVA O PROBLEMA: ignore-serialize removido -->
+                                    <input type="hidden" id="lot_produto_id"><input type="text" id="lot_produto_nome" class="erp-input flex-1" readonly required>
+                                    <button type="button" class="btn-neon btn-neon-info" onclick="abrirPesquisaSup('produtos', 'lot_produto_id', 'lot_produto_nome')">🔍</button>
+                                </div>
+                            </div>
+                            
+                            <div><label>Data Fabricação:</label><input type="date" id="lot_data_fabricacao" class="erp-input"></div>
+                            <div><label>Data Validade:</label><input type="date" id="lot_data_validade" class="erp-input text-danger"></div>
+                            <div><label>PMC:</label><input type="number" id="lot_pmc" class="erp-input" step="0.01"></div>
+                            
+                            <div><label>Qtd Entrada:</label><input type="number" id="lot_qtd_entrada" class="erp-input" step="0.01" oninput="calcSaldoLote()"></div>
+                            <div><label>Qtd Saída:</label><input type="number" id="lot_qtd_saida" class="erp-input" step="0.01" oninput="calcSaldoLote()"></div>
+                            <div><label>Saldo (Automático):</label><input type="number" id="lot_saldo" class="erp-input font-bold text-success" step="0.01" readonly></div>
+                        </div>
+
+                        <div class="section-box mt-15">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-info">Histórico de Movimentações</span>
+                                <div class="d-flex gap-10">
+                                    <input type="date" class="erp-input p-5 text-sm" placeholder="Período" title="Período" style="width:130px;">
+                                </div>
+                            </div>
+                            <div class="table-responsive-wrapper mb-0">
+                                <table class="inner-grid-table mb-0">
+                                    <thead><tr><th>Data</th><th>Opções</th><th>Documento Relacionado</th><th>Qtd</th><th style="width:40px;"></th></tr></thead>
+                                    <tbody id="tb_historico_lote" class="dynamic-list"></tbody>
+                                </table>
+                            </div>
+                            <div class="mt-10"><button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRowSup(this, 'historico_lote')">➕ Inserir Linha Manual</button></div>
+                        </div>
+
+                        <div class="form-actions text-right mt-15"><button type="submit" class="btn-neon btn-neon-success">💾 Salvar Rastreio</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= MÓDULO IMPORTAR XML INTACTO ======================= -->
+        <div id="view_import_xml" class="erp-view">
+            <h3 class="m-0 text-info border-bottom pb-10 mb-20">📥 Motor de Importação XML (SEFAZ)</h3>
+            <div id="xml_drop_zone" class="section-box text-center" style="border: 2px dashed #00f2ff; padding: 40px; cursor: pointer;" onclick="document.getElementById('xml_file').click()">
+                <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                <h4 class="m-0 text-info">Arraste aqui o XML de Entrada</h4>
+                <div class="text-muted mt-5 text-sm">Ou clique para procurar (Somente NFe válidas)</div>
+                <!-- O input chama a função real de ler o arquivo -->
+                <input type="file" id="xml_file" style="display:none" accept=".xml" onchange="lerArquivoXML(this)">
+                <button type="button" class="btn-neon btn-neon-primary mt-15">Procurar Arquivo</button>
+            </div>
+
+            <!-- WORKSPACE DE IMPORTAÇÃO (Exibido após carregar o XML) -->
+            <div id="workspace_importacao" class="w-100" style="display: none;">
+                <div class="card-neon-blue p-20 mb-20" style="border-left: 4px solid var(--primary); background: rgba(0,0,0,0.15); border-radius: 8px;">
+                    <div class="d-flex justify-between align-center mb-15">
+                        <h4 class="text-info mt-0 mb-0">📄 Cabeçalho da NF-e</h4>
+                        <span id="upload_status" class="text-sm font-bold"></span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                        <div style="grid-column: span 2;">
+                            <label class="text-xs text-muted font-bold">Fornecedor (Nome | CNPJ):</label>
+                            <input type="text" id="ws_fornecedor" class="erp-input font-bold" placeholder="Ex: SUPERMERCADO EIRELI | 00.483.394/0001-86">
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted">Operação:</label>
+                            <input type="text" id="ws_operacao" class="erp-input" placeholder="Ex: NOTA DE ECF">
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted">Número da Nota:</label>
+                            <input type="text" id="ws_numero" class="erp-input" placeholder="Ex: 34387">
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted">Série:</label>
+                            <input type="text" id="ws_serie" class="erp-input" placeholder="Ex: 002">
+                        </div>
+                        <div>
+                            <label class="text-xs text-muted">Modelo:</label>
+                            <input type="text" id="ws_modelo" class="erp-input" placeholder="Ex: 55">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                        <div>
+                            <label class="text-xs text-muted">Data Emissão:</label>
+                            <input type="date" id="ws_dt_emissao" class="erp-input">
+                        </div>
+                        <div>
+                            <label class="text-warning font-bold text-xs">Data de Entrada no Estoque:</label>
+                            <input type="date" id="ws_dt_entrada" class="erp-input" style="border-color: var(--warning);">
+                        </div>
+                        <div style="grid-column: span 4;"></div>
+                    </div>
+                    <input type="hidden" id="ws_chave_acesso">
+                </div>
+
+                <div class="card-neon-blue p-20" style="background: rgba(0,0,0,0.15); border-radius: 8px;">
+                    <div class="d-flex justify-between align-center mb-15">
+                        <div>
+                            <h4 class="text-success m-0">📦 Itens da Nota e Dados da Importação</h4>
+                        </div>
+                        <button class="btn-neon btn-neon-primary" style="padding: 5px 15px; font-size: 0.8rem;" onclick="adicionarLinhaManual()">➕ Adicionar Item Manual</button>
+                    </div>
+                    
+                    <div class="table-container table-form" style="overflow-x: auto; max-height: 600px;">
+                        <table style="min-width: 1700px; white-space: nowrap; border-collapse: collapse;">
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th colspan="8" style="background: #1e3a8a; color: #93c5fd; text-align: center; border-right: 3px solid #111; padding: 8px;">🛒 CAMPOS DA NF DE COMPRA</th>
+                                    <th colspan="7" style="background: #064e3b; color: #6ee7b7; text-align: center; padding: 8px;">⚙️ DADOS DA IMPORTAÇÃO (INTERNO)</th>
+                                </tr>
+                                <tr>
+                                    <th style="width: 40px; background: #1e40af; color: #fff; padding: 8px;">Seq.</th>
+                                    <th style="width: 250px; background: #1e40af; color: #fff; padding: 8px;">Produto</th>
+                                    <th style="width: 60px; background: #1e40af; color: #fff; padding: 8px;">Qtd</th>
+                                    <th style="width: 60px; background: #1e40af; color: #fff; padding: 8px;">Unid</th>
+                                    <th style="width: 70px; background: #1e40af; color: #fff; padding: 8px;">CFOP</th>
+                                    <th style="width: 80px; background: #1e40af; color: #fff; padding: 8px;">PIS/COFINS</th>
+                                    <th style="width: 80px; background: #1e40af; color: #fff; padding: 8px;">IPI</th>
+                                    <th style="width: 90px; background: #1e40af; color: #fff; border-right: 3px solid #111; padding: 8px;">Preço Total</th>
+                                    
+                                    <th style="width: 250px; background: #047857; color: #fff; padding: 8px;">Produto (Identificar ou Cadastrar)</th>
+                                    <th style="width: 70px; background: #047857; color: #fff; padding: 8px;">Qtd Fator</th>
+                                    <th style="width: 60px; background: #047857; color: #fff; padding: 8px;">Unid</th>
+                                    <th style="width: 80px; background: #047857; color: #fff; padding: 8px;">CFOP</th>
+                                    <th style="width: 100px; background: #047857; color: #fff; padding: 8px;">PIS/COFINS (Regra)</th>
+                                    <th style="width: 100px; background: #047857; color: #fff; padding: 8px;">IPI (Regra)</th>
+                                    <th style="width: 90px; background: #047857; color: #fff; padding: 8px;">Venda (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ws_lista_itens">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-end gap-10 mt-20 pt-20" style="border-top: 1px solid #333;">
+                        <button class="btn-neon btn-neon-danger bg-transparent" onclick="abrirCompraManual()">Limpar Tudo</button>
+                        <button class="btn-neon btn-neon-success" onclick="efetivarImportacao()">✅ Guardar e Importar Stock</button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Genérico de Pesquisa -->
+<div id="modal_pesquisa_generica" class="erp-modal">
+    <div class="erp-modal-content" style="max-width: 90vw; width: 500px;">
+        <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+            <h3 class="m-0 text-info" id="mpesq_titulo">Pesquisar Registro</h3>
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="fecharPesquisaSup()">X</button>
+        </div>
+        <div class="d-flex gap-10 mb-15 flex-wrap">
+            <input type="text" id="mpesq_input" class="erp-input flex-1" style="min-width: 200px;" placeholder="Digite para buscar...">
+            <button type="button" class="btn-neon btn-neon-primary" onclick="executarPesquisaSup()">🔍 Procurar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="erp-table">
+                <thead><tr><th>ID</th><th>Nome / Descrição</th><th>Ação</th></tr></thead>
+                <tbody id="mpesq_tb"><tr><td colspan="3" class="text-center text-muted">Aguardando busca...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/suprimentos.js"></script>
+{% endblock %}

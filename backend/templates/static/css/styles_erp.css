@@ -1,0 +1,329 @@
+/* ==========================================================================
+   STYLES ERP - Padrão Global para Módulos (Cadastros, Comercial, Fiscal...)
+   ========================================================================== */
+
+/* 1. RESET DE CAIXAS (Garante que nada vaza para fora das divs) */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* 2. LAYOUT PRINCIPAL DO ERP */
+.erp-container { 
+    display: flex; 
+    gap: 20px; 
+    height: calc(100vh - 120px); 
+    align-items: stretch; 
+    overflow: hidden; /* Evita rolagem dupla na página inteira */
+}
+
+/* Menu Lateral */
+.erp-sidebar { 
+    width: 260px; 
+    flex-shrink: 0; /* Impede que o menu seja esmagado */
+    background: #1a1a1a; 
+    border-radius: 8px; 
+    border: 1px solid #333; 
+    overflow-y: auto; 
+    padding: 15px; 
+}
+.menu-group { margin-bottom: 20px; }
+.menu-group-title { 
+    font-size: 0.75rem; text-transform: uppercase; color: #888; 
+    font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; 
+    border-bottom: 1px solid #333; padding-bottom: 5px; 
+}
+.menu-item { 
+    display: block; width: 100%; text-align: left; background: transparent; 
+    border: none; color: #ccc; padding: 8px 10px; border-radius: 4px; 
+    cursor: pointer; transition: 0.2s; font-size: 0.85rem; margin-bottom: 2px; 
+}
+.menu-item:hover { background: #2a2a2a; color: #fff; }
+.menu-item.active { background: rgba(41, 121, 255, 0.15); color: #60a5fa; border-left: 3px solid #60a5fa; font-weight: bold; }
+
+/* Área de Trabalho (Formulários e Tabelas) */
+.erp-workspace { 
+    flex: 1; 
+    background: #1a1a1a; 
+    border-radius: 8px; 
+    border: 1px solid #333; 
+    padding: 20px; 
+    overflow-y: auto; 
+    position: relative;
+    min-width: 0; /* Crucial: Impede que grids internos alarguem esta div infinitamente */
+}
+
+.erp-view { display: none; animation: fadeIn 0.3s ease; }
+.erp-view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 3. FORMULÁRIOS E INPUTS ALINHADOS */
+label {
+    display: block;
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    overflow-wrap: break-word; /* Labels longas quebram linha sem alargar a div */
+    white-space: normal;
+}
+
+.erp-input, .erp-select, .erp-textarea { 
+    background: #222; 
+    color: #fff; 
+    border: 1px solid #444; 
+    padding: 6px 10px; 
+    width: 100%; 
+    max-width: 100%; /* Força a não vazar */
+    border-radius: 4px; 
+    font-size: 0.85rem; 
+    font-family: inherit;
+}
+.erp-input:focus, .erp-select:focus, .erp-textarea:focus { border-color: #60a5fa; outline: none; }
+.erp-input[readonly] { background: #111; border-style: dashed; cursor: not-allowed; color: #888; }
+.erp-textarea { resize: vertical; min-height: 38px; }
+
+/* Checkboxes e itens de seleção */
+.check-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: normal;
+    cursor: pointer;
+    width: 180px; /* Força larguras iguais para que formem colunas perfeitamente alinhadas */
+}
+.int-opt {
+    margin: 0;
+    transform: scale(1.2);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* 4. BOTÕES COMPACTOS E PROPORCIONAIS */
+button { font-family: inherit; cursor: pointer; transition: all 0.2s; }
+.btn-neon {
+    padding: 6px 12px; /* Reduzido para não ficar gigante */
+    font-size: 0.8rem;
+    border-radius: 4px;
+    height: fit-content;
+    white-space: normal; /* Modificado de nowrap para normal para evitar transbordo em ecrãs pequenos */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    text-align: center;
+}
+
+/* 5. GRUPOS DE PESQUISA (Input + Botão na mesma linha sem quebrar) */
+.search-group { 
+    display: flex; 
+    gap: 5px; 
+    align-items: stretch; 
+    width: 100%; 
+}
+.search-group .erp-input { 
+    flex: 1; 
+    min-width: 0; /* Força o input a encolher se não houver espaço */
+}
+.search-group button {
+    flex-shrink: 0; /* Impede o botão de ser esmagado pelo input */
+}
+
+/* 6. TABELAS (Containers responsivos para não quebrar a tela) */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.erp-table, .grid-tabela-itens { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 0.8rem; 
+    min-width: 600px; /* Garante scroll se a tela for menor que 600px */
+}
+.erp-table th, .grid-tabela-itens th { background: #111; color: #aaa; padding: 8px 10px; text-align: left; border-bottom: 1px solid #444; white-space: nowrap; }
+.erp-table td, .grid-tabela-itens td { padding: 8px 10px; border-bottom: 1px solid #333; color: #ddd; vertical-align: middle; }
+.grid-tabela-itens input { background: rgba(0,0,0,0.2); border: 1px solid #444; color: #fff; width: 100%; padding: 4px; border-radius: 3px;}
+.grid-tabela-itens input:focus { border-color: #60a5fa; outline: none; }
+
+.section-title { font-size: 0.8rem; text-transform: uppercase; color: #60a5fa; border-bottom: 1px solid #333; padding-bottom: 5px; margin: 20px 0 10px 0; font-weight: bold; }
+
+/* 7. MODAIS E TIMELINES */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+.modal-content { background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #444; width: 500px; max-width: 95vw; max-height: 90vh; overflow-y: auto;}
+
+.os-timeline { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 30px; border: 1px solid #333; margin-bottom: 20px; overflow-x: auto; }
+.os-step { flex: 1; text-align: center; font-size: 0.75rem; font-weight: bold; color: #666; position: relative; min-width: 90px; }
+.os-step:not(:last-child)::after { content: ''; position: absolute; right: -50%; top: 50%; width: 100%; height: 2px; background: #444; z-index: 0; transform: translateY(-50%); }
+.os-step span { background: #111; padding: 5px 10px; border-radius: 15px; border: 1px solid #444; position: relative; z-index: 1; display: inline-block; cursor: pointer; transition: 0.3s; white-space: nowrap;}
+.os-step.active span { background: #2979ff; color: #fff; border-color: #60a5fa; box-shadow: 0 0 10px rgba(41,121,255,0.5); }
+.os-step.done span { background: #1b5e20; color: #fff; border-color: #4caf50; }
+.fase-panel { display: none; animation: fadeIn 0.3s ease; }
+.fase-panel.active { display: block; }
+
+
+/* ==========================================================================
+   8. ESTILOS DE CADASTROS (Formulários, Grids e Painéis)
+   ========================================================================== */
+
+/* Form Panels e Grids */
+.form-panel { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+.form-panel-dashed { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 6px; border: 1px dashed #444; margin-bottom: 20px; }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+.form-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+
+
+
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-full { grid-column: 1 / -1; }
+
+/* Ações do Formulário */
+.form-actions { display: flex; gap: 10px; }
+
+/* Títulos e Cabeçalhos */
+.page-header-glow { border-bottom: 1px solid rgba(255,255,255,0.1); }
+.page-title-glow { font-size: 1.8rem; margin: 0 0 5px 0; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+.page-subtitle { font-size: 0.9rem; color: #888; }
+.history-section-title { font-size: 1.1rem; color: #fff; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #333; }
+
+/* Botões Neon Adicionais */
+.btn-neon-success { color: #34d399; border-color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid transparent; border-radius: 4px; border-color: #34d399;}
+.btn-neon-success:hover { background: rgba(52, 211, 153, 0.2); }
+.btn-neon-danger { color: #f87171; border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
+.btn-neon-danger:hover { background: rgba(248, 113, 113, 0.2); }
+.btn-neon-warning { color: #fbbf24; border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+.btn-neon-warning:hover { background: rgba(251, 191, 36, 0.2); }
+.btn-neon-info { color: #38bdf8; border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+.btn-neon-info:hover { background: rgba(56, 189, 248, 0.2); }
+.btn-neon-primary { color: #60a5fa; border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); border: 1px solid transparent; border-radius: 4px; border-color: #38bdf8;}
+.btn-neon-primary:hover { background: rgba(96, 165, 250, 0.2); }
+
+/* Cores de Texto */
+.text-primary { color: #60a5fa !important; }
+.text-success { color: #34d399 !important; }
+.text-danger { color: #f87171 !important; }
+.text-warning { color: #fbbf24 !important; }
+.text-info { color: #38bdf8 !important; }
+.text-muted { color: #94a3b8 !important; }
+
+/* Utilitários de Texto */
+.font-bold { font-weight: bold !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-xs { font-size: 0.75rem !important; }
+
+/* Utilitários de Margem */
+.m-0 { margin: 0 !important; }
+.mt-0 { margin-top: 0 !important; }
+.mt-10 { margin-top: 10px !important; }
+.mt-15 { margin-top: 15px !important; }
+.mt-20 { margin-top: 20px !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-5 { margin-bottom: 5px !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-15 { margin-bottom: 15px !important; }
+.mb-20 { margin-bottom: 20px !important; }
+.mr-10 { margin-right: 10px !important; }
+
+/* Utilitários de Padding */
+.p-5 { padding: 5px !important; }
+.pb-10 { padding-bottom: 10px !important; }
+.pt-10 { padding-top: 10px !important; }
+
+/* Flexbox */
+.d-flex { display: flex; }
+.gap-5 { gap: 5px; }
+.gap-10 { gap: 10px; }
+.gap-15 { gap: 15px; }
+.gap-20 { gap: 20px; }
+.align-center { align-items: center; }
+.align-end { align-items: flex-end; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+
+/* Utilitários Extras */
+.w-100 { width: 100%; }
+.min-w-300 { min-width: 300px; }
+.bg-transparent { background-color: transparent !important; }
+.border-bottom { border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+.border-top { border-top: 1px solid rgba(255,255,255,0.1) !important; }
+.border-0 { border: none !important; }
+.border-danger { border-color: #f87171 !important; }
+
+/* ==========================================================================
+   9. RESPONSIVIDADE (Telas Pequenas / Telemóveis)
+   ========================================================================== */
+@media (max-width: 992px) {
+    /* Transforma a tela dividida numa coluna única */
+    .erp-container { 
+        flex-direction: column; 
+        height: auto; 
+        overflow: visible; 
+    }
+    
+    /* Menu Lateral vira um Menu Superior Rolável */
+    .erp-sidebar { 
+        width: 100%; 
+        max-height: 250px; 
+        display: flex; 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        overflow-y: hidden;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    .menu-group { margin-bottom: 0; margin-right: 20px; min-width: 200px; flex-shrink: 0; }
+    
+    .erp-workspace { 
+        padding: 15px; 
+        overflow: visible;
+    }
+    
+    /* Timelines empilhadas para não esmagar textos */
+    .os-timeline {
+        justify-content: flex-start;
+        padding: 10px;
+    }
+    .os-step:not(:last-child)::after { display: none; /* Remove linha conectora no telemóvel para não bugar */ }
+}
+
+@media (max-width: 600px) {
+    /* Força os Grids a virarem 1 coluna no telemóvel para não espremer */
+    form[style*="display: grid"] > div,
+    div[style*="display: grid"] > div,
+    .form-grid > div,
+    .form-grid-3 > div,
+    .form-grid-4 > div {
+        grid-column: span 1 !important;
+    }
+    
+    /* Garante que grupos flexíveis reagem bem */
+    .d-flex { flex-wrap: wrap; }
+    .d-flex:not(.search-group):not(.top-actions):not(.os-timeline) { 
+        flex-direction: column; 
+        align-items: stretch !important; 
+    }
+    
+    .search-group { flex-direction: column; align-items: stretch; }
+    
+    /* Aumenta a área de toque dos botões */
+    button.btn-neon { width: 100%; margin-top: 5px; margin-left: 0 !important; margin-right: 0 !important; }
+    
+    .top-actions { display: flex; flex-direction: column; width: 100%; gap: 5px; }
+    .top-actions button { margin-left: 0; }
+    
+    /* Empilha as ações de formulário */
+    .form-actions { flex-direction: column; margin-top: 15px !important; }
+    .form-actions button { margin-right: 0 !important; margin-bottom: 5px; width: 100%; }
+
+    /* Alinha os checkboxes verticalmente no telemóvel para melhor uso do espaço */
+    .check-item { width: 100%; margin-bottom: 5px; }
+}

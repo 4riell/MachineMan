@@ -1,0 +1,84 @@
+version: '3'
+
+services:
+  # --- SEU SERVIÇO DO PAINEL ---
+  painel-backend:
+    container_name: painel_pizzaria
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app 
+    depends_on:
+      - evolution-api
+    environment:
+      - TZ=America/Sao_Paulo
+
+  # --- NOVO SERVIÇO: CLOUDFLARE TUNNEL ---
+  tunnel:
+    container_name: cloudflared_tunnel
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - painel-backend
+    # O comando abaixo cria um túnel para o serviço 'painel-backend' na porta 8000
+    command: tunnel --url http://painel-backend:8000
+
+  # --- SERVIÇOS DO EVOLUTION (MANTIDOS IGUAIS) ---
+  evolution-api:
+    container_name: evolution_api
+    image: evoapicloud/evolution-api:v2.3.6
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - evolution_instances_v2:/evolution/instances
+      - evolution_store_v2:/evolution/store
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    command: ["node", "./dist/src/main.js"]
+
+  postgres:
+    container_name: evolution_postgres
+    image: postgres:15-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DATABASE_DB}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - evolution_postgres_data_v2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: evolution_redis
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - evolution_redis_data_v2:/data
+
+volumes:
+  evolution_instances_v2:
+  evolution_store_v2:
+  evolution_postgres_data_v2:
+  evolution_redis_data_v2:

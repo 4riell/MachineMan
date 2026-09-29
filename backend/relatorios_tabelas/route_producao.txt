@@ -1,0 +1,56 @@
+=== ANÁLISE DO MÓDULO: route_producao.py ===
+
+>>> TABELAS CRIADAS NESTE ARQUIVO (2) <<<
+Estas tabelas possuem sua estrutura (schema) definida aqui.
+
+[+] Tabela: erp_fichas_tecnicas
+    Colunas (18):
+      - id (INTEGER)
+      - produto_pai_nome (TEXT)
+      - produto_id (INTEGER)
+      - receita (TEXT)
+      - produto_pai_id (INTEGER)
+      - rendimento_padrao (REAL)
+      - unidade_rendimento (VARCHAR(20))
+      - tempo_preparo (VARCHAR(50))
+      - custo_estimado (REAL)
+      - instrucoes (TEXT)
+      - status (VARCHAR(20))
+      - produto_final_id (INTEGER)
+      - produto_final_nome (VARCHAR(150))
+      - descricao (TEXT)
+      - rendimento (REAL)
+      - tempo_preparo_min (INTEGER)
+      - custo_total_estimado (REAL)
+      - itens_json (TEXT)
+----------------------------------------
+
+[+] Tabela: erp_ordens_producao
+    Colunas (25):
+      - id (INTEGER)
+      - numero (TEXT)
+      - data (TEXT)
+      - produto_nome (TEXT)
+      - qtd_planejada (TEXT)
+      - unidade (TEXT)
+      - status (TEXT)
+      - data_inicio (DATETIME)
+      - data_fim (DATETIME)
+      - produto_id (INTEGER)
+      - qtd_produzida (REAL)
+      - responsavel (VARCHAR(150))
+      - custo_total (REAL)
+      - notas (TEXT)
+      - itens_consumidos_json (TEXT)
+      - data_emissao (DATE)
+      - previsao_conclusao (DATE)
+      - ficha_tecnica_id (INTEGER)
+      - quantidade_planejada (REAL)
+      - quantidade_produzida (REAL)
+      - custo_realizado (REAL)
+      - lote_gerado (VARCHAR(50))
+      - validade_lote (DATE)
+      - anotacoes (TEXT)
+      - tipo (VARCHAR(50))
+----------------------------------------
+

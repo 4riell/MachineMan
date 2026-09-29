@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Produção e Manufatura{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_erp.css">
+    <style>
+        .inner-grid-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .inner-grid-table th, .inner-grid-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: left; font-size: 0.85rem; }
+        .inner-grid-table th { background: rgba(0,255,255,0.1); color: #0ff; font-weight: bold; }
+        .inner-grid-table input, .inner-grid-table select { background: #111; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 100%; padding: 4px; border-radius: 4px;}
+        .selected-group-badge { background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; padding: 10px; border-radius: 6px; color: #60a5fa; font-weight: bold; text-align: center; margin-bottom: 15px; }
+        .top-actions button { margin-left: 5px; }
+        .modal-content { scrollbar-width: thin; scrollbar-color: #00ffcc #222; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between mb-15 flex-wrap gap-10">
+    <div>
+        <h1 class="page-title-glow">⚙️ Produção e Manufatura</h1>
+        <div class="page-subtitle">Ordens de Produção, Receituários e Insumos.</div>
+    </div>
+</div>
+
+<div class="erp-container">
+    <div class="erp-sidebar">
+        <div class="menu-group">
+            <div class="menu-group-title">Chão de Fábrica</div>
+            <button class="menu-item" onclick="switchProdView('view_ordens', this)">🏭 Ordens de Produção (OP)</button>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">Engenharia e Custos</div>
+            <button class="menu-item" onclick="switchProdView('view_composicoes', this)">🧪 Fichas Técnicas / Receitas</button>
+            <button class="menu-item" onclick="switchProdView('view_insumos', this)">📦 Cadastro de Insumos</button>
+        </div>
+    </div>
+
+    <div class="erp-workspace">
+        
+        <!-- INSUMOS E MATÉRIAS-PRIMAS -->
+        <div id="view_insumos" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-success">📦 Insumos e Matérias-Primas</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroProd('form_insumos')">➕ Novo Insumo</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="exportarExcel('tb_insumos_table', 'Insumos')">⬇️ Excel</button>
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="exportarPDF('tb_insumos_table', 'Relatório de Insumos')">📄 PDF</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_insumos_table" class="erp-table">
+                    <thead><tr><th>ID</th><th>Insumo</th><th>Unidade</th><th>Custo (R$)</th><th>Estoque</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_insumos"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL INSUMOS -->
+            <div id="form_insumos_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 800px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-success">Cadastro de Insumo</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalProd('form_insumos')">X</button>
+                    </div>
+                    <form id="form_insumos" class="form-panel mb-0 border-0 p-0" onsubmit="salvarInsumo(event)">
+                        <input type="hidden" id="ins_id">
+                        <div class="form-grid">
+                            <div class="col-span-2"><label>Nome do Insumo / Matéria-Prima:</label><input type="text" id="ins_nome" class="erp-input font-bold" required placeholder="Ex: Farinha de Trigo"></div>
+                            <div><label>Fornecedor Principal:</label><select id="ins_fornecedor_id" class="erp-select ddl-fornecedores"></select></div>
+                            <div><label>Unidade (Medida):</label><select id="ins_unidade_medida" class="erp-select ddl-unidades" required></select></div>
+                            
+                            <div><label>Custo Unitário (R$):</label><input type="number" step="0.01" id="ins_custo_unitario" class="erp-input text-warning"></div>
+                            <div><label>Estoque Atual:</label><input type="number" step="0.01" id="ins_estoque_atual" class="erp-input text-info"></div>
+                            <div><label>Estoque Mínimo:</label><input type="number" step="0.01" id="ins_estoque_minimo" class="erp-input"></div>
+                            
+                            <div class="col-span-full"><label>Observações:</label><textarea id="ins_observacoes" class="erp-input" rows="2"></textarea></div>
+                        </div>
+                        <div class="form-actions mt-15 text-right">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormProd('form_insumos')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar Insumo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDENS DE PRODUÇÃO -->
+        <div id="view_ordens" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-primary">🏭 Ordens de Produção (OP)</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroProd('form_ordens')">➕ Nova OP</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="exportarExcel('tb_ordens_table', 'Ordens_Producao')">⬇️ Excel</button>
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="exportarPDF('tb_ordens_table', 'Relatório de OPs')">📄 PDF</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_ordens_table" class="erp-table">
+                    <thead><tr><th>OP Nº</th><th>Data</th><th>Produto Alvo</th><th>Planejado</th><th>Produzido</th><th>Status</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_ordens"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL OP -->
+            <div id="form_ordens_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 900px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-primary">Lançamento de OP</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalProd('form_ordens')">X</button>
+                    </div>
+                    <form id="form_ordens" class="form-panel mb-0 border-0 p-0" onsubmit="salvarProd(event, 'ordens_producao')">
+                        <input type="hidden" id="op_id">
+                        <div class="form-grid">
+                            <div><label>Número da OP:</label><input type="text" id="op_numero" class="erp-input text-warning font-bold" required placeholder="Ex: OP-001"></div>
+                            <div><label>Data Movimento:</label><input type="date" id="op_data" class="erp-input" required></div>
+                            
+                            <div><label>Data Início:</label><input type="date" id="op_data_inicio" class="erp-input"></div>
+                            <div><label>Data Fim:</label><input type="date" id="op_data_fim" class="erp-input"></div>
+                            
+                            <div><label>Tipo:</label>
+                                <select id="op_tipo" class="erp-select">
+                                    <option value="Interna">Interna</option>
+                                    <option value="Externa">Externa / Terceiros</option>
+                                </select>
+                            </div>
+                            <div><label>Responsável:</label>
+                                <select id="op_responsavel" class="erp-select ddl-responsaveis">
+                                    <option value="">-- Selecione o Responsável --</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <label>Ficha Técnica / Receita (Base):</label>
+                                <select id="op_ficha_tecnica_id" class="erp-select ddl-fichas-op" onchange="preencherProdutoPorFicha(this)">
+                                    <option value="">-- Selecione a Receita/Ficha --</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-span-2">
+                                <label>Produto a Fabricar (Pesquisa Automática):</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="op_produto_id">
+                                    <input type="text" id="op_produto_nome" class="erp-input flex-1" readonly placeholder="Preenchido pela Ficha ou clique ->">
+                                    <button type="button" class="btn-neon btn-neon-primary" onclick="abrirPesq('produtos', 'op_produto_id', 'op_produto_nome')">🔍 Buscar</button>
+                                </div>
+                            </div>
+                            
+                            <div><label>Qtd. Planejada:</label><input type="number" step="0.01" id="op_qtd_planejada" class="erp-input"></div>
+                            <div><label>Unidade (Medida):</label><select id="op_unidade" class="erp-select ddl-unidades"></select></div>
+
+                            <div><label>Qtd. Produzida (Real):</label><input type="number" step="0.01" id="op_qtd_produzida" class="erp-input text-success"></div>
+                            <div><label>Custo Total (R$):</label><input type="number" step="0.01" id="op_custo_total" class="erp-input text-warning"></div>
+                            
+                            <div><label>Status:</label>
+                                <select id="op_status" class="erp-select">
+                                    <option value="ABERTA">Aberta / Planejada</option>
+                                    <option value="EM ANDAMENTO">Em Andamento</option>
+                                    <option value="CONCLUIDA">Concluída</option>
+                                    <option value="CANCELADA">Cancelada</option>
+                                </select>
+                            </div>
+                            <div><label>Previsão Conclusão:</label><input type="date" id="op_previsao_conclusao" class="erp-input text-info"></div>
+
+                            <input type="hidden" id="op_data_emissao">
+                            <input type="hidden" id="op_quantidade_planejada">
+                            <input type="hidden" id="op_quantidade_produzida">
+                            <input type="hidden" id="op_custo_realizado">
+
+                            <div><label>Lote Gerado:</label><input type="text" id="op_lote_gerado" class="erp-input" placeholder="Nº Lote de Saída"></div>
+                            <div><label>Validade Lote:</label><input type="date" id="op_validade_lote" class="erp-input text-danger"></div>
+
+                            <div class="col-span-full"><label>Notas da Produção:</label><textarea id="op_notas" class="erp-input" rows="2"></textarea></div>
+                            <input type="hidden" id="op_anotacoes">
+                        </div>
+
+                        <div class="mt-15 section-box border" style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <div class="d-flex justify-between align-center mb-10">
+                                <span class="font-bold text-info">Itens Consumidos Manualmente</span>
+                                <button type="button" class="btn-neon-primary bg-transparent p-5 text-xs" onclick="addRowOP()">➕ Adicionar</button>
+                            </div>
+                            <table class="inner-grid-table mb-0">
+                                <thead><tr><th>Insumo Consumido</th><th>Qtd</th><th>Un</th><th style="width:40px;"></th></tr></thead>
+                                <tbody id="tb_itens_op" class="dynamic-list"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="form-actions mt-15 text-right">
+                            <button type="button" class="btn-neon btn-neon-danger bg-transparent mr-10" onclick="limparFormProd('form_ordens')">🧹 Limpar</button>
+                            <button type="submit" class="btn-neon btn-neon-success">💾 Salvar OP</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- FICHAS TÉCNICAS -->
+        <div id="view_composicoes" class="erp-view">
+            <div class="d-flex justify-between align-center flex-wrap gap-10 border-bottom pb-10 mb-20">
+                <h3 class="m-0 text-warning">🧪 Fichas Técnicas (BOM)</h3>
+                <div class="top-actions m-0">
+                    <button type="button" class="btn-neon btn-neon-primary" onclick="novoCadastroProd('form_fichas')">➕ Nova Ficha / Receita</button>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="exportarExcel('tb_fichas_table', 'Fichas_Tecnicas')">⬇️ Excel</button>
+                    <button type="button" class="btn-neon btn-neon-warning" onclick="exportarPDF('tb_fichas_table', 'Receituário')">📄 PDF</button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tb_fichas_table" class="erp-table">
+                    <thead><tr><th>Produto Pai / Receita</th><th>Rendimento Padrão</th><th>Custo Total (R$)</th><th class="text-center">Ações</th></tr></thead>
+                    <tbody id="tb_fichas"></tbody>
+                </table>
+            </div>
+
+            <!-- MODAL FICHAS TÉCNICAS (DUAL) -->
+            <div id="form_fichas_modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width: 1000px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+                    <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+                        <h3 class="m-0 text-warning">Estrutura da Ficha Técnica</h3>
+                        <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="closeModalProd('form_fichas')">X</button>
+                    </div>
+
+                    <h4 class="text-info mt-0 mb-10">1. Cadastro Base (Produto Pai)</h4>
+                    <form id="form_fichas" onsubmit="salvarFichaPai(event)" class="section-box border mb-20" style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                        <input type="hidden" id="fch_id">
+                        <div class="form-grid">
+                            <div class="col-span-2">
+                                <label>Nome Produto Pai / Receita:</label>
+                                <div class="search-group d-flex gap-5">
+                                    <input type="hidden" id="fch_produto_id">
+                                    <input type="hidden" id="fch_produto_pai_id">
+                                    <input type="hidden" id="fch_produto_final_id">
+                                    <input type="text" id="fch_produto_pai_nome" class="erp-input flex-1" readonly placeholder="Buscar ->">
+                                    <button type="button" class="btn-neon btn-neon-primary p-5" onclick="abrirPesq('produtos', 'fch_produto_id', 'fch_produto_pai_nome')">🔍</button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-span-2"><label>Nome da Receita / Variação:</label><input type="text" id="fch_receita" class="erp-input text-info" placeholder="Ex: Massa Tradicional S/ Sal"></div>
+
+                            <div><label>Rendimento Padrão:</label><input type="number" step="0.01" id="fch_rendimento_padrao" class="erp-input"></div>
+                            <div><label>Unidade Rendimento:</label><select id="fch_unidade_rendimento" class="erp-select ddl-unidades"></select></div>
+                            
+                            <div><label>Tempo Preparo:</label><input type="text" id="fch_tempo_preparo" class="erp-input" placeholder="Ex: 90 min"></div>
+                            <div><label>Custo Estimado Base:</label><input type="number" step="0.01" id="fch_custo_estimado" class="erp-input"></div>
+                            
+                            <div class="col-span-full"><label>Instruções (Modo de Preparo):</label><textarea id="fch_instrucoes" class="erp-input" rows="2"></textarea></div>
+                            
+                            <!-- Campos Espelho Ocultos -->
+                            <input type="hidden" id="fch_rendimento">
+                            <input type="hidden" id="fch_tempo_preparo_min">
+                            <input type="hidden" id="fch_descricao">
+                            <input type="hidden" id="fch_produto_final_nome">
+                            <input type="hidden" id="fch_itens_json" value="[]">
+
+                            <div class="col-span-2 d-flex align-center">
+                                <label class="text-success font-bold mr-10 mb-0">Custo Total (Cálculo Insumos): R$</label>
+                                <input type="number" step="0.01" id="fch_custo_total_estimado" class="erp-input font-bold text-success" readonly style="max-width: 150px;">
+                            </div>
+                            
+                            <div class="col-span-2 form-actions text-right mt-15">
+                                <button type="submit" class="btn-neon btn-neon-warning">💾 Salvar Ficha Base</button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div id="ficha_badge" class="selected-group-badge" style="display:none;"></div>
+                    <h4 class="text-success mt-0 mb-10">2. Ingredientes / Componentes da Receita</h4>
+                    <p class="text-xs text-muted mb-15">*(Para adicionar itens numa receita nova, guarde primeiro a "Ficha Base" acima, feche e edite a ficha na tabela principal)*</p>
+
+                    <form id="form_ficha_itens" onsubmit="salvarFichaItem(event)" style="opacity: 0.5; pointer-events: none;" class="section-box border mb-15" style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                        <input type="hidden" id="fci_id">
+                        <input type="hidden" id="fci_ficha_id">
+                        <div class="form-grid align-end">
+                            <div class="col-span-2">
+                                <label>Insumo / Matéria Prima:</label>
+                                <input type="hidden" id="fci_produto_filho_nome">
+                                <select id="fci_produto_filho_id" class="erp-select ddl-insumos" onchange="updateFichaItemName(this)" required>
+                                    <option value="">-- Carregando Insumos... --</option>
+                                </select>
+                            </div>
+                            <div><label>Qtd. Necessária:</label><input type="number" step="0.001" id="fci_qtd_necessaria" class="erp-input" oninput="calcSubFichaItem()" required></div>
+                            <div><label>Unidade (Medida):</label><select id="fci_unidade" class="erp-select ddl-unidades" required></select></div>
+                            
+                            <div><label>Tipo (Insumo/Emb):</label>
+                                <select id="fci_tipo_item" class="erp-select">
+                                    <option value="Materia Prima">Matéria Prima</option>
+                                    <option value="Embalagem">Embalagem</option>
+                                    <option value="Servico">Serviço</option>
+                                </select>
+                            </div>
+
+                            <div><label>Custo Unitário (R$):</label><input type="number" step="0.01" id="fci_custo_unitario" class="erp-input text-warning" oninput="calcSubFichaItem()"></div>
+                            <div><label>Subtotal (R$):</label><input type="number" step="0.01" id="fci_subtotal" class="erp-input font-bold text-success" readonly></div>
+                            
+                            <div class="col-span-2"><label>Observação Específica:</label><input type="text" id="fci_observacao" class="erp-input"></div>
+                            
+                            <div class="form-actions text-right">
+                                <button type="submit" class="btn-neon btn-neon-success w-100">➕ Inserir</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive-wrapper">
+                        <table class="erp-table">
+                            <thead><tr><th>Ingrediente</th><th>Qtd</th><th>UN</th><th>Vlr.Un</th><th>Subtotal</th><th class="text-center">Ações</th></tr></thead>
+                            <tbody id="tb_ficha_itens">
+                                <tr><td colspan="6" class="text-center text-muted">Selecione uma Ficha Pai primeiro.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODAL DE PESQUISA GLOBAL (REAPROVEITADO) -->
+<div id="modal_pesquisa_prod" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 90vw; width: 600px;">
+        <div class="d-flex justify-between align-center border-bottom pb-10 mb-15">
+            <h3 class="m-0 text-primary" id="mpesq_titulo">Buscar</h3>
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent p-5" onclick="fecharPesquisa()">X</button>
+        </div>
+        <div class="d-flex gap-10 mb-15 flex-wrap">
+            <input type="text" id="mpesq_input" class="erp-input flex-1" placeholder="Digite o nome..." onkeyup="if(event.key==='Enter') executarPesquisa()">
+            <button type="button" class="btn-neon btn-neon-primary" onclick="executarPesquisa()">🔍 Procurar</button>
+        </div>
+        <div class="table-responsive-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="erp-table">
+                <thead><tr><th>ID</th><th>Descrição</th><th>Ação</th></tr></thead>
+                <tbody id="mpesq_resultados">
+                    <tr><td colspan="3" class="text-center text-muted">Aguardando busca...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="/static/js/producao.js"></script>
+{% endblock %}

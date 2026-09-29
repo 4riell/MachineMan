@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes - Cook Degustto{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles_clientes.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="page-header page-header-glow">
+        <div>
+            <h1 class="page-title-glow">👥 Gerenciar Clientes</h1>
+            <div class="page-subtitle">Gerencie contatos e permissões do robô</div>
+        </div>
+        
+        <div class="header-controls">
+            <select id="filterStatus" class="input-std filter-select" onchange="aplicarFiltros()">
+                <option value="all">Todos</option>
+                <option value="active">🟢 Apenas Ativos</option>
+                <option value="blocked">🔴 Apenas Bloqueados</option>
+            </select>
+
+            <input type="text" id="searchClientes" class="input-std search-box" placeholder="🔍 Buscar nome, telefone..." onkeyup="aplicarFiltros()">
+            
+            <div class="header-divider"></div>
+            
+            <button class="btn-neon btn-neon-success p-10" onclick="alterarStatusTodos(true)" title="Ativar Robô para Todos">
+                🔓 Todos
+            </button>
+            <button class="btn-neon btn-neon-danger p-10" onclick="alterarStatusTodos(false)" title="Bloquear Robô para Todos">
+                🔒 Todos
+            </button>
+            
+            <div class="header-divider"></div>
+
+            <button class="btn-neon btn-neon-primary p-10" onclick="abrirModalNovo()">
+                <span>➕</span> Novo Cliente
+            </button>
+        </div>
+    </div>
+
+    <div class="config-card card-neon-blue card-section-wrapper">
+        <div class="card-section-header">
+            <h2 class="card-section-title title-glow-blue">📋 Lista de Contatos</h2>
+            <span class="text-muted text-sm">Total: {{ clientes|length }}</span>
+        </div>
+        <div class="table-container table-reset">
+            <table id="tabelaClientes">
+                <thead>
+                    <tr>
+                        <th class="table-col-30 sortable" onclick="ordenarTabela(0)">
+                            Cliente <span class="sort-icon">⬆⬇</span>
+                        </th>
+                        <th class="table-col-15">Robô Ativo</th>
+                        <th class="table-col-20">Contato</th>
+                        <th class="table-col-25">Endereço</th>
+                        <th class="table-col-10 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr class="cliente-row" data-status="{{ 'active' if c.chat_ativo == 1 else 'blocked' }}">
+                        <td>
+                            <div class="cliente-nome-bold">{{ c.nome }}</div>
+                            {% if c.cpf %}
+                                <div class="cliente-cpf-text">CPF: {{ c.cpf }}</div>
+                            {% endif %}
+                            
+                            {% for extra in colunas_extras %}
+                                {% if c[extra.coluna] %}
+                                    <div class="cliente-extra-text">
+                                        <strong>{{ extra.label }}:</strong> {{ c[extra.coluna] }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <label class="switch switch-sm" title="Ligar/Desligar Robô">
+                                <input type="checkbox" onchange="toggleClienteIndividual('{{ c.telefone }}', this)" {{ 'checked' if c.chat_ativo == 1 else '' }}>
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <a href="https://wa.me/{{ c.telefone }}" target="_blank" class="phone-link phone-link-green">
+                                📱 {{ c.telefone }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if c.rua %}
+                                <div class="endereco-rua">{{ c.rua }}, {{ c.numero_casa or 'S/N' }}</div>
+                                <div class="endereco-bairro">{{ c.bairro }}</div>
+                                {% if c.ponto_referencia %}
+                                    <div class="endereco-ref">Ref: {{ c.ponto_referencia }}</div>
+                                {% endif %}
+                            {% else %}
+                                <span class="sem-endereco">Sem endereço</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <div class="d-flex gap-5 justify-end">
+                                <button class="btn-neon btn-neon-warning btn-sm-padding" title="Editar"
+                                    data-telefone="{{ c.telefone }}"
+                                    data-nome="{{ c.nome }}"
+                                    data-cpf="{{ c.cpf or '' }}"
+                                    data-rua="{{ c.rua or '' }}"
+                                    data-numero="{{ c.numero_casa or '' }}"
+                                    data-bairro="{{ c.bairro or '' }}"
+                                    data-ref="{{ c.ponto_referencia or '' }}"
+                                    data-chat="{{ c.chat_ativo }}" 
+                                    {% for extra in colunas_extras %}
+                                    data-dyn-{{ extra.coluna }}="{{ c[extra.coluna] or '' }}"
+                                    {% endfor %}
+                                    onclick="prepararEdicao(this)">
+                                    ✏️
+                                </button>
+                                <button class="btn-neon btn-neon-danger btn-sm-padding" title="Excluir"
+                                    onclick="excluirCliente('{{ c.telefone }}', '{{ c.nome }}')">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-table-msg">Nenhum cliente encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal modal-clientes-lg">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h2 id="modalTitle" class="modal-title-clientes">Editar Cliente</h2><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="fecharModal()">×</button></div>
+            <form id="editForm" onsubmit="salvarCliente(event)">
+                
+                <div class="chat-toggle-box chat-info-box d-flex justify-between align-center">
+                    <div>
+                        <strong class="text-white d-flex">🤖 Chat Automático</strong>
+                        <small class="text-muted">Permitir que o robô responda este cliente.</small>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="editChatAtivo">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="d-flex flex-wrap gap-15">
+                    <div class="form-group flex-1">
+                        <label class="form-label">Telefone (WhatsApp)</label>
+                        <input type="text" id="editTelefone" class="input-std w-100" placeholder="55..." required>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label class="form-label">CPF (Opcional)</label>
+                        <input type="text" id="editCpf" class="input-std w-100">
+                    </div>
+                </div>
+
+                <div class="form-group mt-10">
+                    <label class="form-label">Nome Completo</label>
+                    <input type="text" id="editNome" class="input-std w-100" required>
+                </div>
+                
+                <hr class="modal-divider">
+                <label class="modal-section-title modal-section-blue">📍 Endereço de Entrega</label>
+
+                <div class="d-flex flex-wrap gap-15">
+                    <div class="form-group flex-3">
+                        <label class="form-label">Rua / Avenida</label>
+                        <input type="text" id="editRua" class="input-std w-100">
+                    </div>
+                    <div class="form-group flex-1">
+                        <label class="form-label">Número</label>
+                        <input type="text" id="editNumero" class="input-std w-100">
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-15 mt-10">
+                    <div class="form-group flex-1">
+                        <label class="form-label">Bairro</label>
+                        <select id="editBairro" class="input-std w-100" style="height: 44px;">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label class="form-label">Ponto de Referência</label>
+                        <input type="text" id="editRef" class="input-std w-100">
+                    </div>
+                </div>
+
+                {% if colunas_extras %}
+                <hr class="modal-divider">
+                <label class="modal-section-title modal-section-cyan">📝 Outros Dados do Cliente</label>
+                <div class="d-flex flex-wrap gap-15">
+                    {% for extra in colunas_extras %}
+                    <div class="form-group flex-1">
+                        <label class="form-label">{{ extra.label }}</label>
+                        <input type="text" class="input-std dynamic-input w-100" id="edit_dyn_{{ extra.coluna }}" data-coluna="{{ extra.coluna }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="modal-footer modal-divider">
+                    <button type="button" class="btn-neon btn-neon-danger" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-neon btn-neon-primary">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script id="dados-bairros" type="application/json">
+        {{ bairros_disponiveis | tojson | safe }}
+    </script>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/clientes.js') }}"></script>
+{% endblock %}

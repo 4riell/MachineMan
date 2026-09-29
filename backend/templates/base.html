@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍕</text></svg>">
+    
+    <title>{% block title %}🦾MACHINEMAN{% endblock %}</title>
+    
+    <link rel="stylesheet" href="/static/css/styles.css">
+
+    <!-- INJEÇÃO DE PERMISSÕES VÍSUAIS PARA FUNCIONÁRIOS -->
+    {% if perfil and perfil != 'dono' and perfil != 'admin' %}
+    <style>
+        /* Oculta os botões perigosos (Excluir Pedidos, Excluir Clientes, Ações em Massa) */
+        button[onclick*="excluir"],
+        button[onclick*="limparTudo"],
+        button[onclick*="excluirSelecionados"],
+        button[onclick*="excluirTodosCliente"],
+        .btn-del {
+            display: none !important;
+        }
+    </style>
+    {% endif %}
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <header class="main-header">
+        <a href="/pedidos" class="brand">🦾MACHINEMAN</a>
+        
+        <button class="hamburger-btn" onclick="toggleMenu()">☰</button>
+        
+        <nav id="top-nav">
+            <a href="/pedidos" class="{% if request.path == '/pedidos' %}active{% endif %}">📋 Pedidos</a>
+            <a href="/mesas" class="{% if request.path == '/mesas' %}active{% endif %}">🪑 Mesas</a>
+            <a href="/clientes" class="{% if request.path == '/clientes' %}active{% endif %}">👥 Clientes</a>
+            
+            <!-- OCULTA ABAS GERENCIAIS DO FUNCIONÁRIO -->
+            {% if not perfil or perfil in ['dono', 'admin'] %}
+            <a href="/cardapio" class="{% if request.path == '/cardapio' %}active{% endif %}">🍽️ Cardápio</a>
+            <a href="/gestao" class="{% if request.path == '/gestao' %}active{% endif %}">📊 Gestão&Estoque</a>            
+            <a href="/configuracoes" class="{% if request.path == '/configuracoes' %}active{% endif %}">⚙️ Config.</a>
+            {% endif %}
+
+            <a href="/notificacoes" class="{% if request.path == '/notificacoes' %}active{% endif %}" id="menu-notificacoes-link">
+                🔔 Notificações 
+                <span id="global-badge" class="badge-count">0</span>
+            </a>
+            
+            <a href="/perfil" class="{% if request.path == '/perfil' %}active{% endif %}">👤 Perfil</a>
+            <a href="/meu-menu">👤 Menu Público</a>
+            
+            <!-- OCULTA MÓDULOS ERP DO FUNCIONÁRIO -->
+            {% if not perfil or perfil in ['dono', 'admin'] %}
+            <div class="dropdown">
+                <button class="dropbtn {% if request.path in ['/fiscal', '/cadastros', '/delivery', '/comercial', '/suprimentos', '/producao', '/financeiro', '/servicos', '/controladoria', '/documentos-fiscais', '/operacional'] %}active{% endif %}">
+                    ⚖️ Módulos ERP ▼
+                </button>
+                <div class="dropdown-content">
+                    <a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">⚖️ Dashboard</a>
+                    <a href="/login-sefaz" class="{% if request.path == '/login-sefaz' %}active{% endif %}">⚖️ login-sefaz</a>
+                    <a href="/cadastros" class="{% if request.path == '/cadastros' %}active{% endif %}">⚖️ Cadastros Base</a>
+                    <a href="/delivery" class="{% if request.path == '/delivery' %}active{% endif %}">⚖️ Delivery & E-commerce</a>
+                    <a href="/comercial" class="{% if request.path == '/comercial' %}active{% endif %}">⚖️ Comercial & Vendas</a>
+                    <a href="/suprimentos" class="{% if request.path == '/suprimentos' %}active{% endif %}">⚖️ Suprimentos & Estoque</a>
+                    <a href="/producao" class="{% if request.path == '/producao' %}active{% endif %}">⚖️ Produção</a>
+                    <a href="/documentos-fiscais" class="{% if request.url.path == '/documentos-fiscais' %}active{% endif %}">⚖️ Documentos Fiscais</a>
+                    <a href="/financeiro" class="{% if request.path == '/financeiro' %}active{% endif %}">⚖️ Financeiro</a>
+                    <a href="/servicos" class="{% if request.path == '/servicos' %}active{% endif %}">⚖️ Serviços (OS)</a>
+                    <a href="/controladoria" class="{% if request.path == '/controladoria' %}active{% endif %}">⚖️ Controladoria (Matriz)</a>
+                    <a href="/operacional" class="{% if request.url.path == '/operacional' %}active{% endif %}">⚖️ Operacional</a>
+                    <a href="/pdv" class="{% if request.path == '/pdv' %}active{% endif %}">⚖️ Caixa PDV</a>
+                </div>
+            </div>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div style="padding: 0 20px 20px 20px;">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="/static/js/base.js?v=5"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

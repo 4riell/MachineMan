@@ -1,0 +1,46 @@
+=== ANÁLISE DO MÓDULO: route_servicos.py ===
+
+>>> TABELAS CRIADAS NESTE ARQUIVO (3) <<<
+Estas tabelas possuem sua estrutura (schema) definida aqui.
+
+[+] Tabela: erp_identificadores
+    Colunas (2):
+      - id (INTEGER)
+      - nome (VARCHAR(100))
+----------------------------------------
+
+[+] Tabela: erp_ordens_servico
+    Colunas (24):
+      - id (INTEGER)
+      - numero (TEXT)
+      - cliente_nome (TEXT)
+      - item_servico_nome (TEXT)
+      - total_geral (TEXT)
+      - status (TEXT)
+      - cliente_id (INTEGER)
+      - financeiro_json (TEXT)
+      - cobranca_json (TEXT)
+      - total_servicos (TEXT)
+      - despesas (REAL)
+      - desconto_percent (REAL)
+      - portarias (TEXT)
+      - tabela_preco (VARCHAR(100))
+      - finalidade (VARCHAR(150))
+      - descricao (TEXT)
+      - problema (TEXT)
+      - solucao (TEXT)
+      - data_registro (VARCHAR(20))
+      - atendente_nome (VARCHAR(150))
+      - itens_json (TEXT)
+      - total_produtos (REAL)
+      - desconto_valor (REAL)
+      - notas (TEXT)
+----------------------------------------
+
+[+] Tabela: erp_serv_itens
+    Colunas (3):
+      - id (INTEGER)
+      - nome (VARCHAR(150))
+      - identificadores_json (TEXT)
+----------------------------------------
+

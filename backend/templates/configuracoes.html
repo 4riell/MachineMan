@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - Cook Degustto{% endblock %}
+
+{% block head %}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles_configuracoes.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="page-header page-header-glow" style="position: relative; z-index: 20;">
+        <div>
+            <h1 class="page-title-glow">⚙️ Configurações do Sistema</h1>
+            <div class="page-subtitle">Defina as Regras do Sistema..</div>
+        </div>
+    </div>
+
+    <form method="POST" action="/api/configuracoes/geral" id="formGeral">
+        <div class="container-config">
+            
+            <div class="config-card card-neon-blue">
+                <h2>⚙️ Geral & Entrega</h2>
+                <div class="toggle-group">
+                    <div class="toggle-item"><input type="checkbox" id="loja_aberta" name="loja_aberta" {% if config.loja_aberta == '1' %}checked{% endif %}><label for="loja_aberta">Loja Aberta</label></div>
+                    <div class="toggle-item"><input type="checkbox" id="chat_ativo" name="chat_ativo" {% if config.chat_ativo == '1' %}checked{% endif %}><label for="chat_ativo">Chat Ativo</label></div>
+                    <div class="toggle-item"><input type="checkbox" id="restrito_cadastrados" name="restrito_cadastrados" {% if config.restrito_cadastrados == '1' %}checked{% endif %}><label for="restrito_cadastrados">Restrito</label></div>
+                </div>
+                <div class="radio-group-box">
+                    <label class="radio-group-label">📅 Modo de Reservas:</label>
+                    <div class="radio-group mt-5">
+                        <label class="radio-item"><input type="radio" name="modo_reserva" value="sistema" {% if config.modo_reserva != 'humano' %}checked{% endif %}><span>🤖 Automático</span></label>
+                        <label class="radio-item"><input type="radio" name="modo_reserva" value="humano" {% if config.modo_reserva == 'humano' %}checked{% endif %}><span>👤 Humano</span></label>
+                    </div>
+                </div>
+                <div class="d-flex gap-15">
+                    <div class="flex-1">
+                        <label>Tempo Estimado (Vazio p/ cálculo dinâmico)</label>
+                        <input type="text" name="tempo_entrega" value="{{ config.tempo_entrega }}" placeholder="Ex: 40-50 min">
+                    </div>
+                </div>
+                <div class="d-flex gap-15">
+                    <div class="flex-1"><label>Taxa Padrão (R$)</label><input type="number" name="taxa_entrega_padrao" value="{{ config.taxa_entrega_padrao }}" step="0.50" placeholder="0.00"></div>
+                    <div class="flex-1"><label>Pedido Mínimo (R$)</label><input type="number" name="valor_minimo_pedido" value="{{ config.valor_minimo_pedido }}" step="0.50" placeholder="0.00"></div>
+                </div>
+                <div class="d-flex gap-15">
+                    <div class="flex-1">
+                        <label>Máx. Pessoas (Reserva)</label>
+                        <input type="number" name="reserva_max_pessoas" value="{{ config.reserva_max_pessoas }}" placeholder="Ex: 20">
+                    </div>
+                </div>
+                <button type="submit" class="btn-neon btn-neon-blue w-100 btn-modal-action mt-auto">Salvar Alterações</button>
+            </div>
+
+            <div class="config-card card-neon-green">
+                <h2>🕒 Horários</h2>
+                
+                <div class="table-container table-horarios-container">
+                    <table class="table-horarios">
+                        <thead>
+                            <tr>
+                                <th class="th-sticky left">Dia</th>
+                                <th class="th-sticky">Início</th>
+                                <th class="th-sticky">Fim</th>
+                                <th class="th-sticky">🚫 Fechado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set dias_map = {'seg':'Seg', 'ter':'Ter', 'qua':'Qua', 'qui':'Qui', 'sex':'Sex', 'sab':'Sáb', 'dom':'Dom'} %}
+                            {% for dia_key in ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'] %}
+                            {% set h = horarios.get(dia_key, {}) %}
+                            <tr style="border-bottom:1px solid #333;">
+                                <td class="td-horario-dia">{{ dias_map[dia_key] }}</td>
+                                <td class="td-horario-center" data-label="Início">
+                                    <input type="time" name="h_{{ dia_key }}_inicio" value="{{ h.get('inicio', '18:00') }}" class="input-time-sm">
+                                </td>
+                                <td class="td-horario-center" data-label="Fim">
+                                    <input type="time" name="h_{{ dia_key }}_fim" value="{{ h.get('fim', '23:00') }}" class="input-time-sm">
+                                </td>
+                                <td class="td-horario-center" data-label="Status">
+                                    <input type="checkbox" name="h_{{ dia_key }}_fechado" {% if h.get('fechado') %}checked{% endif %} class="checkbox-sm">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button type="submit" class="btn-neon btn-neon-green w-100 btn-modal-action mt-auto">Salvar Horários</button>
+            </div>
+
+            <div class="config-card card-neon-purple">
+                <h2>📦 Categorias</h2>
+                <div class="cats-grid" id="listaCategorias">
+                    {% for cat in categorias_db %}
+                    <div class="cat-item" data-id="{{ cat.id }}">
+                        <div class="d-flex align-center gap-8 w-100">
+                            <span class="drag-handle" title="Arraste para reordenar">☰</span>
+                            <input type="checkbox" name="cat_{{ cat.id }}" {% if cat.ativa %}checked{% endif %} class="m-0 w-auto" title="Ativar/Desativar" onchange="atualizarStatusCategoria('{{ cat.id }}', this.checked)">
+                            <input type="text" class="seamless-input cat-emoji-input" value="{{ cat.emoji or '📦' }}" onchange="renomearCategoria('{{ cat.id }}', this.nextElementSibling.value, this.value)">
+                            <input type="text" class="seamless-input cat-nome-input" value="{{ cat.nome }}" onchange="renomearCategoria('{{ cat.id }}', this.value, this.previousElementSibling.value)">
+                            <button type="button" class="btn-del flex-shrink-0" style="width:24px; height:24px; font-size:0.7rem;" onclick="excluirCategoria('{{ cat.id }}')">x</button>
+                        </div>
+                    </div>
+                    {% else %}<p class="empty-table-msg">Nenhuma categoria.</p>{% endfor %}
+                </div>
+                <div class="cat-btn-add-box">
+                    <input id="novaCatEmoji" placeholder="📦" class="input-emoji-add">
+                    <input id="novaCatNome" placeholder="Nova Categoria..." class="input-nome-add" onkeydown="if(event.key === 'Enter'){event.preventDefault(); adicionarCategoria();}">
+                    <button type="button" class="btn-neon btn-neon-purple m-0 btn-auto-width text-lg" onclick="adicionarCategoria()">+</button>
+                </div>
+                <button type="submit" class="btn-neon btn-neon-purple w-100 btn-modal-action mt-auto">Salvar Ordem e Status</button>
+            </div>
+
+            <div class="config-card card-neon-teal">
+                <h2>💳 Formas de Pagamento</h2>
+                <ul class="item-list mb-15">
+                    {% for fp in formas_pagamento %}
+                    <li class="item-card justify-between align-center d-flex">
+                        <div class="fp-title-lg" id="title_fp_{{ fp.id }}">{{ fp.nome }}</div>
+                        <div class="d-flex gap-5">
+                            <button type="button" class="btn-action-sm btn-action-edit" data-fp="{{ fp | tojson | forceescape }}" onclick="abrirModalFormaPagamento(this)" title="Editar Pagamento">✏️</button>
+                            <button type="button" class="btn-del" onclick="removerFormaPagamento('{{ fp.id }}')">🗑️</button>
+                        </div>
+                    </li>
+                    {% else %}<li class="empty-table-msg p-10">Nenhuma forma de pagamento.</li>{% endfor %}
+                </ul>
+                <button type="button" class="btn-neon btn-neon-teal w-100 btn-modal-action mt-auto" onclick="abrirModalFormaPagamento()">➕ Adicionar Pagamento</button>
+            </div>
+
+            <div class="config-card card-neon-orange">
+                <h2>🚚 Modos de Recebimento</h2>
+                
+                <div class="table-container table-reset mb-15">
+                    <table class="data-table w-100" style="border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; color: #aaa; border-bottom: 1px solid #444;">
+                                <th class="p-10">Nome</th>
+                                <th>Regras</th>
+                                <th>No Wpp?</th>
+                                <th class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-modos-envio">
+                            {% for m in modos_envio %}
+                            <tr style="border-bottom: 1px solid #333;">
+                                <td class="p-10 text-white font-bold">{{ m.nome }}</td>
+                                <td data-label="Regras" class="modo-regras-text">
+                                    {% if m.pede_endereco %}📍 Pede Endereço<br>{% endif %}
+                                    {% if m.pede_horario %}🕒 {{ m.pergunta_horario or 'Faz Pergunta' }}{% endif %}
+                                    {% if not m.pede_endereco and not m.pede_horario %}Sem regras{% endif %}
+                                </td>
+                                <td data-label="WhatsApp">
+                                    <input type="checkbox" {% if m.disponivel_wpp %}checked{% endif %} 
+                                        onchange="toggleModoWpp('{{ m.id }}', this.checked)" class="checkbox-accent-orange">
+                                </td>
+                                <td class="text-right">
+                                    <button type="button" class="btn-action-sm btn-action-edit-orange" data-modo='{{ m | tojson | safe }}'
+                                            onclick="abrirModalModoEnvio(this)">✏️</button>
+                                    <button type="button" class="btn-action-sm btn-action-del-red" 
+                                            onclick="deletarModoEnvio('{{ m.id }}')">🗑️</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button type="button" class="btn-neon btn-neon-orange w-100 btn-modal-action mt-auto" onclick="abrirModalModoEnvio()">➕ Adicionar Modo</button>
+            </div>
+
+            <div class="config-card card-neon-yellow">
+                <h2>👤 Cadastro Dinâmico</h2>
+                <div id="listaCamposCadastro" class="cats-grid mb-15 gap-5"></div>
+                <button type="button" class="btn-neon btn-neon-yellow w-100 btn-modal-action mt-auto" onclick="abrirModalCampoCadastro()">➕ Adicionar Campo</button>
+            </div>
+
+            <div class="config-card card-neon-cyan">
+                <h2>📱 Apps Delivery</h2>
+                <ul class="item-list">
+                    {% for plat in plataformas %}
+                    <li class="item-card flex-column align-center">
+                        <div class="d-flex w-100 justify-between">
+                            <input type="text" value="{{ plat.nome }}" class="seamless-input w-100 font-bold text-white text-lg mb-5" id="plat_nome_{{ plat.id }}" onchange="salvarPlataforma('{{ plat.id }}')">
+                            <button type="button" class="btn-del ml-10" onclick="removerPlataforma('{{ plat.id }}')">🗑️</button>
+                        </div>
+                    </li>
+                    {% else %}<li class="empty-table-msg p-10">Nenhum app cadastrado.</li>{% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Adicionar App (Ex: iFood)</span>
+                    <div class="d-flex gap-15 mb-10">
+                        <input type="text" id="newPlatNome" placeholder="Ex: iFood" class="flex-1" onkeydown="if(event.key === 'Enter'){event.preventDefault(); adicionarPlataforma();}">
+                    </div>
+                    <button type="button" class="btn-neon btn-neon-cyan w-100 m-0 btn-modal-action" onclick="adicionarPlataforma()">Adicionar App</button>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-indigo">
+                <h2>📅 Reservas Manuais</h2>
+                <div class="table-container flex-1 mb-10" style="overflow-y:auto; border:none; border-radius:0;">
+                    <table class="reserva-table w-100">
+                        <thead><tr><th>Data</th><th>Hora</th><th>Qtd</th><th>Cliente</th><th></th></tr></thead>
+                        <tbody>
+                            {% for res in reservas %}
+                            <tr>
+                                <td data-label="Data">{{ res.data_reserva[-2:] }}/{{ res.data_reserva[5:7] }}</td>
+                                <td data-label="Hora">{{ res.horario }}</td>
+                                <td data-label="Qtd" class="text-success font-bold">{{ res.qtd_pessoas }}</td>
+                                <td data-label="Cliente">{{ res.nome_cliente }}</td>
+                                <td class="text-right">
+                                    <div class="d-flex gap-5 justify-end">
+                                        <button type="button" class="btn-view" onclick="verReserva('{{ res.data_reserva }}','{{ res.horario }}','{{ res.qtd_pessoas }}','{{ res.nome_cliente }}','{{ res.telefone_cliente }}','{{ res.pre_pedido }}')">👁️</button>
+                                        <button type="button" class="btn-del" onclick="removerReserva('{{ res.id }}')">x</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}<tr><td colspan="5" class="empty-table-msg p-15">Nenhuma reserva.</td></tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="add-box">
+                    <span class="add-box-title">Nova Reserva Manual</span>
+                    <div class="d-flex gap-15 mb-5"><input type="date" id="resData"><input type="time" id="resHora"><input type="number" id="resPessoas" placeholder="Qtd"></div>
+                    <div class="d-flex gap-15 mb-5"><input type="text" id="resNome" placeholder="Nome"><input type="text" id="resTel" placeholder="Tel"></div>
+                    <div class="d-flex gap-15 m-0"><input type="text" id="resObs" placeholder="Obs"><button type="button" class="btn-neon btn-neon-indigo m-0 btn-auto-width" onclick="adicionarReserva()">Adicionar</button></div>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-pink">
+                <h2>💬 Mensagens do Robô</h2>
+                <div class="flex-1 mb-10" style="overflow-y:auto; padding-right:5px;">
+                    <label>Saudação com Nome</label>
+                    <textarea name="msg_saudacao_nome" rows="2">{{ config.msg_saudacao_nome }}</textarea>
+                    
+                    <label>Saudação Padrão</label>
+                    <textarea name="msg_saudacao_padrao" rows="2">{{ config.msg_saudacao_padrao }}</textarea>
+                    
+                    <label>Texto do Link</label>
+                    <textarea name="msg_texto_cardapio" rows="2">{{ config.msg_texto_cardapio }}</textarea>
+                    
+                    <label>Tempo de Entrega (Use <b>{tempo}</b>)</label>
+                    <textarea name="msg_tempo_entrega" rows="2">{{ config.msg_tempo_entrega }}</textarea>
+                    
+                    <label>Agradecimento Final</label>
+                    <textarea name="msg_agradecimento" rows="2">{{ config.msg_agradecimento }}</textarea>
+                    
+                    <label>Aviso de Fila (Use <b>{fila}</b>)</label>
+                    <textarea name="msg_fila_estimativa" rows="2">{{ config.msg_fila_estimativa }}</textarea>
+                </div>
+                <button type="submit" class="btn-neon btn-neon-pink w-100 btn-modal-action mt-auto">Salvar Mensagens</button>
+            </div>
+
+            <div class="config-card card-neon-red">
+                <h2>🛵 Bairros de Entrega</h2>
+                <ul class="item-list">
+                    {% for b in bairros %}
+                    <li class="item-card">
+                        <div class="flex-1 font-bold text-white">
+                            <input type="text" value="{{ b.nome }}" class="seamless-input w-100 font-bold text-white" onchange="editarBairro('{{ b.id }}', this.value, this.nextElementSibling.nextElementSibling.value)">
+                        </div>
+                        <span class="promo-tag" style="background:rgba(255, 23, 68, 0.15); color:#ff1744; border-color:rgba(255, 23, 68, 0.3);">
+                            R$ <input type="number" step="0.50" value="{{ b.taxa if b.taxa is not none else '' }}" placeholder="Padrão" class="seamless-input font-bold" style="width: 50px; color: #ff1744;" onchange="editarBairro('{{ b.id }}', this.parentElement.previousElementSibling.firstElementChild.value, this.value)">
+                        </span>
+                        <button type="button" class="btn-del" onclick="removerBairro('{{ b.id }}')">🗑️</button>
+                    </li>
+                    {% else %}<li class="empty-table-msg p-10">Sem bairros.</li>{% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Adicionar Bairro</span>
+                    <div class="d-flex gap-15 m-0"><input type="text" id="newBairroNome" placeholder="Nome" class="flex-2"><input type="number" id="newBairroTaxa" step="0.50" placeholder="Taxa" class="flex-1"><button type="button" class="btn-neon btn-neon-red m-0 btn-auto-width" onclick="adicionarBairro()">Adicionar</button></div>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-green">
+                <h2>📢 Disparo Programado</h2>
+                <ul class="item-list mb-15" id="listaMensagensAgendadas"></ul>
+                <button type="button" class="btn-neon btn-neon-green w-100 btn-modal-action mt-auto" onclick="abrirModalDisparo()">
+                    ➕ Agendar Novo Disparo
+                </button>
+            </div>
+
+            <div class="config-card card-neon-red">
+                <h2>🚫 Bloqueio de Estoque</h2>
+                <select id="filterEstoqueCat" onchange="filtrarEstoque()" class="mb-10"><option value="">-- Selecione Categoria --</option></select>
+                <div id="listaEstoque" class="flex-1 mb-10 d-flex flex-column gap-8" style="overflow-y: auto;">
+                    <p class="empty-table-msg text-muted">Selecione uma categoria acima.</p>
+                </div>
+                <button type="button" class="btn-neon btn-neon-red w-100 btn-modal-action mt-auto" onclick="location.reload()">Salvar Alterações</button>
+            </div>
+
+            <div class="config-card card-neon-orange">
+                <h2>⭐ Mais Pedidos</h2>
+                <ul class="item-list">
+                    {% for mp in mais_pedidos %}
+                    <li class="item-card"><span class="story-badge">⭐</span><div class="flex-1"><div class="font-bold text-white">{{ mp.nome_produto }}</div><small class="text-muted">{{ mp.categoria }}</small></div><button type="button" class="btn-del" onclick="removerMaisPedido('{{ mp.id }}')">🗑️</button></li>
+                    {% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Adicionar</span>
+                    <select id="filterMaisPedidosCat" onchange="filtrarProdutosMaisPedidos()" class="mb-5"><option value="">Categoria...</option></select>
+                    <div class="d-flex gap-5">
+                        <select id="newMaisPedidoProd"><option value="">Produto...</option></select>
+                        <button type="button" class="btn-neon btn-neon-orange m-0 btn-auto-width" onclick="adicionarMaisPedido()">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-pink">
+                <h2>📸 Stories do Cardápio</h2>
+                <ul class="item-list">
+                    {% for item in destaques %}
+                    <li class="item-card"><span class="story-badge text-white" style="background: #f50057;">#{{ loop.index }}</span><div class="flex-1"><div class="font-bold text-white">{{ item.nome_produto }}</div><small class="text-muted">{{ item.categoria }}</small></div><button type="button" class="btn-del" onclick="removerDestaque('{{ item.id }}')">🗑️</button></li>
+                    {% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Adicionar</span>
+                    <select id="filterDestCat" onchange="atualizarProdutosStories()" class="mb-5"><option value="">Categoria...</option></select>
+                    <div class="d-flex gap-5">
+                        <select id="newDestProd"><option value="">Produto...</option></select>
+                        <button type="button" class="btn-neon btn-neon-pink m-0 btn-auto-width" onclick="adicionarDestaque()">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-purple">
+                <h2>🔤 Apelidos do Robô</h2>
+                <ul class="item-list">
+                    {% for ap in apelidos %}
+                    <li class="item-card"><div class="flex-1"><div class="font-bold text-white">{{ ap.apelido }}</div><small style="color:#bbb;">👉 {{ ap.sabor_nome }}</small></div><button type="button" class="btn-del" onclick="removerApelido('{{ ap.origin }}', '{{ ap.id }}')">🗑️</button></li>
+                    {% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Novo Apelido</span>
+                    <div class="d-flex gap-15 mb-5"><select id="filterApelidoCat" onchange="filtrarProdutosApelido()" class="flex-1"><option value="">Tipo...</option></select><select id="newApelidoProd" class="flex-2"><option value="">Alvo...</option></select></div>
+                    <div class="d-flex gap-15 m-0"><input type="text" id="newApelidoNome" placeholder="Apelido"><button type="button" class="btn-neon btn-neon-purple m-0 btn-auto-width" onclick="adicionarApelido()">Salvar</button></div>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-teal">
+                <h2>💠 Chaves Pix</h2>
+                <ul class="item-list">
+                    {% for pix in pix_keys %}
+                    <li class="item-card"><div style="padding-right: 5px;"><input type="radio" name="pix_select" {% if config.pix_ativo_id == pix.id|string %}checked{% endif %} onchange="selecionarPix('{{ pix.id }}')" style="width:16px;"></div><div class="pix-grid"><input type="text" class="seamless-input pix-full" id="chave_{{ pix.id }}" value="{{ pix.chave }}" onchange="editarPix('{{ pix.id }}')"><input type="text" class="seamless-input" id="titular_{{ pix.id }}" value="{{ pix.titular }}" onchange="editarPix('{{ pix.id }}')"><input type="text" class="seamless-input" id="banco_{{ pix.id }}" value="{{ pix.banco }}" onchange="editarPix('{{ pix.id }}')"></div><button type="button" class="btn-del" onclick="removerPix('{{ pix.id }}')">🗑️</button></li>
+                    {% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Nova Chave</span>
+                    <input type="text" id="newPixChave" placeholder="Chave" class="mb-5">
+                    <div class="d-flex gap-15 m-0">
+                        <input type="text" id="newPixTitular" placeholder="Titular">
+                        <input type="text" id="newPixBanco" placeholder="Banco">
+                    </div>
+                    <button type="button" class="btn-neon btn-neon-teal w-100 p-10 mt-10" onclick="adicionarPix()">Adicionar</button>
+                </div>
+            </div>
+
+            <div class="config-card card-neon-yellow">
+                <h2>🏷️ Promoções</h2>
+                <ul class="item-list">
+                    {% for promo in promocoes %}
+                    <li class="item-card"><div class="flex-1"><div class="font-bold text-white">{{ promo.nome_produto }}</div><small class="text-muted">{{ promo.categoria }}</small></div><span class="promo-tag" style="background:rgba(255, 234, 0, 0.15); color:#ffea00; border-color:rgba(255, 234, 0, 0.3);">-{{ promo.desconto }}</span><button type="button" class="btn-del" onclick="removerPromo('{{ promo.id }}')">🗑️</button></li>
+                    {% endfor %}
+                </ul>
+                <div class="add-box">
+                    <span class="add-box-title">Nova Promoção</span>
+                    <div class="d-flex gap-15 mb-5"><select id="filterPromoCat" onchange="filtrarProdutosPromo()" class="flex-1"><option value="">Categoria...</option></select><select id="newPromoProd" class="flex-2"><option value="">Item...</option></select></div>
+                    <div class="d-flex gap-15 m-0"><input type="text" id="newPromoDesc" placeholder="Desc (ex: 10%)" class="flex-2"><button type="button" class="btn-neon btn-neon-yellow m-0 btn-auto-width flex-1" onclick="adicionarPromo()">Adicionar</button></div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+    <div id="modalReserva" class="modal-overlay">
+        <div class="modal text-left">
+            <h3 style="color:var(--primary); margin-top:0;">Detalhes da Reserva</h3>
+            <p><strong>Cliente:</strong> <span id="detResNome"></span></p>
+            <p><strong>Telefone:</strong> <span id="detResTel"></span></p>
+            <hr class="modal-divider">
+            <p><strong>Data:</strong> <span id="detResData"></span> às <span id="detResHora"></span></p>
+            <p><strong>Pessoas:</strong> <span id="detResPessoas"></span></p>
+            <p><strong>Observação / Pré-Pedido:</strong></p>
+            <div id="detResObs" class="reserva-det-box"></div>
+            <div class="text-right">
+                <button type="button" onclick="document.getElementById('modalReserva').style.display='none'" class="btn-neon btn-neon-primary btn-modal-action">Fechar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modalModoEnvio" class="modal-overlay">
+        <div class="modal">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 class="text-white pb-10 m-0">Gerenciar Modo de Recebimento</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalModoEnvio').style.display='none'">×</button></div>
+            <input type="hidden" id="modoEnvioId">
+            <div class="modal-config-scroll">
+                <label class="form-label">Nome (Ex: Entrega, Retirada, Mesa)</label>
+                <input type="text" id="modoNome" class="input-std w-100 mb-15 p-10" required>
+                
+                <label class="checkbox-card">
+                    <input type="checkbox" id="modoPedeEndereco" style="width:18px; height:18px;">📍 Exigir Endereço (Aplica a taxa de entrega)
+                </label>
+                <label class="checkbox-card mb-10">
+                    <input type="checkbox" id="modoPedeHorario" style="width:18px; height:18px;" onchange="document.getElementById('boxPerguntaHorario').style.display = this.checked ? 'block' : 'none'">🕒 Fazer uma pergunta extra de Horário
+                </label>
+                <div id="boxPerguntaHorario" class="pergunta-box">
+                    <label class="form-label">Qual pergunta o robô fará?</label>
+                    <input type="text" id="modoPergunta" class="input-std pergunta-input" placeholder="Ex: Que horas você chega?">
+                </div>
+                
+                <label class="checkbox-card">
+                    <input type="checkbox" id="modoPedePagamento" style="width:18px; height:18px;" checked>💳 Perguntar a Forma de Pagamento
+                </label>
+                <label class="checkbox-card mb-10">
+                    <input type="checkbox" id="modoPedeObsFinal" style="width:18px; height:18px;" checked onchange="document.getElementById('boxPerguntaObsFinal').style.display = this.checked ? 'block' : 'none'">📝 Perguntar por Observações Finais
+                </label>
+                <div id="boxPerguntaObsFinal" class="pergunta-box" style="display:block;">
+                    <label class="form-label">Mensagem da pergunta final:</label>
+                    <input type="text" id="modoPerguntaObsFinal" class="input-std pergunta-input" placeholder="Ex: Alguma observação geral para o pedido?">
+                </div>
+            </div>
+            <div class="d-flex justify-end gap-15 mt-20">
+                <button type="button" class="btn-neon btn-neon-danger btn-modal-action" onclick="document.getElementById('modalModoEnvio').style.display='none'">Cancelar</button>
+                <button type="button" class="btn-neon btn-neon-success btn-modal-action" onclick="salvarModoEnvio()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalDisparo" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 id="modalDisparoTitulo" class="text-white m-0 pb-10">Novo Disparo Diário</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="fecharModalDisparo()">×</button></div>
+            <input type="hidden" id="editDispId"> 
+            <div class="modal-config-scroll">
+                <label class="checkbox-card checkbox-card-green">
+                    <input type="checkbox" id="newDispAtivo" style="width:18px; height:18px;" checked>🚀 Ativo (Disparar todos os dias no horário marcado)
+                </label>
+                <label class="form-label">Horário do Envio (Diário):</label>
+                <input type="time" id="newDispDataHora" class="input-std w-100 mb-15 p-10">
+                <label class="form-label">Texto da Mensagem:</label>
+                <textarea id="newDispTexto" rows="4" class="input-std w-100 mb-15 p-10" placeholder="Ex: A loja está aberta! Faça seu pedido 🍕"></textarea>
+                <label class="form-label">Anexar Imagem (Opcional):</label>
+                <div id="avisoEdicaoImagem" style="display:none; color:#ff9100; font-size:0.8rem; margin-bottom:5px;">Deixe em branco para manter a imagem atual.</div>
+                <input type="file" id="newDispImagem" accept="image/*" class="input-std w-100 mb-15 p-10" style="background: #222; color: #fff;">
+            </div>
+            <div class="d-flex justify-end gap-15 mt-20">
+                <button type="button" class="btn-neon btn-neon-danger btn-modal-action" onclick="fecharModalDisparo()">Cancelar</button>
+                <button type="button" class="btn-neon btn-neon-success btn-modal-action" onclick="salvarMensagemAgendada()">Salvar Disparo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalFormaPagamento" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 id="modalFormaPagamentoTitulo" class="text-white m-0 pb-10">Nova Forma de Pagamento</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="fecharModalFormaPagamento()">×</button></div>
+            <input type="hidden" id="editFpId">
+            <label class="form-label">Nome do Pagamento (Ex: Dinheiro, Alelo):</label>
+            <input type="text" id="modalFpNome" class="input-std w-100 p-10 mb-15" required>
+            <div class="d-flex gap-15 mb-15 p-10" style="background: rgba(255,255,255,0.05); border-radius: 6px;">
+                <label class="d-flex align-center gap-8 text-white" style="cursor:pointer;"><input type="checkbox" id="modalFpWpp" style="width:16px; height:16px;" checked>Ativo no Robô</label>
+                <label class="d-flex align-center gap-8 text-white" style="cursor:pointer;"><input type="checkbox" id="modalFpDet" onchange="toggleFpPergunta()" style="width:16px; height:16px;">Pedir Detalhe</label>
+            </div>
+            <div id="boxFpPergunta" class="pergunta-box">
+                <label class="form-label">Pergunta do Detalhe:</label>
+                <input type="text" id="modalFpPergunta" class="input-std pergunta-input" placeholder="Ex: Vai precisar de troco para quanto?">
+            </div>
+            <div class="d-flex justify-end gap-15 mt-20">
+                <button type="button" class="btn-neon btn-neon-danger btn-modal-action" onclick="fecharModalFormaPagamento()">Cancelar</button>
+                <button type="button" class="btn-neon btn-neon-success btn-modal-action" onclick="salvarFormaPagamentoModal()">Salvar Pagamento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalCampoCadastro" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 id="modalCampoCadastroTitulo" class="text-white m-0 pb-10">Novo Campo de Cadastro</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="fecharModalCampoCadastro()">×</button></div>
+            <input type="hidden" id="editCadId">
+            <label class="form-label">Nome Interno da Coluna (Ex: CPF ou Complemento):</label>
+            <input type="text" id="modalCadLabel" class="input-std w-100 p-10 mb-15" required>
+            <label class="form-label">Pergunta do Robô (Use * para negrito):</label>
+            <textarea id="modalCadPergunta" rows="2" class="input-std w-100 p-10 mb-15" placeholder="Ex: Digite seu *CPF* na mensagem abaixo:" style="font-family: inherit;"></textarea>
+            <div class="d-flex gap-15 p-10 mb-15" style="background: rgba(255,255,255,0.05); border-radius: 6px;">
+                <label class="d-flex align-center gap-8 text-white" style="cursor:pointer;"><input type="checkbox" id="modalCadAtivo" style="width:16px; height:16px;" checked>Ativo no Fluxo</label>
+                <label class="d-flex align-center gap-8 text-white" style="cursor:pointer;"><input type="checkbox" id="modalCadObrig" style="width:16px; height:16px;">Campo Obrigatório</label>
+            </div>
+            <div class="d-flex justify-end gap-15 mt-20">
+                <button type="button" class="btn-neon btn-neon-danger btn-modal-action" onclick="fecharModalCampoCadastro()">Cancelar</button>
+                <button type="button" class="btn-neon btn-neon-success btn-modal-action" onclick="salvarCampoCadastroModal()">Salvar Campo</button>
+            </div>
+        </div>
+    </div>
+    
+    <script id="todos-produtos-data" type="application/json">{{ todos_produtos | tojson | safe }}</script>
+    <script id="todos-adicionais-data" type="application/json">{{ adicionais_db | tojson | safe }}</script>
+    <script id="mapa-emojis-data" type="application/json">{{ mapa_emojis | tojson | safe }}</script>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/configuracoes.js?v=4"></script>
+{% endblock %}

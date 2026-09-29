@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão & Financeiro{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/styles_gestao.css">
+{% endblock %}
+
+{% block content %}
+    <div class="page-header page-header-glow d-flex align-center justify-between" style="position: relative; z-index: 20;">
+        <div>
+            <h1 class="page-title-glow">📊 Gestão Empresarial</h1>
+            <div class="page-subtitle">Acompanhe receitas, despesas, equipe e configure suas fichas técnicas.</div>
+        </div>
+    </div>
+
+<div class="tabs d-flex gap-10 mb-25 pb-0" style="border-bottom: 1px solid #333; overflow-x: auto;">
+    <button class="tab-btn active" onclick="switchTab('resumo', this)" style="--tab-color: #2979ff;">📈 Visão Geral</button>
+    <button class="tab-btn" onclick="switchTab('despesas', this)" style="--tab-color: #ff1744;">💸 Despesas</button>
+    <button class="tab-btn" onclick="switchTab('estoque', this)" style="--tab-color: #ffea00;">📦 Almoxarifado</button>
+    <button class="tab-btn" onclick="switchTab('ficha', this)" style="--tab-color: #00e5ff;">📋 Fichas Técnicas</button>
+    <button class="tab-btn" onclick="switchTab('equipe', this)" style="--tab-color: #ff9100;">🛵 Motoboys</button>
+    <button class="tab-btn" onclick="switchTab('funcionarios', this)" style="--tab-color: #00e676;">👨‍🍳 Equipe Interna</button>
+</div>
+
+<div id="tab-resumo" class="tab-content">
+    <div class="control-bar mb-15">
+        <h3 class="m-0 text-white w-100">Resumo Mensal</h3>
+        <div class="d-flex gap-10 align-center flex-wrap w-100">
+            <input type="month" id="filtroMesResumo" class="input-std flex-1" style="min-width: 150px;" onchange="carregarResumo()">
+            <button class="btn-neon btn-neon-info flex-2 justify-center" style="min-width: 220px;" onclick="baixarRelatorioContador()" title="Baixar ficheiro CSV formatado">📥 Exportar para Contabilidade</button>
+        </div>
+    </div>
+    
+    <div class="dashboard-grid">
+        <div class="dash-card clickable card-neon-green" onclick="abrirDetalheDash('receita')">
+            <h3 class="text-success">💰 Faturamento Bruto</h3><p class="value val-green" id="dash_receita" style="text-shadow: 0 0 10px rgba(0,230,118,0.4);">R$ 0,00</p>
+        </div>
+        <div class="dash-card clickable card-neon-yellow" onclick="abrirDetalheDash('compras')">
+            <h3 class="text-warning">📉 Custo de Estoque</h3><p class="value val-yellow" id="dash_compras" style="text-shadow: 0 0 10px rgba(255,234,0,0.4);">R$ 0,00</p>
+        </div>
+        <div class="dash-card clickable card-neon-red" onclick="abrirDetalheDash('despesas')">
+            <h3 class="text-danger">🧾 Despesas Gerais</h3>
+            <p class="value val-red mb-5" id="dash_despesas" style="text-shadow: 0 0 10px rgba(255,23,68,0.4);">R$ 0,00</p>
+            <span id="dash_taxas" class="text-xs text-warning font-bold">Inclui R$ 0,00 de Taxas</span>
+        </div>
+        <div class="dash-card clickable card-neon-blue" onclick="abrirDetalheDash('lucro')" style="background: rgba(41, 121, 255, 0.05);">
+            <h3 class="text-primary">🏆 Lucro Líquido Real</h3><p class="value val-blue" id="dash_lucro" style="text-shadow: 0 0 15px rgba(41,121,255,0.5);">R$ 0,00</p>
+        </div>
+    </div>
+    
+    <div class="dashboard-grid mt-20">
+        <div class="dash-card card-neon-cyan flex-1" style="min-width: 300px;">
+            <h3 class="dash-card-title text-info" style="text-shadow: 0 0 8px rgba(0,229,255,0.4);">💳 Receitas por Pagamento</h3>
+            <div id="breakdown_pagamentos">A carregar...</div>
+        </div>
+        <div class="dash-card card-neon-blue flex-1" style="min-width: 300px;">
+            <h3 class="dash-card-title text-primary" style="text-shadow: 0 0 8px rgba(41,121,255,0.4);">📊 Indicadores e Margens</h3>
+            <div id="indicadores_saude">A carregar...</div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-despesas" class="tab-content">
+    <div class="control-bar mb-15">
+        <h3 class="m-0 text-white">Controle de Despesas</h3>
+        <div class="d-flex gap-10">
+            <input type="month" id="filtroMesDespesas" class="input-std w-auto" onchange="carregarDespesas()">
+            <button class="btn-neon btn-neon-blue" onclick="abrirModalDespesa()">➕ Lançar Nova Despesa</button>
+        </div>
+    </div>
+    
+    <div class="summary-row">
+        <div class="summary-card card-neon-blue"><h4>Gasto Total do Mês</h4><p id="sum_desp_total" style="text-shadow: 0 0 10px rgba(41,121,255,0.4);">R$ 0,00</p></div>
+        <div class="summary-card card-neon-green"><h4>Contas Já Pagas</h4><p id="sum_desp_pago" class="text-success" style="text-shadow: 0 0 10px rgba(0,230,118,0.4);">R$ 0,00</p></div>
+        <div class="summary-card card-neon-red"><h4>Contas Pendentes</h4><p id="sum_desp_pendente" class="text-danger" style="text-shadow: 0 0 10px rgba(255,23,68,0.4);">R$ 0,00</p></div>
+    </div>
+
+    <div class="filter-row">
+        <div class="flex-2">
+            <label class="text-sm text-muted d-block mb-5">🔍 Buscar por descrição:</label>
+            <input type="text" id="busca_despesa" class="input-std w-100" placeholder="Ex: Aluguel, Coca-cola..." onkeyup="filtrarDespesas()">
+        </div>
+        <div class="flex-1">
+            <label class="text-sm text-muted d-block mb-5">Funil de Status:</label>
+            <select id="filtro_status_despesa" class="input-std w-100" onchange="filtrarDespesas()">
+                <option value="todos">Todos os Lançamentos</option>
+                <option value="pendente">⏳ Apenas Pendentes (A Pagar)</option>
+                <option value="pago">✅ Apenas Pagos</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Descrição da Despesa</th><th>Vencimento</th><th>Categoria</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="lista_despesas"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="tab-estoque" class="tab-content">
+    <div class="control-bar mb-15">
+        <h3 class="m-0 text-white">Almoxarifado (Estoque Físico)</h3>
+        <button class="btn-neon btn-neon-blue" onclick="abrirModalInsumo()">➕ Cadastrar Insumo Novo</button>
+    </div>
+
+    <div class="filter-row">
+        <div class="flex-2">
+            <label class="text-sm text-muted d-block mb-5">🔍 Buscar produto:</label>
+            <input type="text" id="busca_insumo" class="input-std w-100" placeholder="Ex: Mussarela, Calabresa..." onkeyup="filtrarInsumos()">
+        </div>
+        <div class="flex-1">
+            <label class="text-sm text-muted d-block mb-5">Analisar Níveis:</label>
+            <select id="filtro_status_insumo" class="input-std w-100" onchange="filtrarInsumos()">
+                <option value="todos">Todos os Itens</option>
+                <option value="baixo">⚠️ Apenas Estoque Baixo (Falta na Loja)</option>
+                <option value="normal">✅ Estoque Normal</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Matéria Prima / Insumo</th><th>Quantidade Atual</th><th>Custo Médio (UN)</th><th>Status</th><th>Ações Rápidas</th></tr></thead>
+            <tbody id="lista_insumos"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="tab-ficha" class="tab-content">
+    <div id="view_lista_fichas">
+        <div class="control-bar mb-15">
+            <h3 class="m-0 text-white">Fichas Técnicas Cadastradas</h3>
+            <button class="btn-neon btn-neon-blue" onclick="abrirEditorFicha()">➕ Configurar Nova Receita</button>
+        </div>
+        
+        <div class="filter-row">
+            <div class="flex-2">
+                <label class="text-sm text-muted d-block mb-5">🔍 Buscar receita:</label>
+                <input type="text" id="busca_ficha" class="input-std w-100" placeholder="Ex: Calabresa, Borda..." onkeyup="filtrarFichas()">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Regra Configurada</th><th>Categoria</th><th>Custo da Receita</th><th>Valor Venda</th><th>Margem Atual</th><th>Ações</th></tr></thead>
+                <tbody id="lista_fichas_cadastradas"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="view_editor_ficha" class="hidden">
+        <div class="control-bar" style="background: rgba(37, 99, 235, 0.1); border-color: var(--primary);">
+            <button class="btn-neon btn-neon-blue" style="background: rgba(255,255,255,0.1); color: white;" onclick="fecharEditorFicha()">⬅ Voltar à Lista</button>
+            <h3 class="m-0 text-white" style="text-shadow: 0 0 10px rgba(41, 121, 255, 0.4);">📝 Editor de Ficha Técnica</h3>
+            <button class="btn-neon btn-neon-danger" id="btn_excluir_ficha" style="display:none;" onclick="excluirFichaAberta()">🗑️ Excluir Esta Receita</button>
+        </div>
+        
+        <div class="ficha-container mt-15">
+            <div class="ficha-side card-neon-blue">
+                <h3 class="m-0 text-primary" style="text-shadow: 0 0 10px rgba(41, 121, 255, 0.4);">1. Hierarquia da Receita</h3>
+                <p class="text-muted text-sm mb-15 line-height-base">Use o efeito cascata. Se a receita for da Borda, selecione a categoria, o produto, o tamanho, e por fim o adicional "Borda".</p>
+                
+                <label class="text-sm text-muted">1. Categoria (Obrigatório):</label>
+                <select id="ft_categoria" class="input-std mb-5" onchange="atualizarComboProduto()"></select>
+                <span class="help-text">Selecione onde este item fica no seu cardápio.</span>
+                
+                <label class="text-sm text-muted mt-10">2. Produto (Sabor/Base):</label>
+                <select id="ft_produto" class="input-std mb-5" onchange="atualizarComboTamanhoAdicional()" disabled>
+                    <option value="0">⭐ Regra Geral (Aplica a toda categoria)</option>
+                </select>
+                <span class="help-text">Escolha um produto específico ou a "Regra Geral".</span>
+                
+                <div id="box_variacoes" class="flex-column" style="display:none;">
+                    <label class="text-sm text-muted mt-10">3. Tamanho / Variação:</label>
+                    <select id="ft_tamanho" class="input-std mb-5" onchange="carregarReceitaDoProduto()">
+                        <option value="UNICO">Padrão / Único</option>
+                    </select>
+                    <span class="help-text">A receita varia por tamanho?</span>
+                </div>
+
+                <div id="box_adicionais" class="flex-column" style="display:none;">
+                    <label class="text-sm text-muted mt-10">4. Adicional / Extra (Opcional):</label>
+                    <select id="ft_adicional" class="input-std mb-5" onchange="carregarReceitaDoProduto()">
+                        <option value="">Nenhum (Configurando a Receita Principal)</option>
+                    </select>
+                    <span class="help-text">Se for receita de um extra (ex: Borda), selecione-o aqui.</span>
+                </div>
+            </div>
+            
+            <div class="ficha-side card-neon-green" id="box_receita" style="opacity: 0.5; pointer-events: none;">
+                <div class="d-flex justify-between align-center mb-15">
+                    <h3 class="m-0 text-success" style="text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);">2. Insumos Consumidos</h3>
+                    <button type="button" class="btn-neon btn-neon-success" onclick="abrirModalAddFicha()">➕ Adicionar Insumo</button>
+                </div>
+                <p class="text-muted text-sm line-height-base mt-0">O que e quanto a loja gasta para produzir esta etapa selecionada ao lado?</p>
+                
+                <div class="table-container mt-15" style="border: 1px dashed rgba(0, 230, 118, 0.4); background: rgba(0,0,0,0.3);">
+                    <table><thead><tr><th>Insumo</th><th>Qtd Gasta</th><th>Custo Unit.</th><th>Ações</th></tr></thead><tbody id="lista_itens_ficha"></tbody></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-equipe" class="tab-content">
+    <div class="control-bar mb-20" style="background: rgba(255, 145, 0, 0.1); border-color: var(--warning);">
+        <div>
+            <h3 class="m-0 text-warning" style="text-shadow: 0 0 10px rgba(255, 145, 0, 0.4);">🛵 Acerto Diário de Motoboys</h3>
+            <p class="text-muted text-sm m-0 mt-5">O que o entregador recebeu vs O que a loja tem que pagar de taxa.</p>
+        </div>
+        <input type="date" id="filtroDataAcerto" class="input-std w-auto" onchange="carregarEquipe()">
+    </div>
+    
+    <div class="ficha-container mb-25">
+        
+        <div class="ficha-side card-neon-orange p-15 w-100">
+            <h3 class="m-0 mb-15 text-warning text-lg" style="text-shadow: 0 0 8px rgba(255, 145, 0, 0.4);">📋 Acerto de Entregadores</h3>
+            
+            <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table class="w-100" style="min-width: 650px;">
+                    <thead>
+                        <tr>
+                            <th>Entregador & Detalhes</th>
+                            <th>Gestor a Receber</th>
+                            <th>Total Entregue (Pedidos)</th>
+                            <th>ACERTO FINAL</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista_acerto">
+                        <tr><td colspan="5" class="text-center text-muted">A carregar...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="d-flex w-100 flex-wrap" style="gap: 20px;">
+            <div class="ficha-side card-neon-cyan flex-1 p-15" style="min-width: 280px;">
+                <h3 class="m-0 text-info text-lg" style="text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);">Vínculo Rápido</h3>
+                <p class="text-muted text-sm mb-15">Pedidos novos à espera de motoboy:</p>
+                <div id="lista_pedidos_soltos" class="flex-column gap-10 pr-5" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+            
+            <div class="ficha-side card-neon-indigo flex-1 p-15" style="min-width: 280px;">
+                <h3 class="m-0 text-lg" style="color: #536dfe; text-shadow: 0 0 8px rgba(83, 109, 254, 0.4);">🤖 Automação</h3>
+                <p class="text-muted text-sm mb-15">Ideal para quem tem motoboy fixo.</p>
+                <select id="sel_motoboy_padrao" class="input-std" style="border-color: #536dfe;" onchange="salvarMotoboyPadrao()">
+                    <option value="">Nenhum (Vincular Manualmente)</option>
+                </select>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div class="ficha-container">
+        <div class="ficha-side card-neon-blue flex-1" style="min-width: 300px;">
+            <div class="d-flex justify-between align-center mb-15">
+                <h3 class="m-0 text-primary">👥 Entregadores Cadastrados</h3>
+                <button class="btn-neon btn-neon-blue text-sm p-10" onclick="abrirModalEntregador()">+ Novo</button>
+            </div>
+            <div class="table-container" style="overflow-x: auto; box-shadow: none;">
+                <table class="w-100" style="min-width: 400px;">
+                    <thead><tr><th>Nome</th><th>Taxa & Repasse</th><th>Ação</th></tr></thead>
+                    <tbody id="lista_entregadores"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="ficha-side card-neon-teal flex-1" style="min-width: 300px;">
+            <div class="d-flex justify-between align-center mb-5">
+                <h3 class="m-0" style="color:#1de9b6;">💳 Taxas (Maquininha/App)</h3>
+                <button class="btn-neon btn-neon-teal text-sm p-10" onclick="abrirModalTaxa()">+ Nova</button>
+            </div>
+            <p class="text-muted text-sm m-0 mb-10">Dedução automática do Lucro Líquido.</p>
+            <div class="table-container" style="overflow-x: auto; box-shadow: none;">
+                <table class="w-100" style="min-width: 300px;">
+                    <thead><tr><th>Método</th><th>Taxa (%)</th><th>Ação</th></tr></thead>
+                    <tbody id="lista_taxas"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-funcionarios" class="tab-content">
+    <div class="control-bar mb-20" style="background: rgba(0, 230, 118, 0.1); border-color: var(--success);">
+        <div class="w-100">
+            <h3 class="m-0 text-success" style="text-shadow: 0 0 10px rgba(0, 230, 118, 0.4);">👨‍🍳 Gestão de Funcionários & Pagamentos</h3>
+            <p class="text-muted text-sm m-0 mt-5">Controle salários, lance vales e gere comprovativos.</p>
+        </div>
+        <div class="d-flex gap-10 flex-wrap w-100">
+            <input type="month" id="filtroMesFunc" class="input-std flex-1" style="min-width: 130px;" onchange="carregarExtratoAtivo()">
+            <button class="btn-neon btn-neon-success flex-2 justify-center" style="min-width: 200px;" onclick="abrirModalFuncionario()">➕ Novo Funcionário</button>
+        </div>
+    </div>
+    
+    <div class="ficha-container">
+        <div class="ficha-side card-neon-green flex-1 p-15" style="min-width: 300px; max-width: 400px;">
+            <h3 class="m-0 text-success text-lg mb-15">Colaboradores</h3>
+            <div id="lista_funcionarios"></div>
+        </div> 
+        
+        <div class="ficha-side flex-2 p-20" style="min-width: 300px; background: rgba(255,255,255,0.02); border: 1px dashed #444;" id="painel_extrato_vazio">
+            <div class="text-center text-muted m-auto">
+                <span style="font-size: 3rem;">📄</span>
+                <p>Selecione um funcionário ao lado para ver o extrato.</p>
+            </div>
+        </div>
+
+        <div class="ficha-side card-neon-blue hidden flex-2 p-0" style="min-width: 300px; overflow: hidden;" id="painel_extrato_ativo">
+            <div class="p-20" style="background: rgba(41, 121, 255, 0.05); border-bottom: 1px solid var(--border);">
+                
+                <div class="d-flex justify-between align-center flex-wrap gap-15">
+                    <div>
+                        <h2 class="m-0 text-white" style="text-shadow: 0 0 10px rgba(41, 121, 255, 0.3);" id="extrato_nome">Nome</h2>
+                        <span class="text-success font-bold text-sm" id="extrato_cargo">Cargo</span>
+                    </div>
+                    <button class="btn-neon btn-neon-success w-auto p-10 justify-center" onclick="abrirModalLancamentoFunc()">💸 Lançar Vale / Pagamento</button>
+                </div>
+                
+                <div class="d-flex gap-10 mt-20 flex-wrap">
+                    <div class="flex-1 p-15" style="min-width: 120px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                        <span class="text-muted text-sm">Total Devido</span>
+                        <h3 class="m-0 mt-5 text-info" id="extrato_devido">R$ 0,00</h3>
+                    </div>
+                    <div class="flex-1 p-15" style="min-width: 120px; background:rgba(255, 23, 68, 0.1); border-radius:8px; border: 1px solid rgba(255, 23, 68, 0.3);">
+                        <span class="text-danger text-sm">Já Pago</span>
+                        <h3 class="m-0 mt-5 text-danger" style="text-shadow: 0 0 8px rgba(255, 23, 68, 0.4);" id="extrato_pago">R$ 0,00</h3>
+                    </div>
+                    <div class="flex-1 p-15" style="min-width: 120px; background:rgba(0, 230, 118, 0.1); border-radius:8px; border: 1px solid rgba(0, 230, 118, 0.3);">
+                        <span class="text-success text-sm">Saldo Restante</span>
+                        <h3 class="m-0 mt-5 text-success" style="text-shadow: 0 0 8px rgba(0, 230, 118, 0.4);" id="extrato_saldo">R$ 0,00</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-20" style="background: #181818; min-height: 300px;">
+                <h4 class="m-0 mb-15 text-muted">Extrato de Lançamentos do Mês</h4>
+                <div class="table-container w-100" style="box-shadow: none; border-color: #333;">
+                    <table class="w-100">
+                        <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead>
+                        <tbody id="lista_lancamentos_func"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalInsumo"><div class="modal-content"><div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 id="modalInsumo_titulo" class="text-primary" style="border-color:var(--primary); text-shadow:0 0 10px rgba(41,121,255,0.4);">Cadastrar Insumo</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalInsumo').style.display='none'">×</button></div><form onsubmit="salvarInsumo(event)" class="flex-column gap-5"><input type="hidden" id="ins_id"><label class="text-muted text-sm mt-5">Nome da Matéria Prima:</label><input type="text" id="ins_nome" class="input-std" placeholder="Ex: Queijo Mussarela" required><span class="help-text">Nome de como você compra ou controla no estoque.</span><label class="text-muted text-sm mt-5">Unidade de Medida (Controle base):</label><select id="ins_medida" class="input-std" required><option value="UN">UNidade (Un, Pote, Lata)</option><option value="G">Gramas (G)</option><option value="KG">Quilos (KG)</option><option value="ML">Mililitros (ML)</option><option value="L">Litros (L)</option></select><span class="help-text">Como você vai gastar isso na ficha técnica? (Dica: Prefira G ao invés de KG para itens fracionados).</span><label class="text-muted text-sm mt-5">Aviso de Estoque Mínimo:</label><input type="number" id="ins_min" class="input-std" placeholder="Ex: 10"><span class="help-text">O sistema deixará o item amarelo quando a quantidade chegar neste valor.</span><div class="d-flex justify-end gap-10 mt-10"><button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalInsumo').style.display='none'">Cancelar</button><button type="submit" class="btn-neon btn-neon-blue">Salvar Insumo</button></div></form></div></div>
+
+<div class="modal-overlay" id="modalAjuste"><div class="modal-content"><div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 class="text-info" style="border-color:var(--info); text-shadow:0 0 10px rgba(0,229,255,0.4);">⚖️ Ajustar Saldo Livremente</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalAjuste').style.display='none'">×</button></div><p class="text-muted text-sm">Use isto para corrigir contagens erradas, consumo próprio ou produtos vencidos. <strong>Isto não altera os gráficos financeiros.</strong></p><form onsubmit="salvarAjusteEstoque(event)" class="flex-column gap-10"><input type="hidden" id="ajuste_insumo_id"><div class="p-10" style="background: rgba(0, 229, 255, 0.1); border-radius: 8px; border: 1px solid #00e5ff;"><h4 id="ajuste_nome_display" class="m-0 text-info">Nome do Produto</h4></div><div class="d-flex align-center gap-10 mt-10"><label class="text-muted">Nova Quantidade Real:</label><input type="number" id="ajuste_nova_qtd" class="input-std flex-1" step="0.01" required></div><div class="d-flex justify-end gap-10 mt-15"><button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalAjuste').style.display='none'">Cancelar</button><button type="submit" class="btn-neon btn-neon-cyan">Salvar Ajuste</button></div></form></div></div>
+
+<div class="modal-overlay" id="modalDespesa"><div class="modal-content">
+    <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;">
+        <h3 id="modalDespesa_titulo" class="text-primary m-0" style="border: none; text-shadow: 0 0 10px rgba(41,121,255,0.4);">Lançar Despesa</h3>
+        
+        <button type="button" 
+                class="btn-del bg-transparent text-xl m-0 p-0 text-danger" 
+                style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" 
+                onclick="document.getElementById('modalDespesa').style.display='none'">×</button>
+    </div>
+    <form onsubmit="salvarDespesa(event)" class="flex-column gap-8">
+        <input type="hidden" id="desp_id">
+        <label class="text-muted text-sm mt-5">Com o que você gastou?</label>
+        <input type="text" id="desp_desc" class="input-std" placeholder="Ex: Conta de Luz, Aluguel..." required>
+        
+        <div class="d-flex gap-10 mt-5 flex-wrap w-100">
+            <div class="flex-1 flex-column" style="min-width: 140px;">
+                <label class="text-muted text-sm m-0 mb-5">Valor Base (R$):</label>
+                <input type="number" id="desp_valor" class="input-std m-0 w-100" placeholder="0,00" step="0.01" required>
+            </div>
+            
+            <div class="flex-1 flex-column" style="min-width: 140px;">
+                <label class="text-muted text-sm m-0 mb-5">Juros/Multa:</label>
+                <div class="d-flex gap-5 w-100">
+                    <select id="desp_juros_tipo" class="input-std m-0" style="flex: 0 0 70px; padding: 10px 5px;">
+                        <option value="dinheiro">R$</option>
+                        <option value="porcentagem">%</option>
+                    </select>
+                    <input type="number" id="desp_juros" class="input-std m-0 flex-1" placeholder="0,00" step="0.01" style="min-width: 0;">
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex flex-wrap gap-10 mt-5">
+            <div class="flex-1 flex-column" style="min-width: 140px;">
+                <label class="text-muted text-sm">Data de Vencimento:</label>
+                <div style="margin-top: auto;">
+                    <input type="date" id="desp_venc" class="input-std w-100" required>
+                    <span class="help-text mt-5">Dia que precisa ser pago.</span>
+                </div>
+            </div>
+            
+            <div class="flex-1 flex-column" style="min-width: 140px;">
+                <label class="text-muted text-sm">Categoria (Tipo de Custo):</label>
+                <div style="margin-top: auto;">
+                    <select id="desp_cat" class="input-std w-100">
+                        <option value="operacional">Custo Operacional (Renda, Luz, Internet)</option>
+                        <option value="variavel">Custo Variável (Gás, Consertos, Embalagens)</option>
+                        <option value="impostos">Impostos (DAS MEI, Contabilidade)</option>
+                    </select>
+                    <span class="help-text mt-5">Para organizar os gráficos.</span>
+                </div>
+            </div>
+        </div>
+        <label id="box_recorrente" class="d-flex align-center gap-8 mt-15 mb-5 cursor-pointer text-sm text-primary">
+            <input type="checkbox" id="desp_recorrente" style="width: 18px; height: 18px; accent-color: #2979ff;"> 
+            🔄 Repetir automaticamente todos os meses
+        </label>
+        <span class="help-text mt-0" id="txt_help_recorrente">O sistema vai clonar este boleto/conta todo dia 1º para os próximos meses.</span>
+        
+        <div class="d-flex justify-end gap-10 mt-15">
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalDespesa').style.display='none'">Cancelar</button>
+            <button type="submit" class="btn-neon btn-neon-blue">Salvar Lançamento</button>
+        </div>
+    </form>
+</div></div>
+
+<div class="modal-overlay" id="modalEntrada"><div class="modal-content p-20" style="width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto;">
+    <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 class="m-0 mt-0 text-success" style="border-color:var(--success); text-shadow:0 0 10px rgba(0,230,118,0.4);">🛒 Registrar Compra / Entrada</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalEntrada').style.display='none'">×</button></div>
+    <form onsubmit="salvarEntrada(event)" class="flex-column gap-15 mt-15">
+        <input type="hidden" id="ent_insumo_id">
+        <div class="p-10" style="background: rgba(0, 230, 118, 0.1); border-radius: 8px; border: 1px solid #00e676;">
+            <h4 id="ent_nome_display" class="m-0 mb-5 text-success text-lg">Nome</h4>
+            <span class="text-muted text-sm font-bold">A Unidade deste produto no Sistema é: <span id="ent_unidade_display" class="text-success">UN</span></span>
+        </div>
+        <div class="p-15 flex-column gap-15" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px dashed #555;">
+            <h4 class="m-0 text-white text-lg">📦 O que chegou na nota?</h4>
+            <div class="w-100">
+                <label class="text-muted text-sm d-block mb-5">1. Qtd. de Pacotes/Caixas compradas:</label>
+                <input type="number" id="ent_qtd_volume" class="input-std w-100 d-block" placeholder="Ex: 2 (Fardos)" required oninput="calcularTotalEntrada()">
+            </div>
+            <div class="w-100">
+                <label class="text-muted text-sm d-block mb-5">2. Quantas <span class="lbl_unidade">UN</span> vêm dentro de CADA pacote?</label>
+                <input type="number" id="ent_fator" class="input-std w-100 d-block" placeholder="Ex: 5" required oninput="calcularTotalEntrada()">
+                <span class="help-text m-0 mt-5">Multiplicador. Se você comprou a unidade solta exata do sistema, apenas digite 1.</span>
+            </div>
+            <div class="text-right text-info font-bold text-lg pt-10" style="border-top: 1px solid #444;">
+                Total adicionado ao estoque: <span id="display_calc_total">0</span> <span class="lbl_unidade">UN</span>
+            </div>
+        </div>
+        <div class="w-100">
+            <label class="text-muted text-sm d-block mb-5">Valor Total da Nota de Compra (R$):</label>
+            <input type="number" id="ent_custo" class="input-std w-100 d-block" placeholder="R$ 0,00" step="0.01" required>
+            <span class="help-text mt-5">O sistema usará isto para calcular o seu Custo Médio por unidade automaticamente.</span>
+        </div>
+        <div class="w-100">
+            <label class="text-muted text-sm d-block mb-5">Forma de Pagamento ao Fornecedor:</label>
+            <select id="ent_forma_pagamento" class="input-std w-100 d-block" required onchange="toggleParcelas()">
+                <option value="avista">À Vista (O dinheiro já saiu do caixa)</option>
+                <option value="prazo">A Prazo / Boleto (Gerar Despesa Pendente)</option>
+            </select>
+        </div>
+        <div id="box_compra_prazo" class="flex-column gap-15 p-15" style="display: none; background: rgba(255, 145, 0, 0.1); border-radius: 8px; border: 1px solid #ff9100;">
+            <p class="m-0 text-warning text-xs font-bold">⚠️ Atenção: Isso enviará a conta automaticamente para a aba de Despesas.</p>
+            <div class="w-100">
+                <label class="text-muted text-sm d-block mb-5">Em quantas parcelas?</label>
+                <input type="number" id="ent_parcelas" class="input-std w-100 d-block" value="1" min="1">
+            </div>
+            <div class="w-100">
+                <label class="text-muted text-sm d-block mb-5">Vencimento do primeiro boleto:</label>
+                <input type="date" id="ent_primeiro_venc" class="input-std w-100 d-block">
+            </div>
+        </div>
+        <div class="d-flex justify-end gap-10 mt-10">
+            <button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalEntrada').style.display='none'">Cancelar</button>
+            <button type="submit" class="btn-neon btn-neon-green p-10">Salvar Compra e Estoque</button>
+        </div>
+    </form>
+</div></div>
+
+<div class="modal-overlay" id="modalAddFicha"><div class="modal-content"><h3 class="text-primary" style="border-color:var(--primary); text-shadow:0 0 10px rgba(41,121,255,0.4);">Adicionar Insumo à Regra</h3><form onsubmit="salvarItemFicha(event)" class="flex-column gap-10"><label class="text-muted text-sm">Selecione a matéria-prima do almoxarifado:</label><select id="add_ft_insumo" class="input-std" required onchange="atualizarUnidadeFicha()"></select><div class="d-flex align-center gap-10"><input type="number" id="add_ft_qtd" class="input-std flex-1" step="0.001" required><span id="add_ft_unidade" class="font-bold text-info" style="width:40px;">UN</span></div><div class="d-flex justify-end gap-10 mt-15"><button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalAddFicha').style.display='none'">Cancelar</button><button type="submit" class="btn-neon btn-neon-blue">Adicionar Insumo</button></div></form></div></div>
+
+<div class="modal-overlay" id="modalEntregador">
+    <div class="modal-content">
+        <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 id="modalEntregador_titulo" class="text-primary" style="border-color:var(--primary); text-shadow:0 0 10px rgba(41,121,255,0.4);">Cadastrar Entregador</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalEntregador').style.display='none'">×</button></div>
+        <form onsubmit="salvarEntregador(event)" class="flex-column gap-10">
+            <input type="hidden" id="entregador_id">
+            <input type="text" id="entregador_nome" class="input-std" placeholder="Nome do Motoboy" required>
+            <input type="text" id="entregador_telefone" class="input-std" placeholder="Telefone (Opcional)">
+            
+            <label class="text-muted text-sm mb-0">Taxa Padrão por Entrega (R$):</label>
+            <input type="number" id="entregador_taxa" class="input-std" placeholder="Ex: 5.00" step="0.01" required>
+            
+            <label class="text-muted text-sm mt-5">Regra de Repasse (Dinâmico x Bairro):</label>
+            <select id="entregador_tipo_repasse" class="input-std">
+                <option value="padrao">Sempre usar a Taxa Padrão (Fixa)</option>
+                <option value="bairro">Receber o que o Cliente pagou (Integral Bairro)</option>
+                <option value="maior">Receber a MAIOR taxa (Padrão ou Bairro)</option>
+            </select>
+
+            <label class="text-muted text-sm mt-5">Frequência de Pagamento:</label>
+            <select id="entregador_frequencia" class="input-std">
+                <option value="diario">Diário (Recebe no fim do dia)</option>
+                <option value="semanal">Semanal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="mensal">Mensal</option>
+            </select>
+
+            <div class="d-flex justify-end gap-10 mt-10">
+                <button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalEntregador').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn-neon btn-neon-blue">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="modalTaxa">
+    <div class="modal-content">
+        <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 class="text-info" style="border-color:#1de9b6; text-shadow:0 0 10px rgba(29,233,182,0.4);">Configurar Nova Taxa</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalTaxa').style.display='none'">×</button></div>
+        
+        <form onsubmit="salvarTaxa(event)" class="flex-column gap-10">
+            <label class="text-muted text-sm">Selecione o Método:</label>
+            <select id="taxa_nome" class="input-std" required>
+                <option value="">Selecione...</option>
+                {% for fp in formas_pagamento %}
+                    <option value="{{ fp.nome }}">{{ fp.nome }}</option>
+                {% endfor %}
+            </select>
+            
+            <label class="text-muted text-sm mt-10">Desconto / Taxa Cobrada:</label>
+            <div class="d-flex gap-5 w-100 mb-10">
+                <select id="taxa_tipo" class="input-std m-0" style="flex: 0 0 70px; padding: 10px 5px;" required>
+                    <option value="porcentagem">%</option>
+                    <option value="dinheiro">R$</option>
+                </select>
+                <input type="number" id="taxa_valor" class="input-std m-0 flex-1" placeholder="Ex: 2.5" step="0.01" required>
+            </div>
+            <p class="text-muted text-xs m-0">Dica: Taxas aplicadas automaticamente nas vendas. Métodos sem taxa configurada consideram 0.</p>
+            
+            <div class="d-flex justify-end gap-10 mt-15">
+                <button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalTaxa').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn-neon btn-neon-teal">Salvar Taxa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalFuncionario">
+    <div class="modal-content">
+        <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 id="modalFuncionario_titulo" class="text-success m-0 mb-15" style="border-color:var(--success); text-shadow:0 0 10px rgba(0,230,118,0.4);">Cadastrar Funcionário</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalFuncionario').style.display='none'">×</button></div>
+        
+        <form onsubmit="salvarFuncionario(event)" class="flex-column gap-10">
+            <input type="hidden" id="func_id">
+            
+            <label class="text-muted text-sm m-0">Nome Completo:</label>
+            <input type="text" id="func_nome" class="input-std m-0" placeholder="Ex: João da Silva" required>
+            
+            <label class="text-muted text-sm m-0 mt-5">Cargo (Opcional):</label>
+            <input type="text" id="func_cargo" class="input-std m-0" placeholder="Ex: Atendente, Chapeiro">
+            
+            <div class="d-flex flex-wrap gap-10 w-100 mt-5">
+                <div class="flex-2 flex-column" style="min-width: 140px;">
+                    <label class="text-muted text-sm m-0 mb-5">Salário Base (R$):</label>
+                    <div style="margin-top: auto;">
+                        <input type="number" id="func_salario" class="input-std m-0 w-100" placeholder="0.00" step="0.01" required>
+                    </div>
+                </div>
+                <div class="flex-1 flex-column" style="min-width: 120px;">
+                    <label class="text-muted text-sm m-0 mb-5">Dia de Pagamento:</label>
+                    <div style="margin-top: auto;">
+                        <input type="number" id="func_dia" class="input-std m-0 w-100" placeholder="5" min="1" max="31" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-end gap-10 mt-15">
+                <button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalFuncionario').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn-neon btn-neon-green">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalLancamentoFunc">
+    <div class="modal-content">
+        <div class="d-flex justify-between align-center mb-15" style="border-bottom: 1px solid #333; padding-bottom: 10px;"><h3 class="text-success m-0 mb-5" style="border-color:var(--success); text-shadow:0 0 10px rgba(0,230,118,0.4);">Lançamento no Extrato</h3><button type="button" class="btn-del bg-transparent text-xl m-0 p-0 text-danger" style="border: none; box-shadow: none; line-height: 1; cursor: pointer;" onclick="document.getElementById('modalLancamentoFunc').style.display='none'">×</button></div>
+        <p class="text-success text-sm mt-0 mb-15">Isto será registado e afetará o Lucro Líquido automaticamente.</p>
+        
+        <form onsubmit="salvarLancamentoFunc(event)" class="flex-column gap-10">
+            <label class="text-muted text-sm m-0">Tipo de Lançamento:</label>
+            <select id="lan_tipo" class="input-std m-0 w-100 mb-10" required>
+                <option value="vale">💸 Vale / Adiantamento</option>
+                <option value="salario">💰 Pagamento de Salário</option>
+                <option value="bonus">⭐ Bônus / Comissão Extra</option>
+            </select>
+            
+            <div class="d-flex flex-wrap gap-10 w-100 mb-10">
+                <div class="flex-1 flex-column" style="min-width: 140px;">
+                    <label class="text-muted text-sm m-0 mb-5">Valor (R$):</label>
+                    <input type="number" id="lan_valor" class="input-std m-0 w-100" placeholder="Valor (R$)" step="0.01" required>
+                    <button type="button" onclick="preencherSaldoQuitar()" class="bg-transparent border-none text-info cursor-pointer text-xs text-left p-0 mt-5 underline font-bold">✨ Quitar saldo pendente</button>
+                </div>
+                
+                <div class="flex-1 flex-column" style="min-width: 140px;">
+                    <label class="text-muted text-sm m-0 mb-5">Data do Lançamento:</label>
+                    <input type="date" id="lan_data" class="input-std m-0 w-100" required>
+                </div>
+            </div>
+            
+            <label class="text-muted text-sm m-0">Observação:</label>
+            <input type="text" id="lan_desc" class="input-std m-0 w-100" placeholder="Ex: Semana 1, Metade do Mês">
+            
+            <div class="d-flex justify-end gap-10 mt-15">
+                <button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalLancamentoFunc').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn-neon btn-neon-green">Salvar Lançamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalLancMotoboy"><div class="modal-content"><h3 class="text-warning" style="border-color:var(--warning); text-shadow:0 0 10px rgba(255,145,0,0.4);">Lançar Vale ou Bônus</h3><p class="text-info text-sm mt-0" id="txt_nome_motoboy_lanc">Motoboy</p><form onsubmit="salvarLancMotoboy(event)" class="flex-column gap-10"><input type="hidden" id="lan_moto_id"><label class="text-muted text-sm">O que é isto?</label><select id="lan_moto_tipo" class="input-std" required><option value="vale">💸 Vale / Adiantamento (Ele levou dinheiro do caixa hoje)</option><option value="bonus">⭐ Bônus / Extra (A loja vai pagar a mais para ele hoje)</option></select><input type="number" id="lan_moto_valor" class="input-std" placeholder="Valor (R$)" step="0.01" required><input type="text" id="lan_moto_desc" class="input-std" placeholder="Descrição Opcional (Ex: Conserto Pneu, Caixinha)"><div class="d-flex justify-end gap-10 mt-15"><button type="button" class="btn-neon btn-neon-danger bg-transparent" onclick="document.getElementById('modalLancMotoboy').style.display='none'">Cancelar</button><button type="submit" class="btn-neon btn-neon-orange">Confirmar</button></div></form></div></div>
+
+<div class="modal-overlay" id="modalDashDetalhes">
+    <div class="modal-content w-100" style="max-width: 500px; background: #1e1e1e; border: 1px solid var(--primary); box-shadow: 0 0 40px rgba(41, 121, 255, 0.2);">
+        <div class="d-flex justify-between align-center mb-15 pb-10" style="border-bottom: 1px solid #333;">
+            <h3 class="m-0 text-primary" style="text-shadow: 0 0 10px rgba(41, 121, 255, 0.4);" id="detalhe_titulo">📊 Detalhamento</h3>
+            <button onclick="document.getElementById('modalDashDetalhes').style.display='none'" class="btn-icon btn-del border-none" style="width: 32px; height: 32px; font-size: 1rem; margin-bottom: 6px;" title="Fechar">✖</button>
+        </div>
+        <div id="detalhe_conteudo" style="max-height: 60vh; overflow-y: auto;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/gestao.js"></script>
+{% endblock %}

@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Módulo Fiscal & Tributário{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="/static/css/estilos_fiscal.css">
+    <style>
+        .tab-btn { background: #222; color: #aaa; border: none; padding: 10px 20px; cursor: pointer; border-radius: 8px 8px 0 0; font-weight: bold; transition: 0.3s; }
+        .tab-btn:hover { background: #333; color: #fff; }
+        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Estilização focada em formulários ERP (Inputs compactos) */
+        .erp-input {
+            background: #1a1a1a; color: #fff; border: 1px solid #444; padding: 6px 8px; width: 100%; box-sizing: border-box; border-radius: 4px; font-size: 0.85rem;
+        }
+        .erp-input:focus {
+            border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(41, 121, 255, 0.3); background: #222;
+        }
+        .table-form th { font-size: 0.75rem; padding: 8px 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .table-form td { padding: 4px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-glow d-flex align-center justify-between" style="position: relative; z-index: 20;">
+    <div>
+        <h1 class="page-title-glow">🧾 Gestão de Suprimentos e Fiscal</h1>
+        <div class="page-subtitle">Importação de notas de compra, parametrização e conciliação de stock.</div>
+    </div>
+    <div class="d-flex gap-10">
+        <input type="file" id="inputXML" accept=".xml" style="display: none;" onchange="handleFileSelect(event)">
+        <button class="btn-neon btn-neon-warning" onclick="abrirCompraManual()">📝 Limpar / Nova Compra Manual</button>
+        <button class="btn-neon btn-neon-success" onclick="document.getElementById('inputXML').click()">📥 Auto-Preencher com XML</button>
+    </div>
+</div>
+
+<div class="tabs d-flex gap-10 mt-20" style="border-bottom: 1px solid #333;">
+    <button class="tab-btn active" onclick="switchTabFiscal('compras', this)">📦 Importação de Compra</button>
+    <button class="tab-btn" onclick="switchTabFiscal('emitente', this)">🏢 Dados do Emitente</button>
+    <button class="tab-btn" onclick="switchTabFiscal('cardapio', this)">🏷️ Tributação</button>
+    <button class="tab-btn" onclick="switchTabFiscal('emissao', this)">📠 Fila de Emissão</button>
+</div>
+
+<div id="tab-compras" class="tab-content active mt-20">
+    <div id="workspace_importacao" class="w-100">
+        
+        <div class="card-neon-blue p-20 mb-20" style="border-left: 4px solid var(--primary);">
+            <div class="d-flex justify-between align-center mb-15">
+                <h4 class="text-info mt-0 mb-0">📄 Cabeçalho da NF-e</h4>
+                <span id="upload_status" class="text-sm font-bold"></span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                <div style="grid-column: span 2;">
+                    <label class="text-xs text-muted font-bold">Fornecedor (Nome | CNPJ):</label>
+                    <input type="text" id="ws_fornecedor" class="erp-input font-bold" placeholder="Ex: SUPERMERCADO EIRELI | 00.483.394/0001-86">
+                </div>
+                <div>
+                    <label class="text-xs text-muted">Operação:</label>
+                    <input type="text" id="ws_operacao" class="erp-input" placeholder="Ex: NOTA DE ECF">
+                </div>
+                <div>
+                    <label class="text-xs text-muted">Número da Nota:</label>
+                    <input type="text" id="ws_numero" class="erp-input" placeholder="Ex: 34387">
+                </div>
+                <div>
+                    <label class="text-xs text-muted">Série:</label>
+                    <input type="text" id="ws_serie" class="erp-input" placeholder="Ex: 002">
+                </div>
+                <div>
+                    <label class="text-xs text-muted">Modelo:</label>
+                    <input type="text" id="ws_modelo" class="erp-input" placeholder="Ex: 55">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                <div>
+                    <label class="text-xs text-muted">Data Emissão:</label>
+                    <input type="date" id="ws_dt_emissao" class="erp-input">
+                </div>
+                <div>
+                    <label class="text-warning font-bold text-xs">Data de Entrada no Estoque:</label>
+                    <input type="date" id="ws_dt_entrada" class="erp-input" style="border-color: var(--warning);">
+                </div>
+                <div style="grid-column: span 4;"></div>
+            </div>
+            <input type="hidden" id="ws_chave_acesso">
+        </div>
+
+        <div class="card-neon-blue p-20">
+            <div class="d-flex justify-between align-center mb-15">
+                <div>
+                    <h4 class="text-success m-0">📦 Itens da Nota e Dados da Importação</h4>
+                </div>
+                <button class="btn-neon btn-neon-primary" style="padding: 5px 15px; font-size: 0.8rem;" onclick="adicionarLinhaManual()">➕ Adicionar Item</button>
+            </div>
+            
+            <div class="table-container table-form" style="overflow-x: auto; max-height: 600px;">
+                <table style="min-width: 1700px; white-space: nowrap; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr>
+                            <th colspan="8" style="background: #1e3a8a; color: #93c5fd; text-align: center; border-right: 3px solid #111;">🛒 CAMPOS DA NF DE COMPRA</th>
+                            <th colspan="7" style="background: #064e3b; color: #6ee7b7; text-align: center;">⚙️ DADOS DA IMPORTAÇÃO (INTERNO)</th>
+                        </tr>
+                        <tr>
+                            <th style="width: 40px; background: #1e40af; color: #fff;">Seq.</th>
+                            <th style="width: 250px; background: #1e40af; color: #fff;">Produto</th>
+                            <th style="width: 60px; background: #1e40af; color: #fff;">Qtd</th>
+                            <th style="width: 60px; background: #1e40af; color: #fff;">Unid</th>
+                            <th style="width: 70px; background: #1e40af; color: #fff;">CFOP</th>
+                            <th style="width: 80px; background: #1e40af; color: #fff;">PIS/COFINS</th>
+                            <th style="width: 80px; background: #1e40af; color: #fff;">IPI</th>
+                            <th style="width: 90px; background: #1e40af; color: #fff; border-right: 3px solid #111;">Preço Total</th>
+                            
+                            <th style="width: 250px; background: #047857; color: #fff;">Produto (Identificar ou Cadastrar)</th>
+                            <th style="width: 70px; background: #047857; color: #fff;">Qtd Fator</th>
+                            <th style="width: 60px; background: #047857; color: #fff;">Unid</th>
+                            <th style="width: 80px; background: #047857; color: #fff;">CFOP</th>
+                            <th style="width: 100px; background: #047857; color: #fff;">PIS/COFINS (Regra)</th>
+                            <th style="width: 100px; background: #047857; color: #fff;">IPI (Regra)</th>
+                            <th style="width: 90px; background: #047857; color: #fff;">Venda (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ws_lista_itens">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-end gap-10 mt-20 pt-20" style="border-top: 1px solid #333;">
+                <button class="btn-neon btn-neon-danger bg-transparent" onclick="abrirCompraManual()">Limpar Tudo</button>
+                <button class="btn-neon btn-neon-green" onclick="efetivarImportacao()">✅ Guardar e Importar Stock</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-emitente" class="tab-content mt-20">
+    <div class="ficha-side card-neon-orange w-100 p-20">
+        <h3 class="m-0 mb-15 text-warning">🏢 Configuração da Empresa Emitente (SEFAZ)</h3>
+        <p class="text-sm text-muted mb-20">Preencha os dados oficiais da sua empresa e faça o upload do Certificado Digital A1 (.pfx) para permitir a assinatura eletrónica dos cupons fiscais (NFC-e).</p>
+        
+        <form id="formEmitente" onsubmit="salvarDadosEmitente(event)">
+            <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid #333;">
+                    <h4 class="text-info mt-0">Dados Cadastrais</h4>
+                    <label>CNPJ:</label>
+                    <input type="text" id="em_cnpj" name="cnpj" class="form-control mb-10 w-100" placeholder="Apenas números" required>
+                    
+                    <label>Razão Social:</label>
+                    <input type="text" id="em_razao" name="razao_social" class="form-control mb-10 w-100" required>
+                    
+                    <label>Inscrição Estadual (IE):</label>
+                    <input type="text" id="em_ie" name="inscricao_estadual" class="form-control mb-10 w-100" required>
+                    
+                    <label>Regime Tributário (CRT):</label>
+                    <select id="em_crt" name="crt" class="form-control mb-10 w-100">
+                        <option value="1">Simples Nacional / MEI (CRT 1)</option>
+                        <option value="3">Regime Normal (CRT 3)</option>
+                    </select>
+
+                    <h4 class="text-info mt-15">Endereço Fiscal Oficial</h4>
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1"><label>CEP:</label><input type="text" id="em_cep" name="cep" class="form-control w-100"></div>
+                        <div style="flex:2"><label>Logradouro:</label><input type="text" id="em_logradouro" name="logradouro" class="form-control w-100"></div>
+                        <div style="flex:1"><label>Nº:</label><input type="text" id="em_numero" name="numero" class="form-control w-100"></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <div style="flex:2"><label>Bairro:</label><input type="text" id="em_bairro" name="bairro" class="form-control w-100"></div>
+                        <div style="flex:2"><label>Cód. IBGE Município:</label><input type="text" id="em_ibge" name="codigo_municipio_ibge" class="form-control w-100" placeholder="Ex: 3550308"></div>
+                        <div style="flex:1"><label>UF:</label><input type="text" id="em_uf" name="uf" class="form-control w-100" placeholder="SP"></div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid #333;">
+                    <h4 class="text-success mt-0">Certificado e Integração</h4>
+                    <label>Ambiente da SEFAZ:</label>
+                    <select id="em_ambiente" name="ambiente" class="form-control mb-10 w-100">
+                        <option value="2">Homologação (Testes sem valor fiscal)</option>
+                        <option value="1">Produção (Cupons reais e válidos)</option>
+                    </select>
+
+                    <label>ID do CSC (Token NFC-e):</label>
+                    <input type="text" id="em_csc_id" name="csc_id" class="form-control mb-10 w-100" placeholder="Ex: 000001">
+                    
+                    <label>Código CSC (Alfanumérico):</label>
+                    <input type="password" id="em_csc_codigo" name="csc_codigo" class="form-control mb-10 w-100">
+
+                    <hr style="border-color: #444; margin: 20px 0;">
+
+                    <label class="d-block text-warning font-bold">Upload do Certificado A1 (.pfx):</label>
+                    <input type="file" id="em_certificado" name="certificado" class="form-control mb-5 w-100" accept=".pfx,.p12">
+                    <small class="text-muted d-block mb-10" id="status_certificado">Nenhum certificado atualizado nesta sessão.</small>
+
+                    <label>Senha do Certificado:</label>
+                    <input type="password" id="em_senha_cert" name="certificado_senha" class="form-control mb-10 w-100">
+                    
+                    <div class="d-flex justify-end mt-20">
+                        <button type="submit" class="btn-neon btn-neon-green">💾 Guardar Configurações</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="tab-cardapio" class="tab-content mt-20">
+    <div class="ficha-side card-neon-green w-100 p-20">
+        <h3 class="m-0 mb-5 text-success">🏷️ Classificação Tributária (NCM e CFOP)</h3>
+        <p class="text-muted text-sm mb-15 line-height-base">
+            Para emitir cupom fiscal, todo o produto vendido precisa de ter uma classificação. Configure o <strong>NCM</strong> (Nomenclatura Comum do Mercosul) e o <strong>CFOP</strong> de venda padrão. <br>
+            Exemplo: Pizzas preparadas costumam usar NCM <b>2106.90.90</b>. Refrigerantes usam <b>2202.10.00</b>. O CFOP de venda direta no estado geralmente é <b>5102</b>.
+        </p>
+        
+        <div class="d-flex justify-between align-center mb-10">
+            <input type="text" id="busca_cardapio_fiscal" class="form-control" placeholder="🔍 Procurar produto ou categoria..." onkeyup="filtrarCardapioFiscal()" style="max-width: 350px; background: #1a1a1a;">
+            <button class="btn-neon btn-neon-green" onclick="salvarTributacaoCardapio()">💾 Guardar Alterações</button>
+        </div>
+
+        <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 150px;">Categoria</th>
+                        <th>Nome do Produto Comercializado</th>
+                        <th style="width: 150px;">NCM (8 dígitos)</th>
+                        <th style="width: 120px;">CFOP Saída</th>
+                    </tr>
+                </thead>
+                <tbody id="lista_cardapio_fiscal">
+                    <tr><td colspan="4" class="text-center text-muted">A carregar catálogo de produtos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="tab-emissao" class="tab-content mt-20">
+    <div class="ficha-side card-neon-blue w-100 p-20">
+        <h3 class="m-0 mb-5 text-primary">📠 Fila de Emissão de Notas (NFC-e)</h3>
+        <p class="text-muted text-sm mb-15">Efetue a gestão dos pedidos finalizados e emita o Cupom Fiscal Eletrónico para a SEFAZ com um clique.</p>
+        
+        <div class="d-flex justify-between align-center mb-10">
+            <button class="btn-neon btn-neon-warning bg-transparent" onclick="carregarFilaEmissao()">🔄 Atualizar Lista</button>
+        </div>
+
+        <div class="table-container" style="max-height: 550px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Nº Pedido</th>
+                        <th>Cliente</th>
+                        <th style="width: 150px;">Valor Total</th>
+                        <th style="width: 150px;">Status SEFAZ</th>
+                        <th style="width: 200px;" class="text-center">Ações Fiscais</th>
+                    </tr>
+                </thead>
+                <tbody id="lista_pedidos_fiscal">
+                    <tr><td colspan="5" class="text-center text-muted">A carregar pedidos do sistema...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/fiscal.js"></script>
+{% endblock %}
